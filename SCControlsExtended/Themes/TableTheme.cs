@@ -30,14 +30,14 @@ namespace SCControlsExtended.Themes
                 int fullRowSize = 0;
                 for (int col = 0; col < columns; col++)
                 {
-                    _ = table.Cells.GetCellPosition(row, col, out fullRowSize, out int columnSize);
+                    var cellPosition = table.Cells.GetCellPosition(rowIndex, colIndex, out fullRowSize, out int columnSize);
 
                     var cell = table.Cells.GetIfExists(rowIndex, colIndex);
                     if (table.DrawOnlyIndexedCells && cell == null) continue;
 
-                    cell ??= new Cells.Cell(row, col, table, string.Empty)
+                    cell ??= new Cells.Cell(rowIndex, colIndex, table, string.Empty)
                     {
-                        Position = table.Cells.GetCellPosition(row, col, out _, out _)
+                        Position = cellPosition
                     };
 
                     AdjustControlSurface(table, cell, GetCustomStateAppearance(table, cell));

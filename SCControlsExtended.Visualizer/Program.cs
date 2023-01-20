@@ -44,11 +44,11 @@ namespace SCControlsExtended.Visualizer
             table.Cells[0, 0].Text = "C/R 0";
 
             // Set column, row texts
-            table.Cells.Range(0, 1, 0, 10).ForEach(cell => cell.Text = "Column " + col++);
-            table.Cells.Range(1, 0, 20, 0).ForEach(cell => cell.Text = "Row " + row++);
+            table.Cells.Range(0, 1, 0, 5).ForEach(cell => cell.Text = "Column " + col++);
+            table.Cells.Range(1, 0, 10, 0).ForEach(cell => cell.Text = "Row " + row++);
 
             // Set inner cells color
-            table.Cells.Range(1, 1, 20, 10).ForEach(cell => cell.Background = innerCellColor);
+            table.Cells.Range(1, 1, 10, 5).ForEach(cell => cell.Background = innerCellColor);
 
             // Custom cell size
             table.Cells[5, 7].Text = "Support custom cell sizes!";
@@ -68,13 +68,61 @@ namespace SCControlsExtended.Visualizer
             var visual = new ControlsConsole(Width, Height);
 
             // Construct table control
-            var table = new Table(visual.Width, visual.Height, 10, 2);
+            var table = new Table(visual.Width, visual.Height, 10, 2)
+            {
+                // Set default background color
+                DefaultBackground = Color.Wheat
+            };
+
+            // Set some default theme colors, for selection & hovering appearances
             table.SetThemeColors(Colors.CreateSadConsoleBlue());
+
+            // Test events
+            table.OnCellDoubleClick += Table_OnCellDoubleClick;
+            table.OnCellLeftClick += Table_OnCellLeftClick;
+            table.OnCellRightClick += Table_OnCellRightClick;
+            table.SelectedCellChanged += Table_SelectedCellChanged;
+            table.OnCellEnter += Table_OnCellEnter;
+            table.OnCellExit += Table_OnCellExit;
+
+            // Only add a few cells, and let console draw the rest
+            table.DrawOnlyIndexedCells = false;
+
             visual.Controls.Add(table);
 
             AdjustTableValues(table);
 
             Game.Instance.Screen = visual;
+        }
+
+        private static void Table_OnCellExit(object sender, Table.CellEventArgs e)
+        {
+            System.Console.WriteLine($"Exited cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
+        }
+
+        private static void Table_OnCellEnter(object sender, Table.CellEventArgs e)
+        {
+            System.Console.WriteLine($"Entered cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
+        }
+
+        private static void Table_SelectedCellChanged(object sender, Table.CellEventArgs e)
+        {
+            System.Console.WriteLine($"Selected cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
+        }
+
+        private static void Table_OnCellRightClick(object sender, Table.CellEventArgs e)
+        {
+            System.Console.WriteLine($"Right clicked cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
+        }
+
+        private static void Table_OnCellLeftClick(object sender, Table.CellEventArgs e)
+        {
+            System.Console.WriteLine($"Left clicked cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
+        }
+
+        private static void Table_OnCellDoubleClick(object sender, Table.CellEventArgs e)
+        {
+            System.Console.WriteLine($"Double clicked cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
         }
     }
 }
