@@ -78,6 +78,7 @@ namespace SCControlsExtended.Controls
             {
                 if (mousePosCellIndex != null)
                 {
+                    // TODO: If cell does not yet exist in table, then add a check in cell when any property is modified it is added to the table automatically.
                     CurrentMouseCell = Cells.GetIfExists(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X) ??
                         new Cells.Cell(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, this, string.Empty);
                     OnCellEnter?.Invoke(this, new CellEventArgs(CurrentMouseCell));
