@@ -24,7 +24,11 @@ namespace SCControlsExtended.Controls
         public event EventHandler<CellEventArgs> OnCellRightClick;
         public event EventHandler<CellEventArgs> OnCellDoubleClick;
 
-        private Cells.Cell _hoveredCell;
+        /// <summary>
+        /// Returns the cell the mouse is over, if atleast one event is subscribed to OnCellEnter or OnCellExit.
+        /// If no event is subscribe to either properties, this property will be null.
+        /// </summary>
+        public Cells.Cell CurrentMouseCell { get; private set; }
 
         /// <summary>
         /// By default, only cells that have been indexed (eg. accessing table[0, 0]) will be rendered on the table control.
@@ -63,9 +67,9 @@ namespace SCControlsExtended.Controls
                 if (prev != MousedOverCellPosition)
                 {
                     if (MousedOverCellPosition != null)
-                        OnCellEnter?.Invoke(this, new CellEventArgs(_hoveredCell = Cells.GetIfExists(MousedOverCellPosition.Value.Y, MousedOverCellPosition.Value.X)));
+                        OnCellEnter?.Invoke(this, new CellEventArgs(CurrentMouseCell = Cells.GetIfExists(MousedOverCellPosition.Value.Y, MousedOverCellPosition.Value.X)));
                     else
-                        OnCellExit?.Invoke(this, new CellEventArgs(_hoveredCell));
+                        OnCellExit?.Invoke(this, new CellEventArgs(CurrentMouseCell));
                     IsDirty = true;
                 }
             }
@@ -77,9 +81,9 @@ namespace SCControlsExtended.Controls
 
             if (MousedOverCellPosition != null)
             {
-                OnCellExit?.Invoke(this, new CellEventArgs(_hoveredCell));
+                OnCellExit?.Invoke(this, new CellEventArgs(CurrentMouseCell));
                 MousedOverCellPosition = null;
-                _hoveredCell = null;
+                CurrentMouseCell = null;
                 IsDirty = true;
             }
         }
