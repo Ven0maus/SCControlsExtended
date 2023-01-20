@@ -14,6 +14,8 @@ namespace SCControlsExtended.Visualizer
 
         static void Main(string[] args)
         {
+            Settings.WindowTitle = "SadConsole Controls Extended";
+
             // Setup the engine and create the main window.
             Game.Create(Width, Height);
 
@@ -47,6 +49,13 @@ namespace SCControlsExtended.Visualizer
 
             // Set inner cells color
             table.Cells.Range(1, 1, 25, 10).ForEach(cell => cell.Background = innerCellColor);
+
+            // Custom cell size
+            table.Cells[5, 7].Text = "Support custom cell sizes!";
+            table.Cells[5, 7].Width = 20;
+            table.Cells[5, 7].Height = 5;
+            table.Cells[5, 7].Background = Color.Yellow;
+            table.Cells[5, 7].Foreground = Color.Black;
         }
 
         private static void Init()

@@ -3,7 +3,6 @@ using SadRogue.Primitives;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data.Common;
 
 namespace SCControlsExtended.Controls
 {
@@ -47,6 +46,14 @@ namespace SCControlsExtended.Controls
             MousedOverCellPosition = GetMousedOverCell(state.MousePosition);
             if (prev != MousedOverCellPosition)
                 IsDirty = true;
+        }
+
+        protected override void OnMouseExit(ControlMouseState state)
+        {
+            base.OnMouseExit(state);
+
+            MousedOverCellPosition = null;
+            IsDirty = true;
         }
 
         private Point? GetMousedOverCell(Point mousePosition)
@@ -365,6 +372,7 @@ namespace SCControlsExtended.Controls
                 get { return _width; }
                 set
                 {
+                    // TODO: Adjust cell position of other cells
                     if (_width != value)
                     {
                         _width = value;
@@ -379,6 +387,7 @@ namespace SCControlsExtended.Controls
                 get { return _height; }
                 set
                 {
+                    // TODO: Adjust cell position of other cells
                     if (_height != value)
                     {
                         _height = value;
