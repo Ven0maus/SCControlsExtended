@@ -36,21 +36,14 @@ namespace SCControlsExtended.Visualizer
             table.Cells.Column(0).SetLayout(background: Color.Lerp(Color.Gray, Color.Black, 0.8f));
 
             var innerCellColor = Color.Lerp(Color.Gray, Color.Black, 0.6f);
-            int count = 1;
+            int col = 1, row = 1;
 
             // Set column
             table.Cells[0, 0].Text = "C/R 0";
 
-            // Set column text
-            var range = table.Cells.Range(0, 1, 0, 10);
-            foreach (var cell in range)
-                cell.Text = "Column " + count++;
-
-            // Set row text
-            range = table.Cells.Range(1, 0, 25, 0);
-            count = 1;
-            foreach (var cell in range)
-                cell.Text = "Row " + count++;
+            // Set column, row texts
+            table.Cells.Range(0, 1, 0, 10).ForEach(cell => cell.Text = "Column " + col++);
+            table.Cells.Range(1, 0, 25, 0).ForEach(cell => cell.Text = "Row " + row++);
 
             // Set inner cells color
             table.Cells.Range(1, 1, 25, 10).SetAll(background: innerCellColor);

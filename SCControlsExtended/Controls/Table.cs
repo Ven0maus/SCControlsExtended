@@ -1,5 +1,6 @@
 ﻿using SadConsole.UI.Controls;
 using SadRogue.Primitives;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -289,6 +290,14 @@ namespace SCControlsExtended.Controls
                     {
                         _cells[(y - rect.Y) * rect.Width + (x - rect.X)] = cells[y, x];
                     }
+                }
+            }
+
+            public void ForEach(Action<Cells.Cell> action)
+            {
+                foreach (var cell in this)
+                {
+                    action(cell);
                 }
             }
 
