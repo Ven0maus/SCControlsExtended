@@ -283,9 +283,13 @@ namespace SCControlsExtended.Controls
             /// <param name="background"></param>
             public void SetLayout(int? size = null, Color? foreground = null, Color? background = null)
             {
-                if (size != null) Size = size.Value;
-                if (foreground != null) Foreground = foreground.Value;
-                if (background != null) Background = background.Value;
+                var prevSize = _size;
+                SetLayoutInternal(size, foreground, background);
+                if (prevSize != _size)
+                {
+                    _table.Cells.AdjustCellsAfterResize();
+                    _table.IsDirty = true;
+                }
             }
 
             internal void SetLayoutInternal(int? size = null, Color? foreground = null, Color? background = null)
