@@ -42,7 +42,7 @@ namespace SCControlsExtended.Visualizer
             { 
                 new FunctionalityTestWindow(Width, Height), 
                 new ExcelWindow(Width, Height), 
-                new DrawingGridWindow(Width, Height) 
+                new DrawingTableWindow(Width, Height) 
             };
 
             int yCount = 10;

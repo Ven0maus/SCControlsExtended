@@ -1,6 +1,7 @@
 ﻿using SadConsole;
 using SadConsole.UI.Controls;
 using SadConsole.UI.Themes;
+using SadRogue.Primitives;
 using SCControlsExtended.Controls;
 using System;
 using System.Collections.Generic;
@@ -56,6 +57,7 @@ namespace SCControlsExtended.Themes
 
         private ColoredGlyph GetCustomStateAppearance(Table table, Cells.Cell cell)
         {
+            if (!cell.IsVisible || !cell.Interactable) return null;
             if (table.RenderSelectionEffect && table.SelectedCell != null && cell.Equals(table.SelectedCell))
             {
                 return ControlThemeState.Selected;
@@ -89,6 +91,7 @@ namespace SCControlsExtended.Themes
                 {
                     int colIndex = cell.Position.X + x;
                     int rowIndex = cell.Position.Y + y;
+                    table.Surface[colIndex, rowIndex].IsVisible = cell.IsVisible;
                     table.Surface.SetForeground(colIndex, rowIndex, customStateAppearance != null ? customStateAppearance.Foreground : cell.Foreground);
                     table.Surface.SetBackground(colIndex, rowIndex, customStateAppearance != null ? customStateAppearance.Background : cell.Background);
                 }
@@ -97,10 +100,13 @@ namespace SCControlsExtended.Themes
 
         private static void PrintText(Table table, Cells.Cell cell)
         {
-            if (cell.Text == null) return;
+            if (cell.Text == null || !cell.IsVisible) return;
 
             var width = table.Cells.Column(cell.ColumnIndex).Size;
             var height = table.Cells.Row(cell.RowIndex).Size;
+
+            // TODO: TextAlignment
+
 
             // Split the character array into parts based on cell width
             var splittedTextArray = Split(cell.Text.ToCharArray(), width).ToArray();

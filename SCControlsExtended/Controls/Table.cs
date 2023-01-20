@@ -106,16 +106,19 @@ namespace SCControlsExtended.Controls
             {
                 if (mousePosCellIndex != null)
                 {
-                    // TODO: If cell does not yet exist in table, then add a check in cell when any property is modified it is added to the table automatically.
                     CurrentMouseCell = Cells.GetIfExists(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X) ??
                         new Cells.Cell(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, this, string.Empty)
                         {
                             Position = Cells.GetCellPosition(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, out _, out _)
                         };
-                    OnCellEnter?.Invoke(this, new CellEventArgs(CurrentMouseCell));
+                    if (CurrentMouseCell.Interactable)
+                        OnCellEnter?.Invoke(this, new CellEventArgs(CurrentMouseCell));
                 }
                 else
-                    OnCellExit?.Invoke(this, new CellEventArgs(CurrentMouseCell));
+                {
+                    if (CurrentMouseCell != null && CurrentMouseCell.Interactable)
+                        OnCellExit?.Invoke(this, new CellEventArgs(CurrentMouseCell));
+                }
                 IsDirty = true;
             }
         }
@@ -126,7 +129,7 @@ namespace SCControlsExtended.Controls
 
             if (CurrentMouseCell != null)
             {
-                if (SelectedCell != CurrentMouseCell)
+                if (SelectedCell != CurrentMouseCell && CurrentMouseCell.Interactable && CurrentMouseCell.IsVisible)
                 {
                     var previous = SelectedCell;
                     SelectedCell = CurrentMouseCell;
@@ -140,7 +143,8 @@ namespace SCControlsExtended.Controls
                     SelectedCellChanged?.Invoke(this, new CellChangedEventArgs(previous, SelectedCell));
                 }
 
-                OnCellLeftClick?.Invoke(this, new CellEventArgs(CurrentMouseCell));
+                if (CurrentMouseCell.Interactable && CurrentMouseCell.IsVisible)
+                    OnCellLeftClick?.Invoke(this, new CellEventArgs(CurrentMouseCell));
 
                 DateTime click = DateTime.Now;
                 bool doubleClicked = (click - _leftMouseLastClick).TotalSeconds <= 0.5;
@@ -149,7 +153,8 @@ namespace SCControlsExtended.Controls
                 if (doubleClicked)
                 {
                     _leftMouseLastClick = DateTime.MinValue;
-                    OnCellDoubleClick?.Invoke(this, new CellEventArgs(CurrentMouseCell));
+                    if (CurrentMouseCell.Interactable && CurrentMouseCell.IsVisible)
+                        OnCellDoubleClick?.Invoke(this, new CellEventArgs(CurrentMouseCell));
                 }
             }
             else
@@ -162,7 +167,7 @@ namespace SCControlsExtended.Controls
         {
             base.OnRightMouseClicked(state);
 
-            if (CurrentMouseCell != null)
+            if (CurrentMouseCell != null && CurrentMouseCell.Interactable && CurrentMouseCell.IsVisible)
             {
                 OnCellRightClick?.Invoke(this, new CellEventArgs(CurrentMouseCell));
             }
@@ -174,7 +179,8 @@ namespace SCControlsExtended.Controls
 
             if (CurrentMouseCell != null)
             {
-                OnCellExit?.Invoke(this, new CellEventArgs(CurrentMouseCell));
+                if (CurrentMouseCell.Interactable && CurrentMouseCell.IsVisible)
+                    OnCellExit?.Invoke(this, new CellEventArgs(CurrentMouseCell));
                 CurrentMouseCell = null;
             }
         }
@@ -355,11 +361,22 @@ namespace SCControlsExtended.Controls
 
         private void SetCell(int row, int col, Cell cell)
         {
+            if (cell == null)
+            {
+                if (_cells.Remove((row, col)))
+                    _table.IsDirty = true;
+                return;
+            }
+
             if (_cells.TryGetValue((row, col), out Cell oldCell))
             {
                 if (!oldCell.Foreground.Equals(cell.Foreground) ||
                     !oldCell.Background.Equals(cell.Background) ||
-                    !oldCell.Text.Equals(cell.Text))
+                    !oldCell.Text.Equals(cell.Text) ||
+                    !oldCell.Interactable.Equals(cell.Interactable) &&
+                    !oldCell.IsVisible.Equals(cell.IsVisible) ||
+                    oldCell.TextAlignment.Vertical != cell.TextAlignment.Vertical ||
+                    oldCell.TextAlignment.Horizontal != cell.TextAlignment.Horizontal)
                 {
                     _cells[(row, col)] = cell;
                     _table.IsDirty = true;
@@ -410,6 +427,9 @@ namespace SCControlsExtended.Controls
 
             public Color? Foreground;
             public Color? Background;
+            public Cell.Alignment? TextAlignment;
+            public bool? Interactable;
+            public bool? IsVisible;
 
             private readonly Table _table;
 
@@ -432,10 +452,10 @@ namespace SCControlsExtended.Controls
             /// <param name="height"></param>
             /// <param name="foreground"></param>
             /// <param name="background"></param>
-            public void SetLayout(int? size = null, Color? foreground = null, Color? background = null)
+            public void SetLayout(int? size = null, Color? foreground = null, Color? background = null, Cell.Alignment? textAlignment = null, bool? interactable = null, bool? isVisible = null)
             {
                 var prevSize = _size;
-                SetLayoutInternal(size, foreground, background);
+                SetLayoutInternal(size, foreground, background, textAlignment, interactable, isVisible);
                 if (prevSize != _size)
                 {
                     _table.Cells.AdjustCellsAfterResize();
@@ -443,11 +463,12 @@ namespace SCControlsExtended.Controls
                 }
             }
 
-            internal void SetLayoutInternal(int? size = null, Color? foreground = null, Color? background = null)
+            internal void SetLayoutInternal(int? size = null, Color? foreground = null, Color? background = null, Cell.Alignment? textAlignment = null, bool? interactable = null, bool? isVisible = null)
             {
                 if (size != null) _size = size.Value;
                 Foreground = foreground;
                 Background = background;
+                TextAlignment = textAlignment;
             }
         }
 
@@ -503,6 +524,49 @@ namespace SCControlsExtended.Controls
                 }
             }
 
+            private Alignment _textAlignment;
+            public Alignment TextAlignment
+            {
+                get { return _textAlignment; }
+                set
+                {
+                    if (_textAlignment.Vertical != value.Vertical ||
+                        _textAlignment.Horizontal != value.Horizontal)
+                    {
+                        _textAlignment = value;
+                        _table.IsDirty = true;
+                    }
+                }
+            }
+
+            private bool _interactable = true;
+            public bool Interactable
+            {
+                get { return _interactable; }
+                set
+                {
+                    if (value != _interactable)
+                    {
+                        _interactable = value;
+                        _table.IsDirty = true;
+                    }
+                }
+            }
+
+            private bool _isVisible = true;
+            public bool IsVisible
+            {
+                get { return _isVisible; }
+                set
+                {
+                    if (value != _isVisible)
+                    {
+                        _isVisible = value;
+                        _table.IsDirty = true;
+                    }
+                }
+            }
+
             private readonly Table _table;
 
             internal Cell(int row, int col, Table table, string text)
@@ -526,6 +590,12 @@ namespace SCControlsExtended.Controls
                         _foreground = option.Foreground.Value;
                     if (option.Background != null)
                         _background = option.Background.Value;
+                    if (option.TextAlignment != null)
+                        _textAlignment = option.TextAlignment.Value;
+                    if (option.Interactable != null)
+                        _interactable = option.Interactable.Value;
+                    if (option.IsVisible != null)
+                        _isVisible = option.IsVisible.Value;
                 }
             }
 
@@ -537,10 +607,10 @@ namespace SCControlsExtended.Controls
                 }
             }
 
-            public void SetLayout(int? rowSize = null, int? columnSize = null, Color? foreground = null, Color? background = null)
+            public void SetLayout(int? rowSize = null, int? columnSize = null, Color? foreground = null, Color? background = null, Alignment? textAlignment = null, bool? interactable = null, bool? isVisible = null)
             {
-                _table.Cells.Column(ColumnIndex).SetLayoutInternal(columnSize, foreground, background);
-                _table.Cells.Row(RowIndex).SetLayoutInternal(rowSize, foreground, background);
+                _table.Cells.Column(ColumnIndex).SetLayoutInternal(columnSize, foreground, background, textAlignment, interactable, isVisible);
+                _table.Cells.Row(RowIndex).SetLayoutInternal(rowSize, foreground, background, textAlignment, interactable, isVisible);
                 if (rowSize != null || columnSize != null)
                     _table.Cells.AdjustCellsAfterResize();
                 _table.IsDirty = true;
@@ -557,6 +627,26 @@ namespace SCControlsExtended.Controls
             public int GetHashCode([DisallowNull] Cell obj)
             {
                 return HashCode.Combine(obj.RowIndex, obj.ColumnIndex);
+            }
+
+            public struct Alignment
+            {
+                public TextAlignmentH Horizontal { get; set; }
+                public TextAlignmentV Vertical { get; set; }
+
+                public enum TextAlignmentH
+                {
+                    Left = 0,
+                    Center,
+                    Right
+                }
+
+                public enum TextAlignmentV
+                {
+                    Up = 0,
+                    Center,
+                    Down
+                }
             }
         }
     }

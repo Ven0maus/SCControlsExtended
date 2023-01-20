@@ -33,36 +33,39 @@ namespace SCControlsExtended.Visualizer
             _table.DrawOnlyIndexedCells = false;
             Controls.Add(_table);
 
-            AdjustTableValues(_table);
+            AdjustTableValues();
         }
 
-        private static void AdjustTableValues(Table table)
+        private void AdjustTableValues()
         {
-            table.Cells.Row(0).SetLayout(background: Color.Lerp(Color.Gray, Color.Black, 0.8f));
-            table.Cells.Column(0).SetLayout(background: Color.Lerp(Color.Gray, Color.Black, 0.8f));
+            _table.Cells.Row(0).SetLayout(background: Color.Lerp(Color.Gray, Color.Black, 0.8f));
+            _table.Cells.Column(0).SetLayout(background: Color.Lerp(Color.Gray, Color.Black, 0.8f));
 
             var innerCellColor = Color.Lerp(Color.Gray, Color.Black, 0.6f);
             int col = 1, row = 1;
 
             // Set column
-            table.Cells[0, 0].Text = "C/R 0";
+            _table.Cells[0, 0].Text = "C/R 0";
 
             // Set column, row texts
-            table.Cells.Range(0, 1, 0, 5).ForEach(cell => cell.Text = "Column " + col++);
-            table.Cells.Range(1, 0, 10, 0).ForEach(cell => cell.Text = "Row " + row++);
+            _table.Cells.Range(0, 1, 0, 5).ForEach(cell => cell.Text = "Column " + col++);
+            _table.Cells.Range(1, 0, 10, 0).ForEach(cell => cell.Text = "Row " + row++);
 
             // Set inner cells color
-            table.Cells.Range(1, 1, 10, 5).ForEach(cell => cell.Background = innerCellColor);
+            _table.Cells.Range(1, 1, 10, 5).ForEach(cell => cell.Background = innerCellColor);
 
             // Custom cell size
-            table.Cells[5, 7].Text = "Support custom cell sizes!";
-            table.Cells[5, 7].SetLayout(6, 20);
-            table.Cells[5, 7].Background = Color.Yellow;
-            table.Cells[5, 7].Foreground = Color.Black;
+            _table.Cells[5, 7].Text = "Support custom cell sizes!";
+            _table.Cells[5, 7].SetLayout(6, 20);
+            _table.Cells[5, 7].Background = Color.Yellow;
+            _table.Cells[5, 7].Foreground = Color.Black;
 
-            table.Cells[6, 7].Background = Color.Magenta;
-            table.Cells[5, 8].Background = Color.Orange;
-            table.Cells[6, 8].Background = Color.Blue;
+            _table.Cells[6, 7].Background = Color.Magenta;
+            _table.Cells[5, 8].Background = Color.Orange;
+            _table.Cells[6, 8].Background = Color.Blue;
+            _table.Cells[6, 8].Interactable = false;
+            _table.Cells[7, 8].IsVisible = false;
+            _table.Cells[7, 8].Interactable = false;
         }
 
         private static void Table_OnCellExit(object sender, Table.CellEventArgs e)
