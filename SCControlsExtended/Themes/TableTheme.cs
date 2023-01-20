@@ -40,13 +40,18 @@ namespace SCControlsExtended.Themes
             control.Surface.Fill(Appearance.Foreground, Appearance.Background, Appearance.Glyph);
 
             // Define based on table width/height and DefaultCellSize how many columns/rows should be added
-            var columns = table.Width / table.DefaultCellSize.X;
-            var rows = table.Height / table.DefaultCellSize.Y;
+            var columns = table.Width; // / table.DefaultCellSize.X;
+            var rows = table.Height; // / table.DefaultCellSize.Y;
+            int rowIndex = 0;
             for (int row = 0; row < rows; row++)
             {
+                int colIndex = 0;
+                int fullRowSize = 0;
                 for (int col = 0; col < columns; col++)
                 {
-                    var cell = table.Cells.GetIfExists(row, col);
+                    _ = table.Cells.GetCellPosition(row, col, out fullRowSize, out int columnSize);
+
+                    var cell = table.Cells.GetIfExists(rowIndex, colIndex);
                     if (table.DrawOnlyIndexedCells && cell == null) continue;
 
                     if (cell == null)
@@ -63,7 +68,13 @@ namespace SCControlsExtended.Themes
 
                     AdjustControlSurface(table, cell, mouseOverCell);
                     PrintText(table, cell);
+
+                    col += columnSize - 1;
+                    colIndex++;
                 }
+
+                row += fullRowSize - 1;
+                rowIndex++;
             }
 
             control.IsDirty = false;

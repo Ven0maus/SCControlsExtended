@@ -45,10 +45,10 @@ namespace SCControlsExtended.Visualizer
 
             // Set column, row texts
             table.Cells.Range(0, 1, 0, 10).ForEach(cell => cell.Text = "Column " + col++);
-            table.Cells.Range(1, 0, 25, 0).ForEach(cell => cell.Text = "Row " + row++);
+            table.Cells.Range(1, 0, 20, 0).ForEach(cell => cell.Text = "Row " + row++);
 
             // Set inner cells color
-            table.Cells.Range(1, 1, 25, 10).ForEach(cell => cell.Background = innerCellColor);
+            table.Cells.Range(1, 1, 20, 10).ForEach(cell => cell.Background = innerCellColor);
 
             // Custom cell size
             table.Cells[5, 7].Text = "Support custom cell sizes!";
