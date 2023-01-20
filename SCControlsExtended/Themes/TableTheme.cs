@@ -57,9 +57,9 @@ namespace SCControlsExtended.Themes
                         };
                     }
 
-                    var mouseOverCell = table.MousedOverCellPosition != null &&
-                        table.MousedOverCellPosition.Value.X == cell.ColumnIndex &&
-                        table.MousedOverCellPosition.Value.Y == cell.RowIndex;
+                    var mouseOverCell = table.CurrentMouseCell != null &&
+                        table.CurrentMouseCell.ColumnIndex == cell.ColumnIndex &&
+                        table.CurrentMouseCell.RowIndex == cell.RowIndex;
 
                     AdjustControlSurface(table, cell, mouseOverCell);
                     PrintText(table, cell);

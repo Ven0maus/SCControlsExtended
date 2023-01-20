@@ -22,7 +22,6 @@ namespace SCControlsExtended.Controls
                 _isMouseEnabled = value;
                 if (!_isMouseEnabled)
                 {
-                    MousedOverCellPosition = null;
                     CurrentMouseCell = null;
                     IsDirty = true;
                 }
@@ -48,8 +47,6 @@ namespace SCControlsExtended.Controls
         /// </summary>
         public bool DrawOnlyIndexedCells { get; set; } = true;
 
-        internal Point? MousedOverCellPosition { get; private set; }
-
         public Table(int tableWidth, int tableHeight, int cellWidth, Color foreground, Color background, int cellHeight = 1) : base(tableWidth, tableHeight)
         {
             DefaultCellSize = new(cellWidth, cellHeight);
@@ -74,12 +71,17 @@ namespace SCControlsExtended.Controls
             base.OnMouseIn(state);
 
             // Handle mouse hovering over cell
-            var prev = MousedOverCellPosition;
-            MousedOverCellPosition = GetCellIndexByMousePosition(state.MousePosition);
-            if (prev != MousedOverCellPosition)
+            var mousePosCellIndex = GetCellIndexByMousePosition(state.MousePosition);
+            Point? currentPosition = CurrentMouseCell == null ? null : (CurrentMouseCell.RowIndex, CurrentMouseCell.ColumnIndex);
+
+            if (!Equals(mousePosCellIndex, currentPosition))
             {
-                if (MousedOverCellPosition != null)
-                    OnCellEnter?.Invoke(this, new CellEventArgs(CurrentMouseCell = Cells.GetIfExists(MousedOverCellPosition.Value.Y, MousedOverCellPosition.Value.X)));
+                if (mousePosCellIndex != null)
+                {
+                    CurrentMouseCell = Cells.GetIfExists(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X) ??
+                        new Cells.Cell(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, this, string.Empty);
+                    OnCellEnter?.Invoke(this, new CellEventArgs(CurrentMouseCell));
+                }
                 else
                     OnCellExit?.Invoke(this, new CellEventArgs(CurrentMouseCell));
                 IsDirty = true;
@@ -92,10 +94,9 @@ namespace SCControlsExtended.Controls
 
             base.OnMouseExit(state);
 
-            if (MousedOverCellPosition != null)
+            if (CurrentMouseCell != null)
             {
                 OnCellExit?.Invoke(this, new CellEventArgs(CurrentMouseCell));
-                MousedOverCellPosition = null;
                 CurrentMouseCell = null;
                 IsDirty = true;
             }
