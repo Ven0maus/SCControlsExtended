@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SCControlsExtended", "SCControlsExtended\SCControlsExtended.csproj", "{8C2F2A4E-C24F-42FB-8A3A-B0C6671B4623}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8C2F2A4E-C24F-42FB-8A3A-B0C6671B4623}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C2F2A4E-C24F-42FB-8A3A-B0C6671B4623}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C2F2A4E-C24F-42FB-8A3A-B0C6671B4623}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C2F2A4E-C24F-42FB-8A3A-B0C6671B4623}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4A9CFFAE-A40C-4B8B-BBD6-2FFD844D3679}
+	EndGlobalSection
+EndGlobal
