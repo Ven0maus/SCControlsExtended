@@ -46,7 +46,7 @@ namespace SCControlsExtended.Visualizer
             table.Cells.Range(1, 0, 25, 0).ForEach(cell => cell.Text = "Row " + row++);
 
             // Set inner cells color
-            table.Cells.Range(1, 1, 25, 10).SetAll(background: innerCellColor);
+            table.Cells.Range(1, 1, 25, 10).ForEach(cell => cell.Background = innerCellColor);
         }
 
         private static void Init()

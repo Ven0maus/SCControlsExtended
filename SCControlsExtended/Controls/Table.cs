@@ -301,18 +301,6 @@ namespace SCControlsExtended.Controls
                 }
             }
 
-            public void SetAll(int? width = null, int? height = null, Color? foreground = null, Color? background = null, string text = null)
-            {
-                foreach (var cell in this)
-                {
-                    cell.Width = width ?? cell.Width;
-                    cell.Height = height ?? cell.Height;
-                    cell.Foreground = foreground ?? cell.Foreground;
-                    cell.Background = background ?? cell.Background;
-                    cell.Text = text ?? cell.Text;
-                }
-            }
-
             public IEnumerator<Cell> GetEnumerator()
             {
                 return ((IEnumerable<Cell>)_cells).GetEnumerator();
