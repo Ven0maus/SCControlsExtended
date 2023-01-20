@@ -532,6 +532,7 @@ namespace SCControlsExtended.Controls
                 get { return _textAlignment; }
                 set
                 {
+                    if (value == null) return;
                     if (_textAlignment.Vertical != value.Vertical ||
                         _textAlignment.Horizontal != value.Horizontal)
                     {
