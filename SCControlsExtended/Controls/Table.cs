@@ -3,7 +3,6 @@ using SadRogue.Primitives;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace SCControlsExtended.Controls
 {
@@ -14,7 +13,21 @@ namespace SCControlsExtended.Controls
         public Color DefaultBackground { get; set; }
         public Point DefaultCellSize { get; set; }
 
-        private bool HasCellHoverEvents { get { return OnCellEnter != null || OnCellExit != null; } }
+        private bool _isMouseEnabled = true;
+        public bool IsMouseEnabled 
+        { 
+            get { return _isMouseEnabled; }
+            set
+            {
+                _isMouseEnabled = value;
+                if (!_isMouseEnabled)
+                {
+                    MousedOverCellPosition = null;
+                    CurrentMouseCell = null;
+                    IsDirty = true;
+                }
+            }
+        }
 
         public event EventHandler<CellEventArgs> OnCellEnter;
         public event EventHandler<CellEventArgs> OnCellExit;
@@ -25,8 +38,7 @@ namespace SCControlsExtended.Controls
         public event EventHandler<CellEventArgs> OnCellDoubleClick;
 
         /// <summary>
-        /// Returns the cell the mouse is over, if atleast one event is subscribed to OnCellEnter or OnCellExit.
-        /// If no event is subscribe to either properties, this property will be null.
+        /// Returns the cell the mouse is over, if the property <see cref="IsMouseEnabled"/> is true.
         /// </summary>
         public Cells.Cell CurrentMouseCell { get; private set; }
 
@@ -57,26 +69,27 @@ namespace SCControlsExtended.Controls
 
         protected override void OnMouseIn(ControlMouseState state)
         {
+            if (!IsMouseEnabled) return;
+
             base.OnMouseIn(state);
 
             // Handle mouse hovering over cell
-            if (HasCellHoverEvents)
+            var prev = MousedOverCellPosition;
+            MousedOverCellPosition = GetCellIndexByMousePosition(state.MousePosition);
+            if (prev != MousedOverCellPosition)
             {
-                var prev = MousedOverCellPosition;
-                MousedOverCellPosition = GetCellIndexByMousePosition(state.MousePosition);
-                if (prev != MousedOverCellPosition)
-                {
-                    if (MousedOverCellPosition != null)
-                        OnCellEnter?.Invoke(this, new CellEventArgs(CurrentMouseCell = Cells.GetIfExists(MousedOverCellPosition.Value.Y, MousedOverCellPosition.Value.X)));
-                    else
-                        OnCellExit?.Invoke(this, new CellEventArgs(CurrentMouseCell));
-                    IsDirty = true;
-                }
+                if (MousedOverCellPosition != null)
+                    OnCellEnter?.Invoke(this, new CellEventArgs(CurrentMouseCell = Cells.GetIfExists(MousedOverCellPosition.Value.Y, MousedOverCellPosition.Value.X)));
+                else
+                    OnCellExit?.Invoke(this, new CellEventArgs(CurrentMouseCell));
+                IsDirty = true;
             }
         }
 
         protected override void OnMouseExit(ControlMouseState state)
         {
+            if (!IsMouseEnabled) return;
+
             base.OnMouseExit(state);
 
             if (MousedOverCellPosition != null)
