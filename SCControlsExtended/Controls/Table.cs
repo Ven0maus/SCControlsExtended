@@ -50,6 +50,7 @@ namespace SCControlsExtended.Controls
 
         private Point? GetMousedOverCell(Point mousePosition)
         {
+            // TODO: Adjust to find the position of the cell relative to the mouse position, without having to loop all cells
             foreach (var cell in Cells)
             {
                 if (IsMouseWithinCell(mousePosition, cell.Position.Y, cell.Position.X, cell.Width, cell.Height))
