@@ -184,11 +184,18 @@ namespace SCControlsExtended.Controls
         /// <param name="endRow"></param>
         /// <param name="endCol"></param>
         /// <returns></returns>
-        public CellRange Range(int startRow, int startCol, int endRow, int endCol)
+        public IEnumerable<Cell> Range(int startRow, int startCol, int endRow, int endCol)
         {
             var width = endCol - startCol + 1;
             var height = endRow - startRow + 1;
-            return new CellRange(_table.Cells, new Rectangle(startCol, startRow, width, height));
+
+            for (int x = startCol; x < startCol + width; x++)
+            {
+                for (int y = startRow; y < startRow + height; y++)
+                {
+                    yield return this[y, x];
+                }
+            }
         }
 
         /// <summary>
@@ -348,41 +355,6 @@ namespace SCControlsExtended.Controls
                 if (size != null) _size = size.Value;
                 if (foreground != null) Foreground = foreground.Value;
                 if (background != null) Background = background.Value;
-            }
-        }
-
-        public class CellRange : IEnumerable<Cell>
-        {
-            private readonly Cell[] _cells;
-
-            internal CellRange(Cells cells, Rectangle rect)
-            {
-                _cells = new Cell[rect.Width * rect.Height];
-                for (int x = rect.X; x < rect.X + rect.Width; x++)
-                {
-                    for (int y = rect.Y; y < rect.Y + rect.Height; y++)
-                    {
-                        _cells[(y - rect.Y) * rect.Width + (x - rect.X)] = cells[y, x];
-                    }
-                }
-            }
-
-            public void ForEach(Action<Cells.Cell> action)
-            {
-                foreach (var cell in this)
-                {
-                    action(cell);
-                }
-            }
-
-            public IEnumerator<Cell> GetEnumerator()
-            {
-                return ((IEnumerable<Cell>)_cells).GetEnumerator();
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return GetEnumerator();
             }
         }
 
