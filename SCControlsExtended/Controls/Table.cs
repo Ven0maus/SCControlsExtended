@@ -14,6 +14,18 @@ namespace SCControlsExtended.Controls
         public Color DefaultBackground { get; set; }
         public Point DefaultCellSize { get; set; }
 
+        private bool HasCellHoverEvents { get { return OnCellEnter != null || OnCellExit != null; } }
+
+        public event EventHandler<CellEventArgs> OnCellEnter;
+        public event EventHandler<CellEventArgs> OnCellExit;
+
+        // TODO: Events
+        public event EventHandler<CellEventArgs> OnCellLeftClick;
+        public event EventHandler<CellEventArgs> OnCellRightClick;
+        public event EventHandler<CellEventArgs> OnCellDoubleClick;
+
+        private Cells.Cell _hoveredCell;
+
         /// <summary>
         /// By default, only cells that have been indexed (eg. accessing table[0, 0]) will be rendered on the table control.
         /// Turn this off, if the whole table should draw as many cells  as it fits, even with no data.
@@ -43,18 +55,33 @@ namespace SCControlsExtended.Controls
         {
             base.OnMouseIn(state);
 
-            var prev = MousedOverCellPosition;
-            MousedOverCellPosition = GetMousedOverCell(state.MousePosition);
-            if (prev != MousedOverCellPosition)
-                IsDirty = true;
+            // Handle mouse hovering over cell
+            if (HasCellHoverEvents)
+            {
+                var prev = MousedOverCellPosition;
+                MousedOverCellPosition = GetMousedOverCell(state.MousePosition);
+                if (prev != MousedOverCellPosition)
+                {
+                    if (MousedOverCellPosition != null)
+                        OnCellEnter?.Invoke(this, new CellEventArgs(_hoveredCell = Cells.GetIfExists(MousedOverCellPosition.Value.Y, MousedOverCellPosition.Value.X)));
+                    else
+                        OnCellExit?.Invoke(this, new CellEventArgs(_hoveredCell));
+                    IsDirty = true;
+                }
+            }
         }
 
         protected override void OnMouseExit(ControlMouseState state)
         {
             base.OnMouseExit(state);
 
-            MousedOverCellPosition = null;
-            IsDirty = true;
+            if (MousedOverCellPosition != null)
+            {
+                OnCellExit?.Invoke(this, new CellEventArgs(_hoveredCell));
+                MousedOverCellPosition = null;
+                _hoveredCell = null;
+                IsDirty = true;
+            }
         }
 
         private Point? GetMousedOverCell(Point mousePosition)
@@ -64,7 +91,7 @@ namespace SCControlsExtended.Controls
             {
                 if (IsMouseWithinCell(mousePosition, cell.Position.Y, cell.Position.X, 
                     Cells.Column(cell.ColumnIndex).Size, Cells.Row(cell.RowIndex).Size))
-                    return cell.Position;
+                    return (cell.ColumnIndex, cell.RowIndex);
             }
 
             // TODO: Implement for non existing cells
@@ -78,6 +105,16 @@ namespace SCControlsExtended.Controls
             var maxY = row + height;
             return mousePosition.X >= column && mousePosition.X < maxX &&
                 mousePosition.Y >= row && mousePosition.Y < maxY;
+        }
+
+        public class CellEventArgs : EventArgs
+        {
+            public Cells.Cell Cell { get; }
+
+            public CellEventArgs(Cells.Cell cell)
+            {
+                Cell = cell;
+            }
         }
     }
 
@@ -221,6 +258,7 @@ namespace SCControlsExtended.Controls
 
         internal void AdjustCellsAfterResize()
         {
+            // TODO: only adjust the right cells without having to loop over the entire collection
             foreach (var cell in _cells)
             {
                 cell.Value.Position = GetCellPosition(cell.Value.RowIndex, cell.Value.ColumnIndex);

@@ -58,8 +58,8 @@ namespace SCControlsExtended.Themes
                     }
 
                     var mouseOverCell = table.MousedOverCellPosition != null &&
-                        table.MousedOverCellPosition.Value.X == cell.Position.X &&
-                        table.MousedOverCellPosition.Value.Y == cell.Position.Y;
+                        table.MousedOverCellPosition.Value.X == cell.ColumnIndex &&
+                        table.MousedOverCellPosition.Value.Y == cell.RowIndex;
 
                     AdjustControlSurface(table, cell, mouseOverCell);
                     PrintText(table, cell);
