@@ -61,8 +61,8 @@ namespace SCControlsExtended.Themes
                         table.MousedOverCellPosition.Value.X == cell.Position.X &&
                         table.MousedOverCellPosition.Value.Y == cell.Position.Y;
 
-                    AdjustControlSurface(control, cell, mouseOverCell);
-                    PrintText(control, cell);
+                    AdjustControlSurface(table, cell, mouseOverCell);
+                    PrintText(table, cell);
                 }
             }
 
@@ -77,27 +77,32 @@ namespace SCControlsExtended.Themes
             base.Attached(control);
         }
 
-        private void AdjustControlSurface(ControlBase control, Cells.Cell cell, bool mouseOver = false)
+        private void AdjustControlSurface(Table table, Cells.Cell cell, bool mouseOver = false)
         {
-            for (int x = 0; x < cell.Width; x++)
+            var width = table.Cells.Column(cell.ColumnIndex).Size;
+            var height = table.Cells.Row(cell.RowIndex).Size;
+            for (int x = 0; x < width; x++)
             {
-                for (int y = 0; y < cell.Height; y++)
+                for (int y = 0; y < height; y++)
                 {
                     int colIndex = cell.Position.X + x;
                     int rowIndex = cell.Position.Y + y;
-                    control.Surface.SetForeground(colIndex, rowIndex, cell.Foreground);
-                    control.Surface.SetBackground(colIndex, rowIndex, !mouseOver ? cell.Background : ControlThemeState.MouseOver.Background);
+                    table.Surface.SetForeground(colIndex, rowIndex, cell.Foreground);
+                    table.Surface.SetBackground(colIndex, rowIndex, !mouseOver ? cell.Background : ControlThemeState.MouseOver.Background);
                 }
             }
         }
 
-        private static void PrintText(ControlBase control, Cells.Cell cell)
+        private static void PrintText(Table table, Cells.Cell cell)
         {
             if (cell.Text == null) return;
 
+            var width = table.Cells.Column(cell.ColumnIndex).Size;
+            var height = table.Cells.Row(cell.RowIndex).Size;
+
             // Split the character array into parts based on cell width
-            var splittedTextArray = Split(cell.Text.ToCharArray(), cell.Width).ToArray();
-            for (int y = 0; y < cell.Height; y++)
+            var splittedTextArray = Split(cell.Text.ToCharArray(), width).ToArray();
+            for (int y = 0; y < height; y++)
             {
                 // Don't go out of bounds of the cell height
                 if (splittedTextArray.Length <= y)
@@ -108,7 +113,7 @@ namespace SCControlsExtended.Themes
                 int index = 0;
                 foreach (var character in textArr)
                 {
-                    control.Surface.SetGlyph(cell.Position.X + index++, cell.Position.Y + y, character);
+                    table.Surface.SetGlyph(cell.Position.X + index++, cell.Position.Y + y, character);
                 }
             }
         }

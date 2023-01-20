@@ -3,6 +3,7 @@ using SadRogue.Primitives;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SCControlsExtended.Controls
 {
@@ -61,7 +62,8 @@ namespace SCControlsExtended.Controls
             // TODO: Adjust to find the position of the cell relative to the mouse position, without having to loop all cells
             foreach (var cell in Cells)
             {
-                if (IsMouseWithinCell(mousePosition, cell.Position.Y, cell.Position.X, cell.Width, cell.Height))
+                if (IsMouseWithinCell(mousePosition, cell.Position.Y, cell.Position.X, 
+                    Cells.Column(cell.ColumnIndex).Size, Cells.Row(cell.RowIndex).Size))
                     return cell.Position;
             }
 
@@ -107,7 +109,7 @@ namespace SCControlsExtended.Controls
         public Layout Column(int column)
         {
             var layout = ColumnLayout.GetValueOrDefault(column);
-            layout ??= ColumnLayout[column] = new Layout();
+            layout ??= ColumnLayout[column] = new Layout(_table, Layout.Type.Col);
             return layout;
         }
 
@@ -119,7 +121,7 @@ namespace SCControlsExtended.Controls
         public Layout Row(int row)
         {
             var layout = RowLayout.GetValueOrDefault(row);
-            layout ??= RowLayout[row] = new Layout();
+            layout ??= RowLayout[row] = new Layout(_table, Layout.Type.Row);
             return layout;
         }
 
@@ -156,7 +158,7 @@ namespace SCControlsExtended.Controls
         /// <returns></returns>
         public Point GetCellPosition(int row, int col)
         {
-            return new Point(GetControlColumnIndex(row, col), GetControlRowIndex(row, col));
+            return new Point(GetControlColumnIndex(col), GetControlRowIndex(row));
         }
 
         #endregion
@@ -184,41 +186,25 @@ namespace SCControlsExtended.Controls
             return cell;
         }
 
-        private int GetControlColumnIndex(int row, int col)
+        private int GetControlColumnIndex(int col)
         {
             int index = 0;
             int count = 0;
             while (count < col)
             {
-                var cell = GetIfExists(row, count);
-                if (cell != null)
-                {
-                    index += cell.Width;
-                }
-                else
-                {
-                    index += _table.DefaultCellSize.X;
-                }
+                index += _table.Cells.Column(count).Size;
                 count++;
             }
             return index;
         }
 
-        private int GetControlRowIndex(int row, int col)
+        private int GetControlRowIndex(int row)
         {
             int index = 0;
             int count = 0;
             while (count < row)
             {
-                var cell = GetIfExists(count, col);
-                if (cell != null)
-                {
-                    index += cell.Height;
-                }
-                else
-                {
-                    index += _table.DefaultCellSize.Y;
-                }
+                index += _table.Cells.Row(count).Size;
                 count++;
             }
             return index;
@@ -228,9 +214,7 @@ namespace SCControlsExtended.Controls
         {
             if (_cells.TryGetValue((row, col), out Cell oldCell))
             {
-                if (!oldCell.Width.Equals(cell.Width) ||
-                    !oldCell.Height.Equals(cell.Height) ||
-                    !oldCell.Foreground.Equals(cell.Foreground) ||
+                if (!oldCell.Foreground.Equals(cell.Foreground) ||
                     !oldCell.Background.Equals(cell.Background) ||
                     !oldCell.Text.Equals(cell.Text))
                 {
@@ -242,6 +226,14 @@ namespace SCControlsExtended.Controls
             {
                 _cells[(row, col)] = cell;
                 _table.IsDirty = true;
+            }
+        }
+
+        internal void AdjustCellsAfterResize()
+        {
+            foreach (var cell in _cells)
+            {
+                cell.Value.Position = GetCellPosition(cell.Value.RowIndex, cell.Value.ColumnIndex);
             }
         }
 
@@ -258,13 +250,39 @@ namespace SCControlsExtended.Controls
 
         public class Layout
         {
-            public int? Width;
-            public int? Height;
-            public Color? Foreground;
-            public Color? Background;
+            private int _size;
+            public int Size
+            { 
+                get { return _size; }
+                set
+                {
+                    if (_size != value)
+                    {
+                        _size = value;
+                        _table.Cells.AdjustCellsAfterResize();
+                        _table.IsDirty = true;
+                    }
+                }
+            }
 
-            internal Layout()
-            { }
+            public Color Foreground;
+            public Color Background;
+
+            private readonly Table _table;
+
+            internal enum Type
+            {
+                Col,
+                Row
+            }
+
+            internal Layout(Table table, Type type)
+            {
+                _table = table;
+                Size = type == Type.Col ? table.DefaultCellSize.X : table.DefaultCellSize.Y;
+                Foreground = table.DefaultForeground;
+                Background = table.DefaultBackground;
+            }
 
             /// <summary>
             /// Set a default layout to be used for each new cell
@@ -273,12 +291,11 @@ namespace SCControlsExtended.Controls
             /// <param name="height"></param>
             /// <param name="foreground"></param>
             /// <param name="background"></param>
-            public void SetLayout(int? width = null, int? height = null, Color? foreground = null, Color? background = null)
+            public void SetLayout(int? size = null, Color? foreground = null, Color? background = null)
             {
-                Width = width;
-                Height = height;
-                Foreground = foreground;
-                Background = background;
+                if (size != null) Size = size.Value;
+                if (foreground != null) Foreground = foreground.Value;
+                if (background != null) Background = background.Value;
             }
         }
 
@@ -366,36 +383,6 @@ namespace SCControlsExtended.Controls
                 }
             }
 
-            private int _width;
-            public int Width
-            {
-                get { return _width; }
-                set
-                {
-                    // TODO: Adjust cell position of other cells
-                    if (_width != value)
-                    {
-                        _width = value;
-                        _table.IsDirty = true;
-                    }
-                }
-            }
-
-            private int _height;
-            public int Height
-            {
-                get { return _height; }
-                set
-                {
-                    // TODO: Adjust cell position of other cells
-                    if (_height != value)
-                    {
-                        _height = value;
-                        _table.IsDirty = true;
-                    }
-                }
-            }
-
             private readonly Table _table;
 
             internal Cell(int row, int col, Table table, string text)
@@ -406,8 +393,6 @@ namespace SCControlsExtended.Controls
                 ColumnIndex = col;
 
                 // Default settings
-                Width = table.DefaultCellSize.X;
-                Height = table.DefaultCellSize.Y;
                 Foreground = table.DefaultForeground;
                 Background = table.DefaultBackground;
 
@@ -418,14 +403,8 @@ namespace SCControlsExtended.Controls
                 foreach (var option in layoutOptions)
                 {
                     if (option == null) continue;
-                    if (option.Width != null)
-                        Width = option.Width.Value;
-                    if (option.Height != null)
-                        Height = option.Height.Value;
-                    if (option.Foreground != null)
-                        Foreground = option.Foreground.Value;
-                    if (option.Background != null)
-                        Background = option.Background.Value;
+                    Foreground = option.Foreground;
+                    Background = option.Background;
                 }
             }
         }
