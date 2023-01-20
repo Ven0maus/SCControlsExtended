@@ -28,14 +28,6 @@ namespace SCControlsExtended.Controls
             }
         }
 
-        public event EventHandler<CellEventArgs> OnCellEnter;
-        public event EventHandler<CellEventArgs> OnCellExit;
-
-        // TODO: Events
-        public event EventHandler<CellEventArgs> OnCellLeftClick;
-        public event EventHandler<CellEventArgs> OnCellRightClick;
-        public event EventHandler<CellEventArgs> OnCellDoubleClick;
-
         /// <summary>
         /// Returns the cell the mouse is over, if the property <see cref="IsMouseEnabled"/> is true.
         /// </summary>
@@ -46,6 +38,14 @@ namespace SCControlsExtended.Controls
         /// Turn this off, if the whole table should draw as many cells  as it fits, even with no data.
         /// </summary>
         public bool DrawOnlyIndexedCells { get; set; } = true;
+
+        public event EventHandler<CellEventArgs> OnCellEnter;
+        public event EventHandler<CellEventArgs> OnCellExit;
+
+        // TODO: Events
+        public event EventHandler<CellEventArgs> OnCellLeftClick;
+        public event EventHandler<CellEventArgs> OnCellRightClick;
+        public event EventHandler<CellEventArgs> OnCellDoubleClick;
 
         public Table(int tableWidth, int tableHeight, int cellWidth, Color foreground, Color background, int cellHeight = 1) : base(tableWidth, tableHeight)
         {
@@ -58,11 +58,6 @@ namespace SCControlsExtended.Controls
         public Table(int tableWidth, int tableHeight, int cellWidth, int cellHeight = 1)
             : this(tableWidth, tableHeight, cellWidth, Color.White, Color.Transparent, cellHeight)
         { }
-
-        public void Clear()
-        {
-            Cells.Clear();
-        }
 
         protected override void OnMouseIn(ControlMouseState state)
         {
@@ -182,16 +177,6 @@ namespace SCControlsExtended.Controls
         }
 
         /// <summary>
-        /// Resets all the cells and layout options
-        /// </summary>
-        internal void Clear()
-        {
-            RowLayout.Clear();
-            ColumnLayout.Clear();
-            _cells.Clear();
-        }
-
-        /// <summary>
         /// Creates a range of cells that can be iterated.
         /// </summary>
         /// <param name="startRow"></param>
@@ -217,6 +202,15 @@ namespace SCControlsExtended.Controls
             return new Point(GetControlIndex(col, Layout.Type.Col), GetControlIndex(row, Layout.Type.Row));
         }
 
+        /// <summary>
+        /// Resets all the cells and layout options
+        /// </summary>
+        public void Clear()
+        {
+            RowLayout.Clear();
+            ColumnLayout.Clear();
+            _cells.Clear();
+        }
         #endregion
 
         #region Internal Methods
