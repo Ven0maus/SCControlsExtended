@@ -90,6 +90,8 @@ namespace SCControlsExtended.Controls
             _table = table;
         }
 
+        #region Public Methods
+
         /// <summary>
         /// Get the layout for a specific column
         /// </summary>
@@ -114,6 +116,9 @@ namespace SCControlsExtended.Controls
             return layout;
         }
 
+        /// <summary>
+        /// Resets all the cells and layout options
+        /// </summary>
         internal void Clear()
         {
             RowLayout.Clear();
@@ -136,6 +141,20 @@ namespace SCControlsExtended.Controls
             return new CellRange(_table.Cells, new Rectangle(startCol, startRow, width, height));
         }
 
+        /// <summary>
+        /// Get's the cell position on the control based on the row and column
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="col"></param>
+        /// <returns></returns>
+        public Point GetCellPosition(int row, int col)
+        {
+            return new Point(GetControlColumnIndex(row, col), GetControlRowIndex(row, col));
+        }
+
+        #endregion
+
+        #region Internal Methods
         internal Cell GetIfExists(int row, int col)
         {
             if (_cells.TryGetValue((row, col), out Cell cell))
@@ -156,11 +175,6 @@ namespace SCControlsExtended.Controls
                 _cells[(row, col)] = cell;
             }
             return cell;
-        }
-
-        public Point GetCellPosition(int row, int col)
-        {
-            return new Point(GetControlColumnIndex(row, col), GetControlRowIndex(row, col));
         }
 
         private int GetControlColumnIndex(int row, int col)
@@ -233,6 +247,7 @@ namespace SCControlsExtended.Controls
         {
             return GetEnumerator();
         }
+        #endregion
 
         public class Layout
         {
