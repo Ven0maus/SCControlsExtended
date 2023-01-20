@@ -52,8 +52,7 @@ namespace SCControlsExtended.Visualizer
 
             // Custom cell size
             table.Cells[5, 7].Text = "Support custom cell sizes!";
-            table.Cells.Row(5).Size = 6;
-            table.Cells.Column(7).Size = 20;
+            table.Cells[5, 7].SetLayout(6, 20);
             table.Cells[5, 7].Background = Color.Yellow;
             table.Cells[5, 7].Foreground = Color.Black;
 

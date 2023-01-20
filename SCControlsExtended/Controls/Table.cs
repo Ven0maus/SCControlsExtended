@@ -407,6 +407,12 @@ namespace SCControlsExtended.Controls
                     Background = option.Background;
                 }
             }
+
+            public void SetLayout(int? rowSize = null, int? columnSize = null, Color? foreground = null, Color? background = null)
+            {
+                _table.Cells.Column(ColumnIndex).SetLayout(columnSize, foreground, background);
+                _table.Cells.Row(RowIndex).SetLayout(rowSize, foreground, background);
+            }
         }
     }
 }
