@@ -129,7 +129,7 @@ namespace SCControlsExtended.Controls
 
             if (CurrentMouseCell != null)
             {
-                if (SelectedCell != CurrentMouseCell && CurrentMouseCell.Interactable && CurrentMouseCell.IsVisible)
+                if (SelectedCell != CurrentMouseCell && CurrentMouseCell.Interactable && CurrentMouseCell.IsVisible && CurrentMouseCell.Selectable)
                 {
                     var previous = SelectedCell;
                     SelectedCell = CurrentMouseCell;
@@ -430,6 +430,7 @@ namespace SCControlsExtended.Controls
             public Cell.Alignment TextAlignment;
             public bool? Interactable;
             public bool? IsVisible;
+            public bool? Selectable;
 
             private readonly Table _table;
 
@@ -452,10 +453,10 @@ namespace SCControlsExtended.Controls
             /// <param name="height"></param>
             /// <param name="foreground"></param>
             /// <param name="background"></param>
-            public void SetLayout(int? size = null, Color? foreground = null, Color? background = null, Cell.Alignment textAlignment = null, bool? interactable = null, bool? isVisible = null)
+            public void SetLayout(int? size = null, Color? foreground = null, Color? background = null, Cell.Alignment textAlignment = null, bool? interactable = null, bool? isVisible = null, bool? selectable = null)
             {
                 var prevSize = _size;
-                SetLayoutInternal(size, foreground, background, textAlignment, interactable, isVisible);
+                SetLayoutInternal(size, foreground, background, textAlignment, interactable, isVisible, selectable);
                 if (prevSize != _size)
                 {
                     _table.Cells.AdjustCellsAfterResize();
@@ -463,7 +464,7 @@ namespace SCControlsExtended.Controls
                 }
             }
 
-            internal void SetLayoutInternal(int? size = null, Color? foreground = null, Color? background = null, Cell.Alignment textAlignment = null, bool? interactable = null, bool? isVisible = null)
+            internal void SetLayoutInternal(int? size = null, Color? foreground = null, Color? background = null, Cell.Alignment textAlignment = null, bool? interactable = null, bool? isVisible = null, bool? selectable = null)
             {
                 if (size != null) _size = size.Value;
                 Foreground = foreground;
@@ -471,6 +472,7 @@ namespace SCControlsExtended.Controls
                 TextAlignment = textAlignment;
                 Interactable = interactable;
                 IsVisible = isVisible;
+                Selectable = selectable;
             }
         }
 
@@ -556,6 +558,20 @@ namespace SCControlsExtended.Controls
                 }
             }
 
+            private bool _selectable = true;
+            public bool Selectable
+            {
+                get { return _selectable; }
+                set
+                {
+                    if (value != _selectable)
+                    {
+                        _selectable = value;
+                        _table.IsDirty = true;
+                    }
+                }
+            }
+
             private bool _isVisible = true;
             public bool IsVisible
             {
@@ -600,6 +616,8 @@ namespace SCControlsExtended.Controls
                         _interactable = option.Interactable.Value;
                     if (option.IsVisible != null)
                         _isVisible = option.IsVisible.Value;
+                    if (option.Selectable != null)
+                        _selectable = option.Selectable.Value;
                 }
             }
 
@@ -611,10 +629,10 @@ namespace SCControlsExtended.Controls
                 }
             }
 
-            public void SetLayout(int? rowSize = null, int? columnSize = null, Color? foreground = null, Color? background = null, Alignment? textAlignment = null, bool? interactable = null, bool? isVisible = null)
+            public void SetLayout(int? rowSize = null, int? columnSize = null, Color? foreground = null, Color? background = null, Alignment textAlignment = null, bool? interactable = null, bool? isVisible = null, bool? selectable = null)
             {
-                _table.Cells.Column(ColumnIndex).SetLayoutInternal(columnSize, foreground, background, textAlignment, interactable, isVisible);
-                _table.Cells.Row(RowIndex).SetLayoutInternal(rowSize, foreground, background, textAlignment, interactable, isVisible);
+                _table.Cells.Column(ColumnIndex).SetLayoutInternal(columnSize, foreground, background, textAlignment, interactable, isVisible, selectable);
+                _table.Cells.Row(RowIndex).SetLayoutInternal(rowSize, foreground, background, textAlignment, interactable, isVisible, selectable);
                 if (rowSize != null || columnSize != null)
                     _table.Cells.AdjustCellsAfterResize();
                 _table.IsDirty = true;

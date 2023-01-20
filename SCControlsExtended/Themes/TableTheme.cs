@@ -57,7 +57,7 @@ namespace SCControlsExtended.Themes
         private ColoredGlyph GetCustomStateAppearance(Table table, Cells.Cell cell)
         {
             if (!cell.IsVisible || !cell.Interactable) return null;
-            if (table.RenderSelectionEffect && table.SelectedCell != null && cell.Equals(table.SelectedCell))
+            if (table.RenderSelectionEffect && cell.Selectable && table.SelectedCell != null && cell.Equals(table.SelectedCell))
             {
                 return ControlThemeState.Selected;
             }
