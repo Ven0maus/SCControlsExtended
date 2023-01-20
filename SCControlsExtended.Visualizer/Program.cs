@@ -107,9 +107,18 @@ namespace SCControlsExtended.Visualizer
             System.Console.WriteLine($"Entered cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
         }
 
-        private static void Table_SelectedCellChanged(object sender, Table.CellEventArgs e)
+        private static void Table_SelectedCellChanged(object sender, Table.CellChangedEventArgs e)
         {
             System.Console.WriteLine($"Selected cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
+
+            if (e.PreviousCell != null)
+            {
+                e.PreviousCell.Text = string.Empty;
+            }
+            if (e.Cell != null)
+            {
+                e.Cell.Text = "Selected";
+            }
         }
 
         private static void Table_OnCellRightClick(object sender, Table.CellEventArgs e)
@@ -120,15 +129,6 @@ namespace SCControlsExtended.Visualizer
         private static void Table_OnCellLeftClick(object sender, Table.CellEventArgs e)
         {
             System.Console.WriteLine($"Left clicked cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
-
-            if (_table.SelectedCell == null)
-            {
-                e.Cell.Text = string.Empty;
-            }
-            else
-            {
-                e.Cell.Text = "Selected";
-            }
         }
 
         private static void Table_OnCellDoubleClick(object sender, Table.CellEventArgs e)

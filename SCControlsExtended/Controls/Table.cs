@@ -55,7 +55,7 @@ namespace SCControlsExtended.Controls
         /// <summary>
         /// Fires an event when the selected cell has changed.
         /// </summary>
-        public event EventHandler<CellEventArgs> SelectedCellChanged;
+        public event EventHandler<CellChangedEventArgs> SelectedCellChanged;
         /// <summary>
         /// Fires an event when a cell is left clicked.
         /// </summary>
@@ -121,13 +121,16 @@ namespace SCControlsExtended.Controls
             {
                 if (SelectedCell != CurrentMouseCell)
                 {
+                    var previous = SelectedCell;
                     SelectedCell = CurrentMouseCell;
-                    SelectedCellChanged?.Invoke(this, new CellEventArgs(SelectedCell));
+                    SelectedCellChanged?.Invoke(this, new CellChangedEventArgs(previous, SelectedCell));
                 }
                 else
                 {
                     // Unselect after clicking the selected cell again
+                    var previous = SelectedCell;
                     SelectedCell = null;
+                    SelectedCellChanged?.Invoke(this, new CellChangedEventArgs(previous, SelectedCell));
                 }
 
                 OnCellLeftClick?.Invoke(this, new CellEventArgs(CurrentMouseCell));
@@ -202,6 +205,17 @@ namespace SCControlsExtended.Controls
             internal CellEventArgs(Cells.Cell cell)
             {
                 Cell = cell;
+            }
+        }
+
+        public class CellChangedEventArgs : CellEventArgs
+        {
+            public readonly Cells.Cell PreviousCell;
+
+            internal CellChangedEventArgs(Cells.Cell previousCell, Cells.Cell cell)
+                : base(cell)
+            {
+                PreviousCell = previousCell;
             }
         }
     }
@@ -390,8 +404,8 @@ namespace SCControlsExtended.Controls
                 }
             }
 
-            public Color Foreground;
-            public Color Background;
+            public Color? Foreground;
+            public Color? Background;
 
             private readonly Table _table;
 
@@ -405,8 +419,6 @@ namespace SCControlsExtended.Controls
             {
                 _table = table;
                 Size = type == Type.Col ? table.DefaultCellSize.X : table.DefaultCellSize.Y;
-                Foreground = table.DefaultForeground;
-                Background = table.DefaultBackground;
             }
 
             /// <summary>
@@ -430,8 +442,8 @@ namespace SCControlsExtended.Controls
             internal void SetLayoutInternal(int? size = null, Color? foreground = null, Color? background = null)
             {
                 if (size != null) _size = size.Value;
-                if (foreground != null) Foreground = foreground.Value;
-                if (background != null) Background = background.Value;
+                Foreground = foreground;
+                Background = background;
             }
         }
 
@@ -493,22 +505,23 @@ namespace SCControlsExtended.Controls
             {
                 _table = table;
                 _text = text;
-                RowIndex = row;
-                ColumnIndex = col;
-
-                // Default settings
                 _foreground = table.DefaultForeground;
                 _background = table.DefaultBackground;
 
+                RowIndex = row;
+                ColumnIndex = col;
+
                 // Set cell layout options
-                var columnLayout = table.Cells.ColumnLayout.GetValueOrDefault(col);
-                var rowLayout = table.Cells.RowLayout.GetValueOrDefault(row);
-                var layoutOptions = new[] { columnLayout, rowLayout };
+                table.Cells.ColumnLayout.TryGetValue(col, out var columnLayout);
+                table.Cells.RowLayout.TryGetValue(row, out var rowLayout);
+                var layoutOptions = new[] { rowLayout, columnLayout };
                 foreach (var option in layoutOptions)
                 {
                     if (option == null) continue;
-                    _foreground = option.Foreground;
-                    _background = option.Background;
+                    if (option.Foreground != null)
+                        _foreground = option.Foreground.Value;
+                    if (option.Background != null)
+                        _background = option.Background.Value;
                 }
             }
 
@@ -524,7 +537,8 @@ namespace SCControlsExtended.Controls
             {
                 _table.Cells.Column(ColumnIndex).SetLayoutInternal(columnSize, foreground, background);
                 _table.Cells.Row(RowIndex).SetLayoutInternal(rowSize, foreground, background);
-                _table.Cells.AdjustCellsAfterResize();
+                if (rowSize != null || columnSize != null)
+                    _table.Cells.AdjustCellsAfterResize();
                 _table.IsDirty = true;
             }
 
