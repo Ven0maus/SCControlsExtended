@@ -188,7 +188,6 @@ namespace SCControlsExtended.Controls
         {
             var width = endCol - startCol + 1;
             var height = endRow - startRow + 1;
-
             for (int x = startCol; x < startCol + width; x++)
             {
                 for (int y = startRow; y < startRow + height; y++)
@@ -196,17 +195,6 @@ namespace SCControlsExtended.Controls
                     yield return this[y, x];
                 }
             }
-        }
-
-        /// <summary>
-        /// Get's the cell position on the control based on the row and column
-        /// </summary>
-        /// <param name="row"></param>
-        /// <param name="col"></param>
-        /// <returns></returns>
-        public Point GetCellPosition(int row, int col)
-        {
-            return new Point(GetControlIndex(col, Layout.Type.Col), GetControlIndex(row, Layout.Type.Row));
         }
 
         /// <summary>
@@ -221,6 +209,17 @@ namespace SCControlsExtended.Controls
         #endregion
 
         #region Internal Methods
+        /// <summary>
+        /// Get's the cell position on the control based on the row and column
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="col"></param>
+        /// <returns></returns>
+        internal Point GetCellPosition(int row, int col)
+        {
+            return new Point(GetControlIndex(col, Layout.Type.Col), GetControlIndex(row, Layout.Type.Row));
+        }
+
         internal Cell GetIfExists(int row, int col)
         {
             if (_cells.TryGetValue((row, col), out Cell cell))
