@@ -63,7 +63,7 @@ namespace SCControlsExtended.Controls
             if (HasCellHoverEvents)
             {
                 var prev = MousedOverCellPosition;
-                MousedOverCellPosition = GetMousedOverCell(state.MousePosition);
+                MousedOverCellPosition = GetCellIndexByMousePosition(state.MousePosition);
                 if (prev != MousedOverCellPosition)
                 {
                     if (MousedOverCellPosition != null)
@@ -88,7 +88,7 @@ namespace SCControlsExtended.Controls
             }
         }
 
-        private Point? GetMousedOverCell(Point mousePosition)
+        private Point? GetCellIndexByMousePosition(Point mousePosition)
         {
             // TODO: Adjust to find the position of the cell relative to the mouse position, without having to loop all cells
             foreach (var cell in Cells)
