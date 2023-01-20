@@ -5,24 +5,11 @@ using SCControlsExtended.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 
 namespace SCControlsExtended.Themes
 {
     public class TableTheme : ThemeBase
     {
-        /// <summary>
-        /// When true, only uses <see cref="ThemeStates.Normal"/> for drawing.
-        /// </summary>
-        [DataMember]
-        public bool UseNormalStateOnly { get; set; } = true;
-
-        /// <summary>
-        /// The current appearance based on the control state.
-        /// </summary>
-        [DataMember]
-        public ColoredGlyph Appearance { get; protected set; }
-
         /// <inheritdoc />
         public override void UpdateAndDraw(ControlBase control, TimeSpan time)
         {
@@ -31,13 +18,8 @@ namespace SCControlsExtended.Themes
 
             RefreshTheme(control.FindThemeColors(), control);
 
-            if (!UseNormalStateOnly)
-                Appearance = ControlThemeState.GetStateAppearance(control.State);
-            else
-                Appearance = ControlThemeState.Normal;
-
             // Draw the basic table surface foreground and background
-            control.Surface.Fill(Appearance.Foreground, Appearance.Background, Appearance.Glyph);
+            control.Surface.Fill(table.DefaultForeground, table.DefaultBackground);
 
             var columns = table.Width;
             var rows = table.Height;
@@ -93,7 +75,7 @@ namespace SCControlsExtended.Themes
             base.Attached(control);
         }
 
-        private void AdjustControlSurface(Table table, Cells.Cell cell, ColoredGlyph customStateAppearance)
+        private static void AdjustControlSurface(Table table, Cells.Cell cell, ColoredGlyph customStateAppearance)
         {
             var width = table.Cells.Column(cell.ColumnIndex).Size;
             var height = table.Cells.Row(cell.RowIndex).Size;
@@ -146,7 +128,6 @@ namespace SCControlsExtended.Themes
         public override ThemeBase Clone() => new TableTheme()
         {
             ControlThemeState = ControlThemeState.Clone(),
-            UseNormalStateOnly = UseNormalStateOnly,
         };
     }
 }
