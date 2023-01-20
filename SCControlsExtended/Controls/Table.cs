@@ -14,8 +14,8 @@ namespace SCControlsExtended.Controls
         public Point DefaultCellSize { get; set; }
 
         /// <summary>
-        /// By default, only cells that have been indexed (eg. accessing table[0, 0]) will mark this cell to be drawn.
-        /// Turn this off, if the whole table should draw as many tables as it fits, even with no data.
+        /// By default, only cells that have been indexed (eg. accessing table[0, 0]) will be rendered on the table control.
+        /// Turn this off, if the whole table should draw as many cells  as it fits, even with no data.
         /// </summary>
         public bool DrawOnlyIndexedCells { get; set; } = true;
 
@@ -52,8 +52,8 @@ namespace SCControlsExtended.Controls
         {
             foreach (var cell in Cells)
             {
-                if (IsMouseWithinCell(mousePosition, cell.ControlPosition.Y, cell.ControlPosition.X, cell.Width, cell.Height))
-                    return cell.ControlPosition;
+                if (IsMouseWithinCell(mousePosition, cell.Position.Y, cell.Position.X, cell.Width, cell.Height))
+                    return cell.Position;
             }
 
             // TODO: Implement for non existing cells
@@ -72,11 +72,10 @@ namespace SCControlsExtended.Controls
 
     public class Cells : IEnumerable<Cells.Cell>
     {
-        private readonly Dictionary<Point, Cell> _cells = new();
         private readonly Table _table;
-
-        internal Dictionary<int, Layout> ColumnLayout = new();
-        internal Dictionary<int, Layout> RowLayout = new();
+        private readonly Dictionary<Point, Cell> _cells = new();
+        private readonly Dictionary<int, Layout> ColumnLayout = new();
+        private readonly Dictionary<int, Layout> RowLayout = new();
 
         public Cell this[int row, int col]
         {
@@ -89,6 +88,11 @@ namespace SCControlsExtended.Controls
             _table = table;
         }
 
+        /// <summary>
+        /// Get the layout for a specific column
+        /// </summary>
+        /// <param name="column"></param>
+        /// <returns></returns>
         public Layout Column(int column)
         {
             var layout = ColumnLayout.GetValueOrDefault(column);
@@ -100,6 +104,11 @@ namespace SCControlsExtended.Controls
             return layout;
         }
 
+        /// <summary>
+        /// Get the layout for a specific row
+        /// </summary>
+        /// <param name="row"></param>
+        /// <returns></returns>
         public Layout Row(int row)
         {
             var layout = RowLayout.GetValueOrDefault(row);
@@ -109,11 +118,6 @@ namespace SCControlsExtended.Controls
                 layout = RowLayout[row];
             }
             return layout;
-        }
-
-        internal void Remove(int row, int col)
-        {
-            _cells.Remove((row, col));
         }
 
         internal void Clear()
@@ -174,7 +178,7 @@ namespace SCControlsExtended.Controls
                 cell = new Cell(row, col, _table, string.Empty)
                 {
                     // Calculate the control position of the cell
-                    ControlPosition = GetControlPosition(row, col)
+                    Position = GetCellPosition(row, col)
                 };
 
                 _cells[(row, col)] = cell;
@@ -182,7 +186,7 @@ namespace SCControlsExtended.Controls
             return cell;
         }
 
-        public Point GetControlPosition(int row, int col)
+        public Point GetCellPosition(int row, int col)
         {
             return new Point(GetControlColumnIndex(row, col), GetControlRowIndex(row, col));
         }
@@ -268,6 +272,13 @@ namespace SCControlsExtended.Controls
             internal Layout()
             { }
 
+            /// <summary>
+            /// Set a default layout to be used for each new cell
+            /// </summary>
+            /// <param name="width"></param>
+            /// <param name="height"></param>
+            /// <param name="foreground"></param>
+            /// <param name="background"></param>
             public void SetLayout(int? width = null, int? height = null, Color? foreground = null, Color? background = null)
             {
                 Width = width;
@@ -314,7 +325,7 @@ namespace SCControlsExtended.Controls
 
         public class Cell
         {
-            internal Point ControlPosition { get; set; }
+            internal Point Position { get; set; }
             public int RowIndex { get; }
             public int ColumnIndex { get; }
 

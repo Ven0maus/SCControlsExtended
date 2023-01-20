@@ -53,13 +53,13 @@ namespace SCControlsExtended.Themes
                     {
                         cell = new Cells.Cell(row, col, table, string.Empty)
                         {
-                            ControlPosition = table.Cells.GetControlPosition(row, col)
+                            Position = table.Cells.GetCellPosition(row, col)
                         };
                     }
 
                     var mouseOverCell = table.MousedOverCellPosition != null &&
-                        table.MousedOverCellPosition.Value.X == cell.ControlPosition.X &&
-                        table.MousedOverCellPosition.Value.Y == cell.ControlPosition.Y;
+                        table.MousedOverCellPosition.Value.X == cell.Position.X &&
+                        table.MousedOverCellPosition.Value.Y == cell.Position.Y;
 
                     AdjustControlSurface(control, cell, mouseOverCell);
                     PrintText(control, cell);
@@ -83,8 +83,8 @@ namespace SCControlsExtended.Themes
             {
                 for (int y = 0; y < cell.Height; y++)
                 {
-                    int colIndex = cell.ControlPosition.X + x;
-                    int rowIndex = cell.ControlPosition.Y + y;
+                    int colIndex = cell.Position.X + x;
+                    int rowIndex = cell.Position.Y + y;
                     control.Surface.SetForeground(colIndex, rowIndex, cell.Foreground);
                     control.Surface.SetBackground(colIndex, rowIndex, !mouseOver ? cell.Background : ControlThemeState.MouseOver.Background);
                 }
@@ -108,7 +108,7 @@ namespace SCControlsExtended.Themes
                 int index = 0;
                 foreach (var character in textArr)
                 {
-                    control.Surface.SetGlyph(cell.ControlPosition.X + index++, cell.ControlPosition.Y + y, character);
+                    control.Surface.SetGlyph(cell.Position.X + index++, cell.Position.Y + y, character);
                 }
             }
         }
