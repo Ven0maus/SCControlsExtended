@@ -3,6 +3,7 @@ using SadRogue.Primitives;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data.Common;
 
 namespace SCControlsExtended.Controls
 {
@@ -97,11 +98,7 @@ namespace SCControlsExtended.Controls
         public Layout Column(int column)
         {
             var layout = ColumnLayout.GetValueOrDefault(column);
-            if (layout == null)
-            {
-                AddColumnLayout(column);
-                layout = ColumnLayout[column];
-            }
+            layout ??= ColumnLayout[column] = new Layout();
             return layout;
         }
 
@@ -113,11 +110,7 @@ namespace SCControlsExtended.Controls
         public Layout Row(int row)
         {
             var layout = RowLayout.GetValueOrDefault(row);
-            if (layout == null)
-            {
-                AddRowLayout(row);
-                layout = RowLayout[row];
-            }
+            layout ??= RowLayout[row] = new Layout();
             return layout;
         }
 
@@ -141,28 +134,6 @@ namespace SCControlsExtended.Controls
             var width = endCol - startCol + 1;
             var height = endRow - startRow + 1;
             return new CellRange(_table.Cells, new Rectangle(startCol, startRow, width, height));
-        }
-
-        private void AddColumnLayout(int column, int? width = null, int? height = null, Color? foreground = null, Color? background = null)
-        {
-            ColumnLayout[column] = new()
-            {
-                Width = width,
-                Height = height,
-                Foreground = foreground,
-                Background = background
-            };
-        }
-
-        private void AddRowLayout(int row, int? width = null, int? height = null, Color? foreground = null, Color? background = null)
-        {
-            RowLayout[row] = new()
-            {
-                Width = width,
-                Height = height,
-                Foreground = foreground,
-                Background = background
-            };
         }
 
         internal Cell GetIfExists(int row, int col)
