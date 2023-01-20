@@ -53,7 +53,7 @@ namespace SCControlsExtended.Themes
                     {
                         cell = new Cells.Cell(row, col, table, string.Empty)
                         {
-                            Position = table.Cells.GetCellPosition(row, col)
+                            Position = table.Cells.GetCellPosition(row, col, out _, out _)
                         };
                     }
 

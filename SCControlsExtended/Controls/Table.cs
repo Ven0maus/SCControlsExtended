@@ -91,7 +91,7 @@ namespace SCControlsExtended.Controls
 
             // Handle mouse hovering over cell
             var mousePosCellIndex = GetCellIndexByMousePosition(state.MousePosition);
-            Point? currentPosition = CurrentMouseCell == null ? null : (CurrentMouseCell.RowIndex, CurrentMouseCell.ColumnIndex);
+            Point? currentPosition = CurrentMouseCell == null ? null : (CurrentMouseCell.ColumnIndex, CurrentMouseCell.RowIndex);
 
             if (!Equals(mousePosCellIndex, currentPosition))
             {
@@ -168,16 +168,15 @@ namespace SCControlsExtended.Controls
 
         private Point? GetCellIndexByMousePosition(Point mousePosition)
         {
-            // TODO: Adjust to find the position of the cell relative to the mouse position, without having to loop all cells
-            foreach (var cell in Cells)
+            for (int col = 0; col < Width; col++)
             {
-                if (IsMouseWithinCell(mousePosition, cell.Position.Y, cell.Position.X, 
-                    Cells.Column(cell.ColumnIndex).Size, Cells.Row(cell.RowIndex).Size))
-                    return (cell.ColumnIndex, cell.RowIndex);
+                for (int row = 0; row < Height; row++)
+                {
+                    var position = Cells.GetCellPosition(row, col, out int rowSize, out int columnSize);
+                    if (IsMouseWithinCell(mousePosition, position.Y, position.X, columnSize, rowSize))
+                        return (col, row);
+                }
             }
-
-            // TODO: Implement for non existing cells
-
             return null;
         }
 
@@ -227,7 +226,7 @@ namespace SCControlsExtended.Controls
         /// <returns></returns>
         public Layout Column(int column)
         {
-            var layout = ColumnLayout.GetValueOrDefault(column);
+            ColumnLayout.TryGetValue(column, out Layout layout);
             layout ??= ColumnLayout[column] = new Layout(_table, Layout.Type.Col);
             return layout;
         }
@@ -239,7 +238,7 @@ namespace SCControlsExtended.Controls
         /// <returns></returns>
         public Layout Row(int row)
         {
-            var layout = RowLayout.GetValueOrDefault(row);
+            RowLayout.TryGetValue(row, out Layout layout);
             layout ??= RowLayout[row] = new Layout(_table, Layout.Type.Row);
             return layout;
         }
@@ -283,9 +282,9 @@ namespace SCControlsExtended.Controls
         /// <param name="row"></param>
         /// <param name="col"></param>
         /// <returns></returns>
-        internal Point GetCellPosition(int row, int col)
+        internal Point GetCellPosition(int row, int col, out int rowSize, out int columnSize)
         {
-            return new Point(GetControlIndex(col, Layout.Type.Col), GetControlIndex(row, Layout.Type.Row));
+            return new Point(GetControlIndex(col, Layout.Type.Col, out columnSize), GetControlIndex(row, Layout.Type.Row, out rowSize));
         }
 
         internal Cell GetIfExists(int row, int col)
@@ -302,7 +301,7 @@ namespace SCControlsExtended.Controls
                 cell = new Cell(row, col, _table, string.Empty)
                 {
                     // Calculate the control position of the cell
-                    Position = GetCellPosition(row, col)
+                    Position = GetCellPosition(row, col, out _, out _)
                 };
 
                 _cells[(row, col)] = cell;
@@ -310,16 +309,22 @@ namespace SCControlsExtended.Controls
             return cell;
         }
 
-        private int GetControlIndex(int index, Layout.Type type)
+        private int GetControlIndex(int index, Layout.Type type, out int indexSize)
         {
-            int controlIndex = 0;
             int count = 0;
+            indexSize = type == Layout.Type.Col ?
+                _table.Cells.Column(count).Size :
+                _table.Cells.Row(count).Size;
+
+            int controlIndex = 0;
             while (count < index)
             {
-                controlIndex += type == Layout.Type.Col ? 
+                controlIndex += indexSize;
+                count++;
+
+                indexSize = type == Layout.Type.Col ?
                     _table.Cells.Column(count).Size :
                     _table.Cells.Row(count).Size;
-                count++;
             }
             return controlIndex;
         }
@@ -348,7 +353,7 @@ namespace SCControlsExtended.Controls
             // TODO: only adjust the right cells without having to loop over the entire collection
             foreach (var cell in _cells)
             {
-                cell.Value.Position = GetCellPosition(cell.Value.RowIndex, cell.Value.ColumnIndex);
+                cell.Value.Position = GetCellPosition(cell.Value.RowIndex, cell.Value.ColumnIndex, out _, out _);
             }
         }
 
@@ -518,22 +523,6 @@ namespace SCControlsExtended.Controls
             public int GetHashCode([DisallowNull] Cell obj)
             {
                 return HashCode.Combine(obj.RowIndex, obj.ColumnIndex);
-            }
-
-            public static bool operator ==(Cell cell1, Cell cell2)
-            {
-                if (cell1 == null && cell2 != null) return false;
-                if (cell1 != null && cell2 == null) return false;
-                if (cell1 == null && cell2 == null) return true;
-                return cell1.ColumnIndex == cell2.ColumnIndex && cell1.RowIndex == cell2.RowIndex;
-            }
-
-            public static bool operator !=(Cell cell1, Cell cell2)
-            {
-                if (cell1 == null && cell2 != null) return true;
-                if (cell1 != null && cell2 == null) return true;
-                if (cell1 == null && cell2 == null) return false;
-                return cell1.ColumnIndex != cell2.ColumnIndex || cell1.RowIndex != cell2.RowIndex;
             }
         }
     }
