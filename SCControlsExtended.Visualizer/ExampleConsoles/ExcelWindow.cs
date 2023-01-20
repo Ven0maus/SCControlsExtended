@@ -4,7 +4,7 @@ using SadRogue.Primitives;
 using SCControlsExtended.Controls;
 using System;
 
-namespace SCControlsExtended.Visualizer
+namespace SCControlsExtended.Visualizer.ExampleConsoles
 {
     internal class ExcelWindow : ControlsConsole
     {
@@ -73,7 +73,7 @@ namespace SCControlsExtended.Visualizer
             {
                 mod = (d - 1) % 26;
                 name = Convert.ToChar('A' + mod).ToString() + name;
-                d = (int)((d - mod) / 26);
+                d = (d - mod) / 26;
             }
 
             return name;

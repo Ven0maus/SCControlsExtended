@@ -3,7 +3,7 @@ using SadRogue.Primitives;
 using SCControlsExtended.Controls;
 using System;
 
-namespace SCControlsExtended.Visualizer
+namespace SCControlsExtended.Visualizer.ExampleConsoles
 {
     internal class FunctionalityTestWindow : ControlsConsole
     {
