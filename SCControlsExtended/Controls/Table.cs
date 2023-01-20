@@ -51,7 +51,7 @@ namespace SCControlsExtended.Controls
         {
             foreach (var cell in Cells)
             {
-                if (MatchesAverageMousePosition(mousePosition, cell.ControlPosition.Y, cell.ControlPosition.X, cell.Width, cell.Height))
+                if (IsMouseWithinCell(mousePosition, cell.ControlPosition.Y, cell.ControlPosition.X, cell.Width, cell.Height))
                     return cell.ControlPosition;
             }
 
@@ -60,7 +60,7 @@ namespace SCControlsExtended.Controls
             return null;
         }
 
-        private static bool MatchesAverageMousePosition(Point mousePosition, int row, int column, int width, int height)
+        private static bool IsMouseWithinCell(Point mousePosition, int row, int column, int width, int height)
         {
             var maxX = column + width;
             var maxY = row + height;
@@ -292,7 +292,7 @@ namespace SCControlsExtended.Controls
                 }
             }
 
-            public void SetAll(int? width = null, int? height = null, Color? foreground = null, Color? background = null, string? text = null)
+            public void SetAll(int? width = null, int? height = null, Color? foreground = null, Color? background = null, string text = null)
             {
                 foreach (var cell in this)
                 {

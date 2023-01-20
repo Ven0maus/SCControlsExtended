@@ -5,7 +5,7 @@ using SCControlsExtended.Controls;
 using SCControlsExtended.Themes;
 using SadRogue.Primitives;
 
-namespace SCControlsExtended
+namespace SCControlsExtended.Visualizer
 {
     class Program
     {

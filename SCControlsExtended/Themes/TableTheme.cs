@@ -9,7 +9,7 @@ using System.Runtime.Serialization;
 
 namespace SCControlsExtended.Themes
 {
-    internal class TableTheme : ThemeBase
+    public class TableTheme : ThemeBase
     {
         /// <summary>
         /// When true, only uses <see cref="ThemeStates.Normal"/> for drawing.
