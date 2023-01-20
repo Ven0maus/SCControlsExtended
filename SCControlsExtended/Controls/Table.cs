@@ -99,7 +99,10 @@ namespace SCControlsExtended.Controls
                 {
                     // TODO: If cell does not yet exist in table, then add a check in cell when any property is modified it is added to the table automatically.
                     CurrentMouseCell = Cells.GetIfExists(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X) ??
-                        new Cells.Cell(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, this, string.Empty);
+                        new Cells.Cell(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, this, string.Empty)
+                        {
+                            Position = Cells.GetCellPosition(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, out _, out _)
+                        };
                     OnCellEnter?.Invoke(this, new CellEventArgs(CurrentMouseCell));
                 }
                 else
@@ -123,7 +126,7 @@ namespace SCControlsExtended.Controls
                 }
                 else
                 {
-                    // Unselect
+                    // Unselect after clicking the selected cell again
                     SelectedCell = null;
                 }
 
@@ -304,7 +307,6 @@ namespace SCControlsExtended.Controls
             {
                 cell = new Cell(row, col, _table, string.Empty)
                 {
-                    // Calculate the control position of the cell
                     Position = GetCellPosition(row, col, out _, out _)
                 };
 
@@ -354,7 +356,6 @@ namespace SCControlsExtended.Controls
 
         internal void AdjustCellsAfterResize()
         {
-            // TODO: only adjust the right cells without having to loop over the entire collection
             foreach (var cell in _cells)
             {
                 cell.Value.Position = GetCellPosition(cell.Value.RowIndex, cell.Value.ColumnIndex, out _, out _);
@@ -450,6 +451,7 @@ namespace SCControlsExtended.Controls
                     if (_foreground != value)
                     {
                         _foreground = value;
+                        AddToTableIfNotExists();
                         _table.IsDirty = true;
                     }
                 }
@@ -464,6 +466,7 @@ namespace SCControlsExtended.Controls
                     if (_background != value)
                     {
                         _background = value;
+                        AddToTableIfNotExists();
                         _table.IsDirty = true;
                     }
                 }
@@ -478,6 +481,7 @@ namespace SCControlsExtended.Controls
                     if (_text != value)
                     {
                         _text = value;
+                        AddToTableIfNotExists();
                         _table.IsDirty = true;
                     }
                 }
@@ -488,13 +492,13 @@ namespace SCControlsExtended.Controls
             internal Cell(int row, int col, Table table, string text)
             {
                 _table = table;
-                Text = text;
+                _text = text;
                 RowIndex = row;
                 ColumnIndex = col;
 
                 // Default settings
-                Foreground = table.DefaultForeground;
-                Background = table.DefaultBackground;
+                _foreground = table.DefaultForeground;
+                _background = table.DefaultBackground;
 
                 // Set cell layout options
                 var columnLayout = table.Cells.ColumnLayout.GetValueOrDefault(col);
@@ -503,8 +507,16 @@ namespace SCControlsExtended.Controls
                 foreach (var option in layoutOptions)
                 {
                     if (option == null) continue;
-                    Foreground = option.Foreground;
-                    Background = option.Background;
+                    _foreground = option.Foreground;
+                    _background = option.Background;
+                }
+            }
+
+            private void AddToTableIfNotExists()
+            {
+                if (_table.Cells.GetIfExists(RowIndex, ColumnIndex) == null)
+                {
+                    _table.Cells[RowIndex, ColumnIndex] = this;
                 }
             }
 

@@ -12,6 +12,8 @@ namespace SCControlsExtended.Visualizer
         public const int Width = 100;
         public const int Height = 40;
 
+        private static Table _table;
+
         static void Main(string[] args)
         {
             Settings.WindowTitle = "SadConsole Controls Extended";
@@ -68,29 +70,29 @@ namespace SCControlsExtended.Visualizer
             var visual = new ControlsConsole(Width, Height);
 
             // Construct table control
-            var table = new Table(visual.Width, visual.Height, 10, 2)
+            _table = new Table(visual.Width, visual.Height, 10, 2)
             {
                 // Set default background color
                 DefaultBackground = Color.Wheat
             };
 
             // Set some default theme colors, for selection & hovering appearances
-            table.SetThemeColors(Colors.CreateSadConsoleBlue());
+            _table.SetThemeColors(Colors.CreateSadConsoleBlue());
 
             // Test events
-            table.OnCellDoubleClick += Table_OnCellDoubleClick;
-            table.OnCellLeftClick += Table_OnCellLeftClick;
-            table.OnCellRightClick += Table_OnCellRightClick;
-            table.SelectedCellChanged += Table_SelectedCellChanged;
-            table.OnCellEnter += Table_OnCellEnter;
-            table.OnCellExit += Table_OnCellExit;
+            _table.OnCellDoubleClick += Table_OnCellDoubleClick;
+            _table.OnCellLeftClick += Table_OnCellLeftClick;
+            _table.OnCellRightClick += Table_OnCellRightClick;
+            _table.SelectedCellChanged += Table_SelectedCellChanged;
+            _table.OnCellEnter += Table_OnCellEnter;
+            _table.OnCellExit += Table_OnCellExit;
 
             // Only add a few cells, and let console draw the rest
-            table.DrawOnlyIndexedCells = false;
+            _table.DrawOnlyIndexedCells = false;
 
-            visual.Controls.Add(table);
+            visual.Controls.Add(_table);
 
-            AdjustTableValues(table);
+            AdjustTableValues(_table);
 
             Game.Instance.Screen = visual;
         }
@@ -118,6 +120,15 @@ namespace SCControlsExtended.Visualizer
         private static void Table_OnCellLeftClick(object sender, Table.CellEventArgs e)
         {
             System.Console.WriteLine($"Left clicked cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
+
+            if (_table.SelectedCell == null)
+            {
+                e.Cell.Text = string.Empty;
+            }
+            else
+            {
+                e.Cell.Text = "Selected";
+            }
         }
 
         private static void Table_OnCellDoubleClick(object sender, Table.CellEventArgs e)

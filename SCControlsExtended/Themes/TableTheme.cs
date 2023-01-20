@@ -18,8 +18,8 @@ namespace SCControlsExtended.Themes
 
             RefreshTheme(control.FindThemeColors(), control);
 
-            // Draw the basic table surface foreground and background
-            control.Surface.Fill(table.DefaultForeground, table.DefaultBackground);
+            // Draw the basic table surface foreground and background, and clear the glyphs
+            control.Surface.Fill(table.DefaultForeground, table.DefaultBackground, 0);
 
             var columns = table.Width;
             var rows = table.Height;
