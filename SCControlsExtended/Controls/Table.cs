@@ -3,6 +3,7 @@ using SadRogue.Primitives;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace SCControlsExtended.Controls
 {
@@ -32,6 +33,10 @@ namespace SCControlsExtended.Controls
         /// Returns the cell the mouse is over, if the property <see cref="IsMouseEnabled"/> is true.
         /// </summary>
         public Cells.Cell CurrentMouseCell { get; private set; }
+        /// <summary>
+        /// Returns the current selected cell
+        /// </summary>
+        public Cells.Cell SelectedCell { get; private set; }
 
         /// <summary>
         /// By default, only cells that have been indexed (eg. accessing table[0, 0]) will be rendered on the table control.
@@ -39,13 +44,32 @@ namespace SCControlsExtended.Controls
         /// </summary>
         public bool DrawOnlyIndexedCells { get; set; } = true;
 
+        /// <summary>
+        /// Fires an event when a cell is entered by the mouse.
+        /// </summary>
         public event EventHandler<CellEventArgs> OnCellEnter;
+        /// <summary>
+        /// Fires an event when a cell is exited by the mouse.
+        /// </summary>
         public event EventHandler<CellEventArgs> OnCellExit;
-
-        // TODO: Events
+        /// <summary>
+        /// Fires an event when the selected cell has changed.
+        /// </summary>
+        public event EventHandler<CellEventArgs> SelectedCellChanged;
+        /// <summary>
+        /// Fires an event when a cell is left clicked.
+        /// </summary>
         public event EventHandler<CellEventArgs> OnCellLeftClick;
+        /// <summary>
+        /// Fires an event when a cell is right clicked.
+        /// </summary>
         public event EventHandler<CellEventArgs> OnCellRightClick;
+        /// <summary>
+        /// Fires an event when a cell is double clicked.
+        /// </summary>
         public event EventHandler<CellEventArgs> OnCellDoubleClick;
+
+        private DateTime _leftMouseLastClick = DateTime.Now;
 
         public Table(int tableWidth, int tableHeight, int cellWidth, Color foreground, Color background, int cellHeight = 1) : base(tableWidth, tableHeight)
         {
@@ -81,6 +105,50 @@ namespace SCControlsExtended.Controls
                 else
                     OnCellExit?.Invoke(this, new CellEventArgs(CurrentMouseCell));
                 IsDirty = true;
+            }
+        }
+
+        protected override void OnLeftMouseClicked(ControlMouseState state)
+        {
+            if (!IsMouseEnabled) return;
+
+            base.OnLeftMouseClicked(state);
+
+            if (CurrentMouseCell != null)
+            {
+                if (SelectedCell != CurrentMouseCell)
+                {
+                    SelectedCell = CurrentMouseCell;
+                    SelectedCellChanged?.Invoke(this, new CellEventArgs(SelectedCell));
+                }
+
+                OnCellLeftClick?.Invoke(this, new CellEventArgs(CurrentMouseCell));
+
+                DateTime click = DateTime.Now;
+                bool doubleClicked = (click - _leftMouseLastClick).TotalSeconds <= 0.5;
+                _leftMouseLastClick = click;
+
+                if (doubleClicked)
+                {
+                    _leftMouseLastClick = DateTime.MinValue;
+                    OnCellDoubleClick?.Invoke(this, new CellEventArgs(CurrentMouseCell));
+                }
+            }
+            else
+            {
+                SelectedCell = null;
+            }
+        }
+
+        protected override void OnRightMouseClicked(ControlMouseState state)
+        {
+            if (!IsMouseEnabled) return;
+
+            base.OnRightMouseClicked(state);
+
+            if (CurrentMouseCell != null)
+            {
+                OnCellRightClick?.Invoke(this, new CellEventArgs(CurrentMouseCell));
             }
         }
 
@@ -123,9 +191,9 @@ namespace SCControlsExtended.Controls
 
         public class CellEventArgs : EventArgs
         {
-            public Cells.Cell Cell { get; }
+            public readonly Cells.Cell Cell;
 
-            public CellEventArgs(Cells.Cell cell)
+            internal CellEventArgs(Cells.Cell cell)
             {
                 Cell = cell;
             }
@@ -357,7 +425,7 @@ namespace SCControlsExtended.Controls
             }
         }
 
-        public class Cell
+        public class Cell : IEqualityComparer<Cell>
         {
             internal Point Position { get; set; }
             public int RowIndex { get; }
@@ -437,6 +505,35 @@ namespace SCControlsExtended.Controls
                 _table.Cells.Row(RowIndex).SetLayoutInternal(rowSize, foreground, background);
                 _table.Cells.AdjustCellsAfterResize();
                 _table.IsDirty = true;
+            }
+
+            public bool Equals(Cell cell1, Cell cell2)
+            {
+                if (cell1 == null && cell2 != null) return false;
+                if (cell1 != null && cell2 == null) return false;
+                if (cell1 == null && cell2 == null) return true;
+                return cell1.ColumnIndex == cell2.ColumnIndex && cell1.RowIndex == cell2.RowIndex;
+            }
+
+            public int GetHashCode([DisallowNull] Cell obj)
+            {
+                return HashCode.Combine(obj.RowIndex, obj.ColumnIndex);
+            }
+
+            public static bool operator ==(Cell cell1, Cell cell2)
+            {
+                if (cell1 == null && cell2 != null) return false;
+                if (cell1 != null && cell2 == null) return false;
+                if (cell1 == null && cell2 == null) return true;
+                return cell1.ColumnIndex == cell2.ColumnIndex && cell1.RowIndex == cell2.RowIndex;
+            }
+
+            public static bool operator !=(Cell cell1, Cell cell2)
+            {
+                if (cell1 == null && cell2 != null) return true;
+                if (cell1 != null && cell2 == null) return true;
+                if (cell1 == null && cell2 == null) return false;
+                return cell1.ColumnIndex != cell2.ColumnIndex || cell1.RowIndex != cell2.RowIndex;
             }
         }
     }
