@@ -39,9 +39,8 @@ namespace SCControlsExtended.Themes
             // Draw the basic table surface foreground and background
             control.Surface.Fill(Appearance.Foreground, Appearance.Background, Appearance.Glyph);
 
-            // Define based on table width/height and DefaultCellSize how many columns/rows should be added
-            var columns = table.Width; // / table.DefaultCellSize.X;
-            var rows = table.Height; // / table.DefaultCellSize.Y;
+            var columns = table.Width;
+            var rows = table.Height;
             int rowIndex = 0;
             for (int row = 0; row < rows; row++)
             {
@@ -54,19 +53,12 @@ namespace SCControlsExtended.Themes
                     var cell = table.Cells.GetIfExists(rowIndex, colIndex);
                     if (table.DrawOnlyIndexedCells && cell == null) continue;
 
-                    if (cell == null)
+                    cell ??= new Cells.Cell(row, col, table, string.Empty)
                     {
-                        cell = new Cells.Cell(row, col, table, string.Empty)
-                        {
-                            Position = table.Cells.GetCellPosition(row, col, out _, out _)
-                        };
-                    }
+                        Position = table.Cells.GetCellPosition(row, col, out _, out _)
+                    };
 
-                    var mouseOverCell = table.CurrentMouseCell != null &&
-                        table.CurrentMouseCell.ColumnIndex == cell.ColumnIndex &&
-                        table.CurrentMouseCell.RowIndex == cell.RowIndex;
-
-                    AdjustControlSurface(table, cell, mouseOverCell);
+                    AdjustControlSurface(table, cell, GetCustomStateAppearance(table, cell));
                     PrintText(table, cell);
 
                     col += columnSize - 1;
@@ -80,6 +72,19 @@ namespace SCControlsExtended.Themes
             control.IsDirty = false;
         }
 
+        private ColoredGlyph GetCustomStateAppearance(Table table, Cells.Cell cell)
+        {
+            var mouseOverCell = table.CurrentMouseCell != null &&
+                table.CurrentMouseCell.ColumnIndex == cell.ColumnIndex &&
+                table.CurrentMouseCell.RowIndex == cell.RowIndex;
+
+            if (table.SelectedCell != null && cell.Equals(table.SelectedCell))
+                return ControlThemeState.Selected;
+            if (mouseOverCell)
+                return ControlThemeState.MouseOver;
+            return null;
+        }
+
         public override void Attached(ControlBase control)
         {
             if (control is not Table)
@@ -88,7 +93,7 @@ namespace SCControlsExtended.Themes
             base.Attached(control);
         }
 
-        private void AdjustControlSurface(Table table, Cells.Cell cell, bool mouseOver = false)
+        private void AdjustControlSurface(Table table, Cells.Cell cell, ColoredGlyph customStateAppearance)
         {
             var width = table.Cells.Column(cell.ColumnIndex).Size;
             var height = table.Cells.Row(cell.RowIndex).Size;
@@ -98,8 +103,8 @@ namespace SCControlsExtended.Themes
                 {
                     int colIndex = cell.Position.X + x;
                     int rowIndex = cell.Position.Y + y;
-                    table.Surface.SetForeground(colIndex, rowIndex, cell.Foreground);
-                    table.Surface.SetBackground(colIndex, rowIndex, !mouseOver ? cell.Background : ControlThemeState.MouseOver.Background);
+                    table.Surface.SetForeground(colIndex, rowIndex, customStateAppearance != null ? customStateAppearance.Foreground : cell.Foreground);
+                    table.Surface.SetBackground(colIndex, rowIndex, customStateAppearance != null ? customStateAppearance.Background : cell.Background);
                 }
             }
         }

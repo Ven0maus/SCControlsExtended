@@ -121,6 +121,11 @@ namespace SCControlsExtended.Controls
                     SelectedCell = CurrentMouseCell;
                     SelectedCellChanged?.Invoke(this, new CellEventArgs(SelectedCell));
                 }
+                else
+                {
+                    // Unselect
+                    SelectedCell = null;
+                }
 
                 OnCellLeftClick?.Invoke(this, new CellEventArgs(CurrentMouseCell));
 
@@ -162,7 +167,6 @@ namespace SCControlsExtended.Controls
             {
                 OnCellExit?.Invoke(this, new CellEventArgs(CurrentMouseCell));
                 CurrentMouseCell = null;
-                IsDirty = true;
             }
         }
 
