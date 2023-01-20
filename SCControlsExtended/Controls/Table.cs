@@ -158,7 +158,7 @@ namespace SCControlsExtended.Controls
         /// <returns></returns>
         public Point GetCellPosition(int row, int col)
         {
-            return new Point(GetControlColumnIndex(col), GetControlRowIndex(row));
+            return new Point(GetControlIndex(col, Layout.Type.Col), GetControlIndex(row, Layout.Type.Row));
         }
 
         #endregion
@@ -186,28 +186,18 @@ namespace SCControlsExtended.Controls
             return cell;
         }
 
-        private int GetControlColumnIndex(int col)
+        private int GetControlIndex(int index, Layout.Type type)
         {
-            int index = 0;
+            int controlIndex = 0;
             int count = 0;
-            while (count < col)
+            while (count < index)
             {
-                index += _table.Cells.Column(count).Size;
+                controlIndex += type == Layout.Type.Col ? 
+                    _table.Cells.Column(count).Size :
+                    _table.Cells.Row(count).Size;
                 count++;
             }
-            return index;
-        }
-
-        private int GetControlRowIndex(int row)
-        {
-            int index = 0;
-            int count = 0;
-            while (count < row)
-            {
-                index += _table.Cells.Row(count).Size;
-                count++;
-            }
-            return index;
+            return controlIndex;
         }
 
         private void SetCell(int row, int col, Cell cell)
