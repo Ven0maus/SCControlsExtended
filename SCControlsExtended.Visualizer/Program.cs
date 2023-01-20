@@ -58,6 +58,8 @@ namespace SCControlsExtended.Visualizer
                 { 
                     selectionMenu.IsVisible = false;
                     Game.Instance.Screen = option;
+                    if (option is ExcelWindow excelWindow)
+                        excelWindow.Init();
                 });
                 selectionMenu.Controls.Add(button);
             }

@@ -427,7 +427,7 @@ namespace SCControlsExtended.Controls
 
             public Color? Foreground;
             public Color? Background;
-            public Cell.Alignment? TextAlignment;
+            public Cell.Alignment TextAlignment;
             public bool? Interactable;
             public bool? IsVisible;
 
@@ -452,7 +452,7 @@ namespace SCControlsExtended.Controls
             /// <param name="height"></param>
             /// <param name="foreground"></param>
             /// <param name="background"></param>
-            public void SetLayout(int? size = null, Color? foreground = null, Color? background = null, Cell.Alignment? textAlignment = null, bool? interactable = null, bool? isVisible = null)
+            public void SetLayout(int? size = null, Color? foreground = null, Color? background = null, Cell.Alignment textAlignment = null, bool? interactable = null, bool? isVisible = null)
             {
                 var prevSize = _size;
                 SetLayoutInternal(size, foreground, background, textAlignment, interactable, isVisible);
@@ -463,12 +463,14 @@ namespace SCControlsExtended.Controls
                 }
             }
 
-            internal void SetLayoutInternal(int? size = null, Color? foreground = null, Color? background = null, Cell.Alignment? textAlignment = null, bool? interactable = null, bool? isVisible = null)
+            internal void SetLayoutInternal(int? size = null, Color? foreground = null, Color? background = null, Cell.Alignment textAlignment = null, bool? interactable = null, bool? isVisible = null)
             {
                 if (size != null) _size = size.Value;
                 Foreground = foreground;
                 Background = background;
                 TextAlignment = textAlignment;
+                Interactable = interactable;
+                IsVisible = isVisible;
             }
         }
 
@@ -575,6 +577,7 @@ namespace SCControlsExtended.Controls
                 _text = text;
                 _foreground = table.DefaultForeground;
                 _background = table.DefaultBackground;
+                _textAlignment = new Alignment();
 
                 RowIndex = row;
                 ColumnIndex = col;
@@ -591,7 +594,7 @@ namespace SCControlsExtended.Controls
                     if (option.Background != null)
                         _background = option.Background.Value;
                     if (option.TextAlignment != null)
-                        _textAlignment = option.TextAlignment.Value;
+                        _textAlignment = option.TextAlignment;
                     if (option.Interactable != null)
                         _interactable = option.Interactable.Value;
                     if (option.IsVisible != null)
@@ -629,7 +632,7 @@ namespace SCControlsExtended.Controls
                 return HashCode.Combine(obj.RowIndex, obj.ColumnIndex);
             }
 
-            public struct Alignment
+            public class Alignment
             {
                 public TextAlignmentH Horizontal { get; set; }
                 public TextAlignmentV Vertical { get; set; }

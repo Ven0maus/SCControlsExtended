@@ -91,6 +91,7 @@ namespace SCControlsExtended.Themes
                 {
                     int colIndex = cell.Position.X + x;
                     int rowIndex = cell.Position.Y + y;
+                    if (!table.Surface.IsValidCell(colIndex, rowIndex)) continue;
                     table.Surface[colIndex, rowIndex].IsVisible = cell.IsVisible;
                     table.Surface.SetForeground(colIndex, rowIndex, customStateAppearance != null ? customStateAppearance.Foreground : cell.Foreground);
                     table.Surface.SetBackground(colIndex, rowIndex, customStateAppearance != null ? customStateAppearance.Background : cell.Background);
@@ -105,8 +106,10 @@ namespace SCControlsExtended.Themes
             var width = table.Cells.Column(cell.ColumnIndex).Size;
             var height = table.Cells.Row(cell.RowIndex).Size;
 
-            // TODO: TextAlignment
-
+            // Handle alignments
+            var vAlign = cell.TextAlignment.Vertical;
+            var hAlign = cell.TextAlignment.Horizontal;
+            GetTotalCellSize(cell, width, height, out int totalWidth, out int totalHeight);
 
             // Split the character array into parts based on cell width
             var splittedTextArray = Split(cell.Text.ToCharArray(), width).ToArray();
@@ -117,13 +120,62 @@ namespace SCControlsExtended.Themes
                     break;
 
                 // Print each array to the correct y index
-                var textArr = splittedTextArray[y];
+                var textArr = splittedTextArray[y].ToArray();
+                var startPosX = GetHorizontalAlignment(hAlign, totalWidth, textArr);
+                var startPosY = GetVerticalAlignment(vAlign, totalHeight, splittedTextArray);
+
                 int index = 0;
                 foreach (var character in textArr)
                 {
-                    table.Surface.SetGlyph(cell.Position.X + index++, cell.Position.Y + y, character);
+                    table.Surface.SetGlyph(startPosX + cell.Position.X + index++, startPosY + cell.Position.Y + y, character);
                 }
             }
+        }
+
+        private static void GetTotalCellSize(Cells.Cell cell, int width, int height, out int totalWidth, out int totalHeight)
+        {
+            int startX = cell.Position.X;
+            int startY = cell.Position.Y;
+            int endX = cell.Position.X + width;
+            int endY = cell.Position.Y + height;
+            totalWidth = endX - startX;
+            totalHeight = endY - startY;
+        }
+
+        private static int GetHorizontalAlignment(Cells.Cell.Alignment.TextAlignmentH hAlign, int totalWidth, char[] textArr)
+        {
+            int startPosX = 0;
+            switch (hAlign)
+            {
+                case Cells.Cell.Alignment.TextAlignmentH.Left:
+                    startPosX = 0;
+                    break;
+                case Cells.Cell.Alignment.TextAlignmentH.Center:
+                    startPosX = (totalWidth - textArr.Length) / 2;
+                    break;
+                case Cells.Cell.Alignment.TextAlignmentH.Right:
+                    startPosX = totalWidth - textArr.Length;
+                    break;
+            }
+            return startPosX;
+        }
+
+        private static int GetVerticalAlignment(Cells.Cell.Alignment.TextAlignmentV vAlign, int totalHeight, IEnumerable<char>[] textArrs)
+        {
+            int position = 0;
+            switch (vAlign)
+            {
+                case Cells.Cell.Alignment.TextAlignmentV.Up:
+                    position = 0;
+                    break;
+                case Cells.Cell.Alignment.TextAlignmentV.Center:
+                    position = (totalHeight - textArrs.Length) / 2;
+                    break;
+                case Cells.Cell.Alignment.TextAlignmentV.Down:
+                    position = totalHeight - textArrs.Length;
+                    break;
+            }
+            return position;
         }
 
         private static IEnumerable<IEnumerable<T>> Split<T>(T[] array, int size)
