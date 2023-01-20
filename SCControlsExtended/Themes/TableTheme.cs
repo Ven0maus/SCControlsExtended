@@ -56,14 +56,18 @@ namespace SCControlsExtended.Themes
 
         private ColoredGlyph GetCustomStateAppearance(Table table, Cells.Cell cell)
         {
-            var mouseOverCell = table.CurrentMouseCell != null &&
-                table.CurrentMouseCell.ColumnIndex == cell.ColumnIndex &&
-                table.CurrentMouseCell.RowIndex == cell.RowIndex;
-
-            if (table.SelectedCell != null && cell.Equals(table.SelectedCell))
+            if (table.RenderSelectionEffect && table.SelectedCell != null && cell.Equals(table.SelectedCell))
+            {
                 return ControlThemeState.Selected;
-            if (mouseOverCell)
-                return ControlThemeState.MouseOver;
+            }
+            if (table.RenderHoverEffect)
+            {
+                var mouseOverCell = table.CurrentMouseCell != null &&
+                    table.CurrentMouseCell.ColumnIndex == cell.ColumnIndex &&
+                    table.CurrentMouseCell.RowIndex == cell.RowIndex;
+                if (mouseOverCell)
+                    return ControlThemeState.MouseOver;
+            }
             return null;
         }
 

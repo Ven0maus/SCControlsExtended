@@ -1,9 +1,10 @@
 ﻿using SadConsole;
 using SadConsole.UI;
+using SadConsole.UI.Controls;
 using SadConsole.UI.Themes;
+using SadRogue.Primitives;
 using SCControlsExtended.Controls;
 using SCControlsExtended.Themes;
-using SadRogue.Primitives;
 
 namespace SCControlsExtended.Visualizer
 {
@@ -11,8 +12,6 @@ namespace SCControlsExtended.Visualizer
     {
         public const int Width = 100;
         public const int Height = 40;
-
-        private static Table _table;
 
         static void Main(string[] args)
         {
@@ -34,106 +33,36 @@ namespace SCControlsExtended.Visualizer
             Library.Default.SetControlTheme(typeof(Table), new TableTheme());
         }
 
-        private static void AdjustTableValues(Table table)
-        {
-            table.Cells.Row(0).SetLayout(background: Color.Lerp(Color.Gray, Color.Black, 0.8f));
-            table.Cells.Column(0).SetLayout(background: Color.Lerp(Color.Gray, Color.Black, 0.8f));
-
-            var innerCellColor = Color.Lerp(Color.Gray, Color.Black, 0.6f);
-            int col = 1, row = 1;
-
-            // Set column
-            table.Cells[0, 0].Text = "C/R 0";
-
-            // Set column, row texts
-            table.Cells.Range(0, 1, 0, 5).ForEach(cell => cell.Text = "Column " + col++);
-            table.Cells.Range(1, 0, 10, 0).ForEach(cell => cell.Text = "Row " + row++);
-
-            // Set inner cells color
-            table.Cells.Range(1, 1, 10, 5).ForEach(cell => cell.Background = innerCellColor);
-
-            // Custom cell size
-            table.Cells[5, 7].Text = "Support custom cell sizes!";
-            table.Cells[5, 7].SetLayout(6, 20);
-            table.Cells[5, 7].Background = Color.Yellow;
-            table.Cells[5, 7].Foreground = Color.Black;
-
-            table.Cells[6, 7].Background = Color.Magenta;
-            table.Cells[5, 8].Background = Color.Orange;
-            table.Cells[6, 8].Background = Color.Blue;
-        }
-
         private static void Init()
         {
             SetCustomThemes();
 
-            var visual = new ControlsConsole(Width, Height);
-
-            // Construct table control
-            _table = new Table(visual.Width, visual.Height, 10, 2)
-            {
-                // Set default background color
-                DefaultBackground = Color.Wheat
+            var selectionMenu = new ControlsConsole(Width, Height);
+            var options = new ControlsConsole[] 
+            { 
+                new FunctionalityTestWindow(Width, Height), 
+                new ExcelWindow(Width, Height), 
+                new DrawingGridWindow(Width, Height) 
             };
 
-            // Set some default theme colors, for selection & hovering appearances
-            _table.SetThemeColors(Colors.CreateSadConsoleBlue());
-
-            // Test events
-            _table.OnCellDoubleClick += Table_OnCellDoubleClick;
-            _table.OnCellLeftClick += Table_OnCellLeftClick;
-            _table.OnCellRightClick += Table_OnCellRightClick;
-            _table.SelectedCellChanged += Table_SelectedCellChanged;
-            _table.OnCellEnter += Table_OnCellEnter;
-            _table.OnCellExit += Table_OnCellExit;
-
-            // Only add a few cells, and let console draw the rest
-            _table.DrawOnlyIndexedCells = false;
-
-            visual.Controls.Add(_table);
-
-            AdjustTableValues(_table);
-
-            Game.Instance.Screen = visual;
-        }
-
-        private static void Table_OnCellExit(object sender, Table.CellEventArgs e)
-        {
-            System.Console.WriteLine($"Exited cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
-        }
-
-        private static void Table_OnCellEnter(object sender, Table.CellEventArgs e)
-        {
-            System.Console.WriteLine($"Entered cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
-        }
-
-        private static void Table_SelectedCellChanged(object sender, Table.CellChangedEventArgs e)
-        {
-            System.Console.WriteLine($"Selected cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
-
-            if (e.PreviousCell != null)
+            int yCount = 10;
+            foreach (var option in options)
             {
-                e.PreviousCell.Text = string.Empty;
+                var name = option.GetType().Name;
+                var button = new Button(name.Length + 2)
+                {
+                    Position = new Point(Width / 2 - (name.Length / 2), yCount += 2),
+                    Text = name
+                };
+                button.Click += ((sender, args) => 
+                { 
+                    selectionMenu.IsVisible = false;
+                    Game.Instance.Screen = option;
+                });
+                selectionMenu.Controls.Add(button);
             }
-            if (e.Cell != null)
-            {
-                e.Cell.Text = "Selected";
-            }
-        }
 
-        private static void Table_OnCellRightClick(object sender, Table.CellEventArgs e)
-        {
-            System.Console.WriteLine($"Right clicked cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
-        }
-
-        private static void Table_OnCellLeftClick(object sender, Table.CellEventArgs e)
-        {
-            System.Console.WriteLine($"Left clicked cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
-        }
-
-        private static void Table_OnCellDoubleClick(object sender, Table.CellEventArgs e)
-        {
-            System.Console.WriteLine($"Double clicked cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
+            Game.Instance.Screen = selectionMenu;
         }
     }
 }

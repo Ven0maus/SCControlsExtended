@@ -14,15 +14,16 @@ namespace SCControlsExtended.Controls
         public Color DefaultBackground { get; set; }
         public Point DefaultCellSize { get; set; }
 
-        private bool _isMouseEnabled = true;
-        public bool IsMouseEnabled 
-        { 
-            get { return _isMouseEnabled; }
-            set
+        private bool _useMouse = true;
+        public new bool UseMouse
+        {
+            get { return _useMouse; }
+            set 
             {
-                _isMouseEnabled = value;
-                if (!_isMouseEnabled)
+                _useMouse = value; 
+                if (!_useMouse)
                 {
+                    SelectedCell = null;
                     CurrentMouseCell = null;
                     IsDirty = true;
                 }
@@ -43,6 +44,16 @@ namespace SCControlsExtended.Controls
         /// Turn this off, if the whole table should draw as many cells  as it fits, even with no data.
         /// </summary>
         public bool DrawOnlyIndexedCells { get; set; } = true;
+
+        /// <summary>
+        /// By default, the cell hover event effect is rendered on the control
+        /// </summary>
+        public bool RenderHoverEffect { get; set; } = true;
+
+        /// <summary>
+        /// By default, the cell selection event effect is rendered on the control
+        /// </summary>
+        public bool RenderSelectionEffect { get; set; } = true;
 
         /// <summary>
         /// Fires an event when a cell is entered by the mouse.
@@ -85,8 +96,6 @@ namespace SCControlsExtended.Controls
 
         protected override void OnMouseIn(ControlMouseState state)
         {
-            if (!IsMouseEnabled) return;
-
             base.OnMouseIn(state);
 
             // Handle mouse hovering over cell
@@ -113,8 +122,6 @@ namespace SCControlsExtended.Controls
 
         protected override void OnLeftMouseClicked(ControlMouseState state)
         {
-            if (!IsMouseEnabled) return;
-
             base.OnLeftMouseClicked(state);
 
             if (CurrentMouseCell != null)
@@ -153,8 +160,6 @@ namespace SCControlsExtended.Controls
 
         protected override void OnRightMouseClicked(ControlMouseState state)
         {
-            if (!IsMouseEnabled) return;
-
             base.OnRightMouseClicked(state);
 
             if (CurrentMouseCell != null)
@@ -165,8 +170,6 @@ namespace SCControlsExtended.Controls
 
         protected override void OnMouseExit(ControlMouseState state)
         {
-            if (!IsMouseEnabled) return;
-
             base.OnMouseExit(state);
 
             if (CurrentMouseCell != null)
@@ -293,6 +296,7 @@ namespace SCControlsExtended.Controls
             RowLayout.Clear();
             ColumnLayout.Clear();
             _cells.Clear();
+            _table.IsDirty = true;
         }
         #endregion
 
