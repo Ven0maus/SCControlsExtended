@@ -287,6 +287,13 @@ namespace SCControlsExtended.Controls
                 if (foreground != null) Foreground = foreground.Value;
                 if (background != null) Background = background.Value;
             }
+
+            internal void SetLayoutInternal(int? size = null, Color? foreground = null, Color? background = null)
+            {
+                if (size != null) _size = size.Value;
+                if (foreground != null) Foreground = foreground.Value;
+                if (background != null) Background = background.Value;
+            }
         }
 
         public class CellRange : IEnumerable<Cell>
@@ -400,8 +407,10 @@ namespace SCControlsExtended.Controls
 
             public void SetLayout(int? rowSize = null, int? columnSize = null, Color? foreground = null, Color? background = null)
             {
-                _table.Cells.Column(ColumnIndex).SetLayout(columnSize, foreground, background);
-                _table.Cells.Row(RowIndex).SetLayout(rowSize, foreground, background);
+                _table.Cells.Column(ColumnIndex).SetLayoutInternal(columnSize, foreground, background);
+                _table.Cells.Row(RowIndex).SetLayoutInternal(rowSize, foreground, background);
+                _table.Cells.AdjustCellsAfterResize();
+                _table.IsDirty = true;
             }
         }
     }
