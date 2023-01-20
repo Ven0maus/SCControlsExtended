@@ -57,17 +57,38 @@ namespace SCControlsExtended.Themes
         private ColoredGlyph GetCustomStateAppearance(Table table, Cells.Cell cell)
         {
             if (!cell.IsVisible || !cell.Interactable) return null;
-            if (table.RenderSelectionEffect && cell.Selectable && table.SelectedCell != null && cell.Equals(table.SelectedCell))
+
+            if (cell.Selectable && table.SelectedCell != null)
             {
-                return ControlThemeState.Selected;
+                switch (table.SelectionMode)
+                {
+                    case Table.Mode.Single:
+                        if (!cell.Equals(table.SelectedCell)) break;
+                        return ControlThemeState.Selected;
+                    case Table.Mode.EntireRow:
+                        if (cell.RowIndex != table.SelectedCell.RowIndex) break;
+                        return ControlThemeState.Selected;
+                    case Table.Mode.EntireColumn:
+                        if (cell.ColumnIndex != table.SelectedCell.ColumnIndex) break;
+                        return ControlThemeState.Selected;
+                    case Table.Mode.None:
+                        break;
+                }
             }
-            if (table.RenderHoverEffect)
+
+            switch (table.HoverMode)
             {
-                var mouseOverCell = table.CurrentMouseCell != null &&
-                    table.CurrentMouseCell.ColumnIndex == cell.ColumnIndex &&
-                    table.CurrentMouseCell.RowIndex == cell.RowIndex;
-                if (mouseOverCell)
+                case Table.Mode.Single:
+                    if (table.CurrentMouseCell == null || !cell.Equals(table.CurrentMouseCell)) break;
                     return ControlThemeState.MouseOver;
+                case Table.Mode.EntireRow:
+                    if (table.CurrentMouseCell == null || table.CurrentMouseCell.RowIndex != cell.RowIndex) break;
+                    return ControlThemeState.MouseOver;
+                case Table.Mode.EntireColumn:
+                    if (table.CurrentMouseCell == null || table.CurrentMouseCell.ColumnIndex != cell.ColumnIndex) break;
+                    return ControlThemeState.MouseOver;
+                case Table.Mode.None:
+                    break;
             }
             return null;
         }

@@ -18,9 +18,9 @@ namespace SCControlsExtended.Controls
         public new bool UseMouse
         {
             get { return _useMouse; }
-            set 
+            set
             {
-                _useMouse = value; 
+                _useMouse = value;
                 if (!_useMouse)
                 {
                     SelectedCell = null;
@@ -45,15 +45,47 @@ namespace SCControlsExtended.Controls
         /// </summary>
         public bool DrawOnlyIndexedCells { get; set; } = true;
 
+        private Mode _hoverMode;
         /// <summary>
-        /// By default, the cell hover event effect is rendered on the control
+        /// By default, the cell hover event effect is rendered on the control in single mode.
         /// </summary>
-        public bool RenderHoverEffect { get; set; } = true;
+        public Mode HoverMode
+        {
+            get { return _hoverMode; }
+            set
+            {
+                if (value != _hoverMode)
+                {
+                    _hoverMode = value;
+                    IsDirty = true;
+                }
+            }
+        }
 
+        private Mode _selectionMode;
         /// <summary>
-        /// By default, the cell selection event effect is rendered on the control
+        /// By default, the cell selection event effect is rendered on the control in single mode.
         /// </summary>
-        public bool RenderSelectionEffect { get; set; } = true;
+        public Mode SelectionMode
+        {
+            get { return _selectionMode; }
+            set
+            {
+                if (value != _selectionMode)
+                {
+                    _selectionMode = value;
+                    IsDirty = true;
+                }
+            }
+        }
+
+        public enum Mode
+        {
+            Single = 0,
+            None,
+            EntireRow,
+            EntireColumn
+        }
 
         /// <summary>
         /// Fires an event when a cell is entered by the mouse.
@@ -412,7 +444,7 @@ namespace SCControlsExtended.Controls
         {
             private int _size;
             public int Size
-            { 
+            {
                 get { return _size; }
                 set
                 {
