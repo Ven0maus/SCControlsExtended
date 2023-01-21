@@ -72,6 +72,7 @@ namespace SCControlsExtended.Controls
         public event EventHandler<CellEventArgs> OnCellDoubleClick;
 
         private DateTime _leftMouseLastClick = DateTime.Now;
+        private Point? _leftMouseLastClickPosition;
 
         public Table(int width, int height) : base(width, height)
         {
@@ -150,12 +151,14 @@ namespace SCControlsExtended.Controls
                     OnCellLeftClick?.Invoke(this, new CellEventArgs(CurrentMouseCell));
 
                 DateTime click = DateTime.Now;
-                bool doubleClicked = (click - _leftMouseLastClick).TotalSeconds <= 0.5;
+                bool doubleClicked = (click - _leftMouseLastClick).TotalSeconds <= 0.25 && state.MousePosition == _leftMouseLastClickPosition;
                 _leftMouseLastClick = click;
+                _leftMouseLastClickPosition = state.MousePosition;
 
                 if (doubleClicked)
                 {
                     _leftMouseLastClick = DateTime.MinValue;
+                    _leftMouseLastClickPosition = null;
                     if (CurrentMouseCell.Settings.Interactable && CurrentMouseCell.Settings.IsVisible)
                         OnCellDoubleClick?.Invoke(this, new CellEventArgs(CurrentMouseCell));
                 }
