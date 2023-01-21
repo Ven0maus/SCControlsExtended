@@ -81,7 +81,7 @@ namespace SCControlsExtended.Controls
             DefaultCellSize = new(1, 1);
         }
 
-        public Table(int width, int height, int cellWidth, int cellHeight = 1) 
+        public Table(int width, int height, int cellWidth, int cellHeight = 1)
             : this(width, height)
         {
             if (cellWidth < 1 || cellHeight < 1)
@@ -292,9 +292,9 @@ namespace SCControlsExtended.Controls
                 set
                 {
                     if (value == null) return;
-                    if (Settings != value)
+                    if (_settings != value)
                     {
-                        _settings = value;
+                        (_settings ??= new Options(this)).CopyFrom(value);
                         AddToTableIfNotExists();
                         Table.IsDirty = true;
                     }
@@ -325,7 +325,7 @@ namespace SCControlsExtended.Controls
                     if (option.Background != null)
                         _background = option.Background.Value;
                     if (option.SettingsInitialized)
-                        _settings = option.Settings;
+                        (_settings ??= new Options(this)).CopyFrom(option.Settings);
                 }
             }
 
@@ -364,6 +364,7 @@ namespace SCControlsExtended.Controls
                         {
                             _horizontalAlignment = value;
                             if (_usedForLayout) return;
+                            _cell.AddToTableIfNotExists();
                             _cell.Table.IsDirty = true;
                         }
                     }
@@ -379,6 +380,7 @@ namespace SCControlsExtended.Controls
                         {
                             _verticalAlignment = value;
                             if (_usedForLayout) return;
+                            _cell.AddToTableIfNotExists();
                             _cell.Table.IsDirty = true;
                         }
                     }
@@ -394,6 +396,7 @@ namespace SCControlsExtended.Controls
                         {
                             _maxCharactersPerLine = value;
                             if (_usedForLayout) return;
+                            _cell.AddToTableIfNotExists();
                             _cell.Table.IsDirty = true;
                         }
                     }
@@ -544,6 +547,18 @@ namespace SCControlsExtended.Controls
                         Interactable
                     });
                 }
+
+                internal void CopyFrom(Options settings)
+                {
+                    HorizontalAlignment = settings.HorizontalAlignment;
+                    VerticalAlignment = settings.VerticalAlignment;
+                    MaxCharactersPerLine = settings.MaxCharactersPerLine;
+                    IsVisible = settings.IsVisible;
+                    Selectable = settings.Selectable;
+                    SelectionMode = settings.SelectionMode;
+                    HoverMode = settings.HoverMode;
+                    Interactable = settings.Interactable;
+                }
             }
         }
     }
@@ -656,8 +671,8 @@ namespace SCControlsExtended.Controls
         {
             int count = 0;
             indexSize = type == Layout.LayoutType.Col ?
-                _table.Cells.Column(count).Size :
-                _table.Cells.Row(count).Size;
+                (ColumnLayout.TryGetValue(count, out Layout layout) ? layout.Size : _table.DefaultCellSize.X) :
+                (RowLayout.TryGetValue(count, out layout) ? layout.Size : _table.DefaultCellSize.Y);
 
             int controlIndex = 0;
             while (count < index)
@@ -666,8 +681,8 @@ namespace SCControlsExtended.Controls
                 count++;
 
                 indexSize = type == Layout.LayoutType.Col ?
-                    _table.Cells.Column(count).Size :
-                    _table.Cells.Row(count).Size;
+                    (ColumnLayout.TryGetValue(count, out layout) ? layout.Size : _table.DefaultCellSize.X) :
+                    (RowLayout.TryGetValue(count, out layout) ? layout.Size : _table.DefaultCellSize.Y);
             }
             return controlIndex;
         }
@@ -740,10 +755,10 @@ namespace SCControlsExtended.Controls
             public Table.Cell.Options Settings
             {
                 get { return _settings ??= new Table.Cell.Options(_table); }
-                set 
+                set
                 {
                     if (value == null) return;
-                    _settings = value;
+                    (_settings ??= new Table.Cell.Options(_table)).CopyFrom(value);
                 }
             }
 

@@ -145,7 +145,8 @@ namespace SCControlsExtended.Themes
                     break;
 
                 // Print each array to the correct y index
-                var textArr = splittedTextArray[y].ToArray();
+                // Remove spaces in the front on the newline
+                var textArr = splittedTextArray[y].SkipWhile(a => a == ' ').ToArray();
                 var startPosX = GetHorizontalAlignment(hAlign, totalWidth, textArr);
                 var startPosY = GetVerticalAlignment(vAlign, totalHeight, splittedTextArray);
 
