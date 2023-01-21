@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace SCControlsExtended.Controls
 {
@@ -250,7 +251,7 @@ namespace SCControlsExtended.Controls
         #region Public Methods
 
         /// <summary>
-        /// Get the layout for a specific column
+        /// Get the layout for the given column
         /// </summary>
         /// <param name="column"></param>
         /// <returns></returns>
@@ -262,7 +263,18 @@ namespace SCControlsExtended.Controls
         }
 
         /// <summary>
-        /// Get the layout for a specific row
+        /// Get the layout for the given columns
+        /// </summary>
+        /// <param name="column"></param>
+        /// <returns></returns>
+        public Layout.Range Column(params int[] columns)
+        {
+            var layouts = columns.Select(a => Column(a));
+            return new Layout.Range(layouts);
+        }
+
+        /// <summary>
+        /// Get the layout for the given row
         /// </summary>
         /// <param name="row"></param>
         /// <returns></returns>
@@ -271,6 +283,17 @@ namespace SCControlsExtended.Controls
             RowLayout.TryGetValue(row, out Layout layout);
             layout ??= RowLayout[row] = new Layout(_table, Layout.Type.Row);
             return layout;
+        }
+
+        /// <summary>
+        /// Get the layout for the given rows
+        /// </summary>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        public Layout.Range Row(params int[] rows)
+        {
+            var layouts = rows.Select(a => Row(a));
+            return new Layout.Range(layouts);
         }
 
         /// <summary>
@@ -408,7 +431,7 @@ namespace SCControlsExtended.Controls
         }
         #endregion
 
-        public class Layout
+        public class Layout : ILayout
         {
             private int _size;
             public int Size
@@ -482,6 +505,41 @@ namespace SCControlsExtended.Controls
                 HoverMode = hoverMode;
                 SelectionMode = selectionMode;
             }
+
+            public class Range : IEnumerable<Layout>, ILayout
+            {
+                private readonly IEnumerable<Layout> _layouts;
+
+                internal Range(IEnumerable<Layout> layouts)
+                {
+                    _layouts = layouts;
+                }
+
+                public void SetLayout(int? size = null, Color? foreground = null, Color? background = null,
+                    Cell.Alignment textAlignment = null, bool? interactable = null, bool? isVisible = null, bool? selectable = null,
+                    Table.Mode? hoverMode = null, Table.Mode? selectionMode = null)
+                {
+                    foreach (var layout in _layouts)
+                        layout.SetLayout(size, foreground, background, textAlignment, interactable, isVisible, selectable, hoverMode, selectionMode);
+                }
+
+                public IEnumerator<Layout> GetEnumerator()
+                {
+                    return _layouts.GetEnumerator();
+                }
+
+                IEnumerator IEnumerable.GetEnumerator()
+                {
+                    return GetEnumerator();
+                }
+            }
+        }
+
+        interface ILayout
+        {
+            void SetLayout(int? size = null, Color? foreground = null, Color? background = null,
+                Cell.Alignment textAlignment = null, bool? interactable = null, bool? isVisible = null, bool? selectable = null,
+                Table.Mode? hoverMode = null, Table.Mode? selectionMode = null);
         }
 
         public class Cell : IEqualityComparer<Cell>
