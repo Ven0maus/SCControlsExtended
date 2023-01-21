@@ -13,8 +13,8 @@ namespace SCControlsExtended.Controls
         public Color DefaultForeground { get; set; }
         public Color DefaultBackground { get; set; }
         public Point DefaultCellSize { get; set; }
-        public Mode DefaultHoverMode { get; set; }
-        public Mode DefaultSelectionMode { get; set; }
+        public Cells.Layout.Mode DefaultHoverMode { get; set; }
+        public Cells.Layout.Mode DefaultSelectionMode { get; set; }
 
         private bool _useMouse = true;
         public new bool UseMouse
@@ -46,14 +46,6 @@ namespace SCControlsExtended.Controls
         /// Turn this off, if the whole table should draw as many cells  as it fits, even with no data.
         /// </summary>
         public bool DrawOnlyIndexedCells { get; set; } = true;
-
-        public enum Mode
-        {
-            Single = 0,
-            None,
-            EntireRow,
-            EntireColumn
-        }
 
         /// <summary>
         /// Fires an event when a cell is entered by the mouse.
@@ -217,7 +209,7 @@ namespace SCControlsExtended.Controls
             }
         }
 
-        public class CellChangedEventArgs : CellEventArgs
+        public sealed class CellChangedEventArgs : CellEventArgs
         {
             public readonly Cell PreviousCell;
 
@@ -228,7 +220,7 @@ namespace SCControlsExtended.Controls
             }
         }
 
-        public class Cell : IEquatable<Cell>
+        public sealed class Cell : IEquatable<Cell>
         {
             internal Point Position { get; set; }
             public int Row { get; }
@@ -442,8 +434,8 @@ namespace SCControlsExtended.Controls
                     }
                 }
 
-                private Table.Mode _selectionMode;
-                public Table.Mode SelectionMode
+                private Cells.Layout.Mode _selectionMode;
+                public Cells.Layout.Mode SelectionMode
                 {
                     get { return _selectionMode; }
                     set
@@ -458,8 +450,8 @@ namespace SCControlsExtended.Controls
                     }
                 }
 
-                private Table.Mode _hoverMode;
-                public Table.Mode HoverMode
+                private Cells.Layout.Mode _hoverMode;
+                public Cells.Layout.Mode HoverMode
                 {
                     get { return _hoverMode; }
                     set
@@ -543,7 +535,7 @@ namespace SCControlsExtended.Controls
         }
     }
 
-    public class Cells : IEnumerable<Table.Cell>
+    public sealed class Cells : IEnumerable<Table.Cell>
     {
         private readonly Table _table;
         private readonly Dictionary<Point, Table.Cell> _cells = new();
@@ -760,6 +752,14 @@ namespace SCControlsExtended.Controls
             {
                 Col,
                 Row
+            }
+
+            public enum Mode
+            {
+                Single = 0,
+                None,
+                EntireRow,
+                EntireColumn
             }
 
             internal Layout(Table table, Type type)

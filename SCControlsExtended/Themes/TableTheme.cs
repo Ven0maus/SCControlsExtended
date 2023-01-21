@@ -62,32 +62,32 @@ namespace SCControlsExtended.Themes
             {
                 switch (cell.Settings.SelectionMode)
                 {
-                    case Table.Mode.Single:
+                    case Cells.Layout.Mode.Single:
                         if (!cell.Equals(table.SelectedCell)) break;
                         return ControlThemeState.Selected;
-                    case Table.Mode.EntireRow:
+                    case Cells.Layout.Mode.EntireRow:
                         if (cell.Row != table.SelectedCell.Row) break;
                         return ControlThemeState.Selected;
-                    case Table.Mode.EntireColumn:
+                    case Cells.Layout.Mode.EntireColumn:
                         if (cell.Column != table.SelectedCell.Column) break;
                         return ControlThemeState.Selected;
-                    case Table.Mode.None:
+                    case Cells.Layout.Mode.None:
                         break;
                 }
             }
 
             switch (cell.Settings.HoverMode)
             {
-                case Table.Mode.Single:
+                case Cells.Layout.Mode.Single:
                     if (table.CurrentMouseCell == null || !cell.Equals(table.CurrentMouseCell)) break;
                     return ControlThemeState.MouseOver;
-                case Table.Mode.EntireRow:
+                case Cells.Layout.Mode.EntireRow:
                     if (table.CurrentMouseCell == null || table.CurrentMouseCell.Row != cell.Row) break;
                     return ControlThemeState.MouseOver;
-                case Table.Mode.EntireColumn:
+                case Cells.Layout.Mode.EntireColumn:
                     if (table.CurrentMouseCell == null || table.CurrentMouseCell.Column != cell.Column) break;
                     return ControlThemeState.MouseOver;
-                case Table.Mode.None:
+                case Cells.Layout.Mode.None:
                     break;
             }
             return null;
