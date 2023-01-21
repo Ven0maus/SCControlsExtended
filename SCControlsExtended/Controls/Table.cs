@@ -1,8 +1,12 @@
-﻿using SadConsole.UI.Controls;
+﻿using SadConsole;
+using SadConsole.UI.Controls;
+using SadConsole.UI.Themes;
 using SadRogue.Primitives;
+using SCControlsExtended.Themes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SCControlsExtended.Controls
 {
@@ -71,8 +75,28 @@ namespace SCControlsExtended.Controls
         /// </summary>
         public event EventHandler<CellEventArgs> OnCellDoubleClick;
 
+        internal ScrollBar ScrollBar { get; private set; }
+
+        internal bool IsScrollBarVisible
+        {
+            get => ScrollBar.IsVisible;
+            set => ScrollBar.IsVisible = value;
+        }
+
+        /// <summary>
+        /// The total rows visible in the table.
+        /// </summary>
+        public int VisibleRowsTotal { get; set; }
+
+        /// <summary>
+        /// The maximum amount of rows that can be shown in the table.
+        /// </summary>
+        public int VisibleRowsMax { get; set; }
+
         private DateTime _leftMouseLastClick = DateTime.Now;
         private Point? _leftMouseLastClickPosition;
+
+        private void _scrollbar_ValueChanged(object sender, EventArgs e) => IsDirty = true;
 
         public Table(int width, int height) : base(width, height)
         {
@@ -96,6 +120,73 @@ namespace SCControlsExtended.Controls
         {
             DefaultForeground = defaultForeground;
             DefaultBackground = defaultBackground;
+        }
+
+        /// <summary>
+        /// Configures the associated <see cref="ScrollBar"/>.
+        /// </summary>
+        /// <param name="orientation">The orientation of the scrollbar.</param>
+        /// <param name="sizeValue">The size of the scrollbar.</param>
+        /// <param name="position">The position of the scrollbar.</param>
+        public void SetupScrollBar(Orientation orientation, int height, Point position)
+        {
+            bool scrollBarExists = false;
+            int value = 0;
+            int max = 0;
+
+            if (ScrollBar != null)
+            {
+                ScrollBar.ValueChanged -= _scrollbar_ValueChanged;
+                value = ScrollBar.Value;
+                max = ScrollBar.Maximum;
+                RemoveControl(ScrollBar);
+                scrollBarExists = true;
+            }
+
+            ScrollBar = new ScrollBar(orientation, height);
+
+            if (scrollBarExists)
+            {
+                ScrollBar.Maximum = max;
+                ScrollBar.Value = value;
+            }
+
+            ScrollBar.ValueChanged += _scrollbar_ValueChanged;
+            ScrollBar.Position = position;
+            AddControl(ScrollBar);
+
+            OnThemeChanged();
+            DetermineState();
+        }
+
+        /// <summary>
+        /// Scrolls the list to the item currently selected.
+        /// </summary>
+        public void ScrollToSelectedItem()
+        {
+            if (IsScrollBarVisible)
+            {
+                int selectedRow = SelectedCell != null ? SelectedCell.Row * Cells.GetSizeOrDefault(SelectedCell.Row, Cells.Layout.LayoutType.Row) : 0;
+                if (selectedRow < VisibleRowsMax)
+                    ScrollBar.Value = 0;
+                else if (selectedRow > Cells.MaxRows - VisibleRowsTotal)
+                    ScrollBar.Value = ScrollBar.Maximum;
+                else
+                    ScrollBar.Value = selectedRow - VisibleRowsTotal;
+            }
+        }
+
+        /// <summary>
+        /// Sets the scrollbar's theme to the current theme's <see cref="ListBoxTheme.ScrollBarTheme"/>.
+        /// </summary>
+        protected override void OnThemeChanged()
+        {
+            if (ScrollBar == null) return;
+
+            if (Theme is TableTheme theme)
+                ScrollBar.Theme = theme.ScrollBarTheme;
+            else
+                ScrollBar.Theme = null;
         }
 
         protected override void OnMouseIn(ControlMouseState state)
@@ -125,6 +216,14 @@ namespace SCControlsExtended.Controls
                 }
                 IsDirty = true;
             }
+
+            if (state.OriginalMouseState.Mouse.ScrollWheelValueChange != 0)
+            {
+                if (state.OriginalMouseState.Mouse.ScrollWheelValueChange < 0)
+                    ScrollBar.Value -= 1;
+                else
+                    ScrollBar.Value += 1;
+            }
         }
 
         protected override void OnLeftMouseClicked(ControlMouseState state)
@@ -137,6 +236,7 @@ namespace SCControlsExtended.Controls
                 {
                     var previous = SelectedCell;
                     SelectedCell = CurrentMouseCell;
+                    ScrollToSelectedItem();
                     SelectedCellChanged?.Invoke(this, new CellChangedEventArgs(previous, SelectedCell));
                 }
                 else
@@ -577,6 +677,16 @@ namespace SCControlsExtended.Controls
             get { return GetOrCreateCell(row, col); }
             internal set { SetCell(row, col, value); }
         }
+
+        /// <summary>
+        /// The maximum rows the table currently holds.
+        /// </summary>
+        public int MaxRows { get { return _cells.Count == 0 ? 0 : _cells.Values.Max(a => a.Row); } }
+
+        /// <summary>
+        /// The maximum columns the table currently holds.
+        /// </summary>
+        public int MaxColumns { get { return _cells.Count == 0 ? 0 : _cells.Values.Max(a => a.Column); } }
 
         internal Cells(Table table)
         {

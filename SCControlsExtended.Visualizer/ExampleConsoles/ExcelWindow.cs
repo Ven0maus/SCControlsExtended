@@ -17,6 +17,7 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             _table.SetThemeColors(Colors.CreateSadConsoleBlue());
             _table.DefaultForeground = Color.Black;
             _table.DrawOnlyIndexedCells = true;
+            _table.SetupScrollBar(Orientation.Vertical, height - 1, new Point(width - 1, 0));
             Controls.Add(_table);
 
             AdjustTable();
@@ -61,7 +62,7 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             });
 
             // Set inner cells color
-            _table.Cells.Range(1, 1, Height / _table.DefaultCellSize.Y, Width / _table.DefaultCellSize.X).ForEach(cell => cell.Background = innerCellColor);
+            _table.Cells.Range(1, 1, Height / _table.DefaultCellSize.Y + 3, Width / _table.DefaultCellSize.X).ForEach(cell => cell.Background = innerCellColor);
         }
 
         private static string GetExcelColumnName(int index)

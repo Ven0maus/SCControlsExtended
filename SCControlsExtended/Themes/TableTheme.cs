@@ -1,6 +1,8 @@
 ﻿using SadConsole;
+using SadConsole.UI;
 using SadConsole.UI.Controls;
 using SadConsole.UI.Themes;
+using SadRogue.Primitives;
 using SCControlsExtended.Controls;
 using System;
 using System.Collections.Generic;
@@ -10,16 +12,95 @@ namespace SCControlsExtended.Themes
 {
     public class TableTheme : ThemeBase
     {
+        /// <summary>
+        /// The appearance of the scrollbar used by the table control.
+        /// </summary>
+        public ScrollBarTheme ScrollBarTheme { get; set; }
+
+        /// <summary>
+        /// Internal flag to indicate the scroll bar needs to be reconfigured.
+        /// </summary>
+        protected bool ReconfigureScrollBar { get; set; }
+
+        public TableTheme(ScrollBarTheme scrollBarTheme)
+        {
+            ScrollBarTheme = scrollBarTheme;
+        }
+
+        public override void Attached(ControlBase control)
+        {
+            if (control is not Table table)
+                throw new Exception("Added TableTheme to a control that isn't a Table.");
+
+            base.Attached(control);
+        }
+
+        public override void RefreshTheme(Colors colors, ControlBase control)
+        {
+            base.RefreshTheme(colors, control);
+
+            if (control is not Table table) return;
+
+            table.ScrollBar.Theme = ScrollBarTheme;
+            ScrollBarTheme?.RefreshTheme(_colorsLastUsed, table.ScrollBar);
+        }
+
+        private static void SetupScrollBar(Table table)
+        {
+            table.SetupScrollBar(Orientation.Vertical, table.Height, new Point(table.Width - 1, 0));
+        }
+
+        private static int GetMaxRowsBasedOnRowSizes(Table table)
+        {
+            return !table.Cells.Any() ? 0 : table.Cells
+                .GroupBy(a => a.Row)
+                .Select(a => a.Key * table.Cells.GetSizeOrDefault(a.Key, Cells.Layout.LayoutType.Row))
+                .Max();
+        }
+
+        /// <summary>
+        /// Shows the scroll bar when there are too many items to display; otherwise, hides it.
+        /// </summary>
+        /// <param name="table">Reference to the listbox being processed.</param>
+        private static void ShowHideScrollBar(Table table)
+        {
+            // process the scroll bar
+            int scrollbarItems = GetMaxRowsBasedOnRowSizes(table) - table.Height;
+
+            if (scrollbarItems > 0)
+            {
+                table.ScrollBar.Maximum = scrollbarItems;
+                table.IsScrollBarVisible = true;
+            }
+            else
+            {
+                table.ScrollBar.Maximum = 0;
+                table.IsScrollBarVisible = true;
+            }
+        }
+
         /// <inheritdoc />
         public override void UpdateAndDraw(ControlBase control, TimeSpan time)
         {
-            if (!control.IsDirty || control is not Table table)
+            if (control is not Table table || !table.IsDirty)
                 return;
+
+            if (ReconfigureScrollBar)
+            {
+                SetupScrollBar(table);
+                ReconfigureScrollBar = false;
+            }
 
             RefreshTheme(control.FindThemeColors(), control);
 
             // Draw the basic table surface foreground and background, and clear the glyphs
             control.Surface.Fill(table.DefaultForeground, table.DefaultBackground, 0);
+
+            ShowHideScrollBar(table);
+
+            var maxRows = GetMaxRowsBasedOnRowSizes(table);
+            table.VisibleRowsTotal = maxRows >= table.Height ? table.Height : maxRows;
+            table.VisibleRowsMax = table.Height;
 
             var columns = table.Width;
             var rows = table.Height;
@@ -91,14 +172,6 @@ namespace SCControlsExtended.Themes
                     break;
             }
             return null;
-        }
-
-        public override void Attached(ControlBase control)
-        {
-            if (control is not Table)
-                throw new Exception("Added TableTheme to a control that isn't a Table.");
-
-            base.Attached(control);
         }
 
         private static void AdjustControlSurface(Table table, Table.Cell cell, ColoredGlyph customStateAppearance)
@@ -213,7 +286,7 @@ namespace SCControlsExtended.Themes
         }
 
         /// <inheritdoc />
-        public override ThemeBase Clone() => new TableTheme()
+        public override ThemeBase Clone() => new TableTheme((ScrollBarTheme)ScrollBarTheme.Clone())
         {
             ControlThemeState = ControlThemeState.Clone(),
         };
