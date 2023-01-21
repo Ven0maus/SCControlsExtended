@@ -646,7 +646,7 @@ namespace SCControlsExtended.Controls
         }
 
         /// <summary>
-        /// Get the layout for the given column
+        /// Get the size of the column or row or the default if no layout exists, without allocating a new layout object.
         /// </summary>
         /// <param name="column"></param>
         /// <returns></returns>
