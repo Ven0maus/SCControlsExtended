@@ -103,8 +103,8 @@ namespace SCControlsExtended.Themes
 
         private static void AdjustControlSurface(Table table, Table.Cell cell, ColoredGlyph customStateAppearance)
         {
-            var width = table.Cells.Column(cell.Column).Size;
-            var height = table.Cells.Row(cell.Row).Size;
+            var width = table.Cells.GetSizeOrDefault(cell.Column, Cells.Layout.LayoutType.Col);
+            var height = table.Cells.GetSizeOrDefault(cell.Row, Cells.Layout.LayoutType.Row);
             for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < height; y++)
@@ -123,8 +123,8 @@ namespace SCControlsExtended.Themes
         {
             if (cell.Text == null || !cell.Settings.IsVisible) return;
 
-            var width = table.Cells.Column(cell.Column).Size;
-            var height = table.Cells.Row(cell.Row).Size;
+            var width = table.Cells.GetSizeOrDefault(cell.Column, Cells.Layout.LayoutType.Col);
+            var height = table.Cells.GetSizeOrDefault(cell.Row, Cells.Layout.LayoutType.Row);
 
             // Handle alignments
             var vAlign = cell.Settings.VerticalAlignment;

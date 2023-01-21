@@ -3,6 +3,7 @@ using SadRogue.Primitives;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data.Common;
 
 namespace SCControlsExtended.Controls
 {
@@ -239,7 +240,6 @@ namespace SCControlsExtended.Controls
             public int Row { get; }
             public int Column { get; }
 
-            // Adjustable settings
             private Color _foreground;
             public Color Foreground
             {
@@ -582,7 +582,6 @@ namespace SCControlsExtended.Controls
         }
 
         #region Public Methods
-
         /// <summary>
         /// Get the layout for the given column
         /// </summary>
@@ -644,6 +643,24 @@ namespace SCControlsExtended.Controls
         internal Point GetCellPosition(int row, int col, out int rowSize, out int columnSize)
         {
             return new Point(GetControlIndex(col, Layout.LayoutType.Col, out columnSize), GetControlIndex(row, Layout.LayoutType.Row, out rowSize));
+        }
+
+        /// <summary>
+        /// Get the layout for the given column
+        /// </summary>
+        /// <param name="column"></param>
+        /// <returns></returns>
+        internal int GetSizeOrDefault(int index, Layout.LayoutType type)
+        {
+            switch (type)
+            {
+                case Layout.LayoutType.Col:
+                    return ColumnLayout.TryGetValue(index, out Layout layout) ? layout.Size : _table.DefaultCellSize.X;
+                case Layout.LayoutType.Row:
+                    return RowLayout.TryGetValue(index, out layout) ? layout.Size : _table.DefaultCellSize.Y;
+                default:
+                    throw new NotSupportedException("Invalid layout type.");
+            }
         }
 
         internal Table.Cell GetIfExists(int row, int col)
