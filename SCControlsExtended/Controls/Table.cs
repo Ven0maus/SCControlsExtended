@@ -13,6 +13,8 @@ namespace SCControlsExtended.Controls
         public Color DefaultForeground { get; set; }
         public Color DefaultBackground { get; set; }
         public Point DefaultCellSize { get; set; }
+        public Mode DefaultHoverMode { get; set; }
+        public Mode DefaultSelectionMode { get; set; }
 
         private bool _useMouse = true;
         public new bool UseMouse
@@ -44,40 +46,6 @@ namespace SCControlsExtended.Controls
         /// Turn this off, if the whole table should draw as many cells  as it fits, even with no data.
         /// </summary>
         public bool DrawOnlyIndexedCells { get; set; } = true;
-
-        private Mode _hoverMode;
-        /// <summary>
-        /// By default, the cell hover event effect is rendered on the control in single mode.
-        /// </summary>
-        public Mode HoverMode
-        {
-            get { return _hoverMode; }
-            set
-            {
-                if (value != _hoverMode)
-                {
-                    _hoverMode = value;
-                    IsDirty = true;
-                }
-            }
-        }
-
-        private Mode _selectionMode;
-        /// <summary>
-        /// By default, the cell selection event effect is rendered on the control in single mode.
-        /// </summary>
-        public Mode SelectionMode
-        {
-            get { return _selectionMode; }
-            set
-            {
-                if (value != _selectionMode)
-                {
-                    _selectionMode = value;
-                    IsDirty = true;
-                }
-            }
-        }
 
         public enum Mode
         {
@@ -463,6 +431,8 @@ namespace SCControlsExtended.Controls
             public bool? Interactable;
             public bool? IsVisible;
             public bool? Selectable;
+            public Table.Mode? HoverMode;
+            public Table.Mode? SelectionMode;
 
             private readonly Table _table;
 
@@ -485,7 +455,9 @@ namespace SCControlsExtended.Controls
             /// <param name="height"></param>
             /// <param name="foreground"></param>
             /// <param name="background"></param>
-            public void SetLayout(int? size = null, Color? foreground = null, Color? background = null, Cell.Alignment textAlignment = null, bool? interactable = null, bool? isVisible = null, bool? selectable = null)
+            public void SetLayout(int? size = null, Color? foreground = null, Color? background = null, 
+                Cell.Alignment textAlignment = null, bool? interactable = null, bool? isVisible = null, bool? selectable = null,
+                Table.Mode? hoverMode = null, Table.Mode? selectionMode = null)
             {
                 var prevSize = _size;
                 SetLayoutInternal(size, foreground, background, textAlignment, interactable, isVisible, selectable);
@@ -496,7 +468,9 @@ namespace SCControlsExtended.Controls
                 }
             }
 
-            internal void SetLayoutInternal(int? size = null, Color? foreground = null, Color? background = null, Cell.Alignment textAlignment = null, bool? interactable = null, bool? isVisible = null, bool? selectable = null)
+            internal void SetLayoutInternal(int? size = null, Color? foreground = null, Color? background = null, 
+                Cell.Alignment textAlignment = null, bool? interactable = null, bool? isVisible = null, bool? selectable = null,
+                Table.Mode? hoverMode = null, Table.Mode? selectionMode = null)
             {
                 if (size != null) _size = size.Value;
                 Foreground = foreground;
@@ -505,6 +479,8 @@ namespace SCControlsExtended.Controls
                 Interactable = interactable;
                 IsVisible = isVisible;
                 Selectable = selectable;
+                HoverMode = hoverMode;
+                SelectionMode = selectionMode;
             }
         }
 
@@ -618,6 +594,34 @@ namespace SCControlsExtended.Controls
                 }
             }
 
+            private Table.Mode _selectionMode;
+            public Table.Mode SelectionMode
+            {
+                get { return _selectionMode; }
+                set 
+                {
+                    if (value != _selectionMode)
+                    {
+                        _selectionMode = value;
+                        _table.IsDirty = true;
+                    }
+                }
+            }
+
+            private Table.Mode _hoverMode;
+            public Table.Mode HoverMode
+            {
+                get { return _hoverMode; }
+                set
+                {
+                    if (value != _hoverMode)
+                    {
+                        _hoverMode = value;
+                        _table.IsDirty = true;
+                    }
+                }
+            }
+
             private readonly Table _table;
 
             internal Cell(int row, int col, Table table, string text)
@@ -626,6 +630,8 @@ namespace SCControlsExtended.Controls
                 _text = text;
                 _foreground = table.DefaultForeground;
                 _background = table.DefaultBackground;
+                _selectionMode = table.DefaultSelectionMode;
+                _hoverMode = table.DefaultHoverMode;
                 _textAlignment = new Alignment();
 
                 RowIndex = row;
@@ -650,6 +656,10 @@ namespace SCControlsExtended.Controls
                         _isVisible = option.IsVisible.Value;
                     if (option.Selectable != null)
                         _selectable = option.Selectable.Value;
+                    if (option.HoverMode != null)
+                        _hoverMode = option.HoverMode.Value;
+                    if (option.SelectionMode != null)
+                        _selectionMode = option.SelectionMode.Value;
                 }
             }
 
@@ -661,10 +671,14 @@ namespace SCControlsExtended.Controls
                 }
             }
 
-            public void SetLayout(int? rowSize = null, int? columnSize = null, Color? foreground = null, Color? background = null, Alignment textAlignment = null, bool? interactable = null, bool? isVisible = null, bool? selectable = null)
+            public void SetLayout(int? rowSize = null, int? columnSize = null, Color? foreground = null, Color? background = null, 
+                Alignment textAlignment = null, bool? interactable = null, bool? isVisible = null, bool? selectable = null,
+                Table.Mode? hoverMode = null, Table.Mode? selectionMode = null)
             {
-                _table.Cells.Column(ColumnIndex).SetLayoutInternal(columnSize, foreground, background, textAlignment, interactable, isVisible, selectable);
-                _table.Cells.Row(RowIndex).SetLayoutInternal(rowSize, foreground, background, textAlignment, interactable, isVisible, selectable);
+                _table.Cells.Column(ColumnIndex).SetLayoutInternal(columnSize, foreground, background, textAlignment, 
+                    interactable, isVisible, selectable, hoverMode, selectionMode);
+                _table.Cells.Row(RowIndex).SetLayoutInternal(rowSize, foreground, background, textAlignment, 
+                    interactable, isVisible, selectable, hoverMode, selectionMode);
                 if (rowSize != null || columnSize != null)
                     _table.Cells.AdjustCellsAfterResize();
                 _table.IsDirty = true;

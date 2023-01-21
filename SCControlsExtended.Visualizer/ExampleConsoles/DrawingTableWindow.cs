@@ -16,7 +16,7 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             _table.DefaultBackground = Color.Lerp(Color.Gray, Color.Black, 0.85f);
             _table.DefaultForeground = Color.Yellow;
             _table.DrawOnlyIndexedCells = false;
-            _table.SelectionMode = Table.Mode.None;
+            _table.DefaultSelectionMode = Table.Mode.None;
             Controls.Add(_table);
         }
 

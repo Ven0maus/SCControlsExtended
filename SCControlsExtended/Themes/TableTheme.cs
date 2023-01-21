@@ -60,7 +60,7 @@ namespace SCControlsExtended.Themes
 
             if (cell.Selectable && table.SelectedCell != null)
             {
-                switch (table.SelectionMode)
+                switch (cell.SelectionMode)
                 {
                     case Table.Mode.Single:
                         if (!cell.Equals(table.SelectedCell)) break;
@@ -76,7 +76,7 @@ namespace SCControlsExtended.Themes
                 }
             }
 
-            switch (table.HoverMode)
+            switch (cell.HoverMode)
             {
                 case Table.Mode.Single:
                     if (table.CurrentMouseCell == null || !cell.Equals(table.CurrentMouseCell)) break;
