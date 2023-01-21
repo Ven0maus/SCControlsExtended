@@ -131,8 +131,13 @@ namespace SCControlsExtended.Themes
             var hAlign = cell.Settings.HorizontalAlignment;
             GetTotalCellSize(cell, width, height, out int totalWidth, out int totalHeight);
 
+            // Set the amount of characters to split on for wrapping
+            var maxCharsPerLine = cell.Settings.MaxCharactersPerLine ?? width;
+            if (maxCharsPerLine > width)
+                maxCharsPerLine = width;
+
             // Split the character array into parts based on cell width
-            var splittedTextArray = Split(cell.Text.ToCharArray(), width).ToArray();
+            var splittedTextArray = Split(cell.Text.ToCharArray(), maxCharsPerLine).ToArray();
             for (int y = 0; y < height; y++)
             {
                 // Don't go out of bounds of the cell height
