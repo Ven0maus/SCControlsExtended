@@ -35,11 +35,11 @@ namespace SCControlsExtended.Controls
         /// <summary>
         /// Returns the cell the mouse is over, if the property <see cref="IsMouseEnabled"/> is true.
         /// </summary>
-        public Cells.Cell CurrentMouseCell { get; private set; }
+        public Cell CurrentMouseCell { get; private set; }
         /// <summary>
         /// Returns the current selected cell
         /// </summary>
-        public Cells.Cell SelectedCell { get; private set; }
+        public Cell SelectedCell { get; private set; }
 
         /// <summary>
         /// By default, only cells that have been indexed (eg. accessing table[0, 0]) will be rendered on the table control.
@@ -107,7 +107,7 @@ namespace SCControlsExtended.Controls
                 if (mousePosCellIndex != null)
                 {
                     CurrentMouseCell = Cells.GetIfExists(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X) ??
-                        new Cells.Cell(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, this, string.Empty)
+                        new Cell(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, this, string.Empty)
                         {
                             Position = Cells.GetCellPosition(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, out _, out _)
                         };
@@ -209,9 +209,9 @@ namespace SCControlsExtended.Controls
 
         public class CellEventArgs : EventArgs
         {
-            public readonly Cells.Cell Cell;
+            public readonly Cell Cell;
 
-            internal CellEventArgs(Cells.Cell cell)
+            internal CellEventArgs(Cell cell)
             {
                 Cell = cell;
             }
@@ -219,297 +219,13 @@ namespace SCControlsExtended.Controls
 
         public class CellChangedEventArgs : CellEventArgs
         {
-            public readonly Cells.Cell PreviousCell;
+            public readonly Cell PreviousCell;
 
-            internal CellChangedEventArgs(Cells.Cell previousCell, Cells.Cell cell)
+            internal CellChangedEventArgs(Cell previousCell, Cell cell)
                 : base(cell)
             {
                 PreviousCell = previousCell;
             }
-        }
-    }
-
-    public class Cells : IEnumerable<Cells.Cell>
-    {
-        private readonly Table _table;
-        private readonly Dictionary<Point, Cell> _cells = new();
-        private readonly Dictionary<int, Layout> ColumnLayout = new();
-        private readonly Dictionary<int, Layout> RowLayout = new();
-
-        public Cell this[int row, int col]
-        {
-            get { return GetOrCreateCell(row, col); }
-            set { SetCell(row, col, value); }
-        }
-
-        internal Cells(Table table)
-        {
-            _table = table;
-        }
-
-        #region Public Methods
-
-        /// <summary>
-        /// Get the layout for the given column
-        /// </summary>
-        /// <param name="column"></param>
-        /// <returns></returns>
-        public Layout Column(int column)
-        {
-            ColumnLayout.TryGetValue(column, out Layout layout);
-            layout ??= ColumnLayout[column] = new Layout(_table, Layout.Type.Col);
-            return layout;
-        }
-
-        /// <summary>
-        /// Get the layout for the given columns
-        /// </summary>
-        /// <param name="column"></param>
-        /// <returns></returns>
-        public Layout.Range Column(params int[] columns)
-        {
-            var layouts = columns.Select(a => Column(a));
-            return new Layout.Range(layouts);
-        }
-
-        /// <summary>
-        /// Get the layout for the given row
-        /// </summary>
-        /// <param name="row"></param>
-        /// <returns></returns>
-        public Layout Row(int row)
-        {
-            RowLayout.TryGetValue(row, out Layout layout);
-            layout ??= RowLayout[row] = new Layout(_table, Layout.Type.Row);
-            return layout;
-        }
-
-        /// <summary>
-        /// Get the layout for the given rows
-        /// </summary>
-        /// <param name="row"></param>
-        /// <returns></returns>
-        public Layout.Range Row(params int[] rows)
-        {
-            var layouts = rows.Select(a => Row(a));
-            return new Layout.Range(layouts);
-        }
-
-        /// <summary>
-        /// Resets all the cells and layout options
-        /// </summary>
-        public void Clear(bool clearLayout = true)
-        {
-            if (clearLayout)
-            {
-                RowLayout.Clear();
-                ColumnLayout.Clear();
-            }
-            _cells.Clear();
-            _table.IsDirty = true;
-        }
-        #endregion
-
-        #region Internal Methods
-        /// <summary>
-        /// Get's the cell position on the control based on the row and column
-        /// </summary>
-        /// <param name="row"></param>
-        /// <param name="col"></param>
-        /// <returns></returns>
-        internal Point GetCellPosition(int row, int col, out int rowSize, out int columnSize)
-        {
-            return new Point(GetControlIndex(col, Layout.Type.Col, out columnSize), GetControlIndex(row, Layout.Type.Row, out rowSize));
-        }
-
-        internal Cell GetIfExists(int row, int col)
-        {
-            if (_cells.TryGetValue((row, col), out Cell cell))
-                return cell;
-            return null;
-        }
-
-        private Cell GetOrCreateCell(int row, int col)
-        {
-            if (!_cells.TryGetValue((row, col), out Cell cell))
-            {
-                cell = new Cell(row, col, _table, string.Empty)
-                {
-                    Position = GetCellPosition(row, col, out _, out _)
-                };
-
-                _cells[(row, col)] = cell;
-            }
-            return cell;
-        }
-
-        private int GetControlIndex(int index, Layout.Type type, out int indexSize)
-        {
-            int count = 0;
-            indexSize = type == Layout.Type.Col ?
-                _table.Cells.Column(count).Size :
-                _table.Cells.Row(count).Size;
-
-            int controlIndex = 0;
-            while (count < index)
-            {
-                controlIndex += indexSize;
-                count++;
-
-                indexSize = type == Layout.Type.Col ?
-                    _table.Cells.Column(count).Size :
-                    _table.Cells.Row(count).Size;
-            }
-            return controlIndex;
-        }
-
-        private void SetCell(int row, int col, Cell cell)
-        {
-            if (cell == null)
-            {
-                if (_cells.Remove((row, col)))
-                    _table.IsDirty = true;
-                return;
-            }
-
-            if (_cells.TryGetValue((row, col), out Cell oldCell))
-            {
-                if (!oldCell.Foreground.Equals(cell.Foreground) ||
-                    !oldCell.Background.Equals(cell.Background) ||
-                    !oldCell.Text.Equals(cell.Text) ||
-                    !oldCell.Settings.Equals(cell.Settings))
-                {
-                    _cells[(row, col)] = cell;
-                    _table.IsDirty = true;
-                }
-            }
-            else
-            {
-                _cells[(row, col)] = cell;
-                _table.IsDirty = true;
-            }
-        }
-
-        internal void AdjustCellsAfterResize()
-        {
-            foreach (var cell in _cells)
-                cell.Value.Position = GetCellPosition(cell.Value.Row, cell.Value.Column, out _, out _);
-        }
-
-        public IEnumerator<Cell> GetEnumerator()
-        {
-            return _cells.Values.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-        #endregion
-
-        public class Layout : ILayout
-        {
-            private int _size;
-            public int Size
-            {
-                get { return _size; }
-                set
-                {
-                    if (_size != value)
-                    {
-                        _size = value;
-                        _table.Cells.AdjustCellsAfterResize();
-                        _table.IsDirty = true;
-                    }
-                }
-            }
-
-            public Color? Foreground;
-            public Color? Background;
-
-            private Cell.Options _settings;
-            public Cell.Options Settings
-            {
-                get { return _settings ??= new Cell.Options(_table); }
-                set 
-                {
-                    if (value == null) return;
-                    _settings = value;
-                }
-            }
-
-            internal bool SettingsInitialized { get { return _settings != null; } }
-
-            private readonly Table _table;
-
-            internal enum Type
-            {
-                Col,
-                Row
-            }
-
-            internal Layout(Table table, Type type)
-            {
-                _table = table;
-                Size = type == Type.Col ? table.DefaultCellSize.X : table.DefaultCellSize.Y;
-            }
-
-            /// <summary>
-            /// Set a default layout to be used for each new cell
-            /// </summary>
-            /// <param name="width"></param>
-            /// <param name="height"></param>
-            /// <param name="foreground"></param>
-            /// <param name="background"></param>
-            public void SetLayout(int? size = null, Color? foreground = null, Color? background = null, Cell.Options settings = null)
-            {
-                var prevSize = _size;
-                SetLayoutInternal(size, foreground, background, settings);
-                if (prevSize != _size)
-                {
-                    _table.Cells.AdjustCellsAfterResize();
-                    _table.IsDirty = true;
-                }
-            }
-
-            internal void SetLayoutInternal(int? size = null, Color? foreground = null, Color? background = null, Cell.Options settings = null)
-            {
-                if (size != null) _size = size.Value;
-                Foreground = foreground;
-                Background = background;
-                Settings = settings;
-            }
-
-            public class Range : IEnumerable<Layout>, ILayout
-            {
-                private readonly IEnumerable<Layout> _layouts;
-
-                internal Range(IEnumerable<Layout> layouts)
-                {
-                    _layouts = layouts;
-                }
-
-                public void SetLayout(int? size = null, Color? foreground = null, Color? background = null, Cell.Options settings = null)
-                {
-                    foreach (var layout in _layouts)
-                        layout.SetLayout(size, foreground, background, settings);
-                }
-
-                public IEnumerator<Layout> GetEnumerator()
-                {
-                    return _layouts.GetEnumerator();
-                }
-
-                IEnumerator IEnumerable.GetEnumerator()
-                {
-                    return GetEnumerator();
-                }
-            }
-        }
-
-        interface ILayout
-        {
-            void SetLayout(int? size = null, Color? foreground = null, Color? background = null, Cell.Options settings = null);
         }
 
         public class Cell : IEquatable<Cell>
@@ -635,7 +351,7 @@ namespace SCControlsExtended.Controls
             {
                 private HorizontalAlign _horizontalAlignment;
                 public HorizontalAlign HorizontalAlignment
-                { 
+                {
                     get { return _horizontalAlignment; }
                     set
                     {
@@ -824,6 +540,290 @@ namespace SCControlsExtended.Controls
                     });
                 }
             }
+        }
+    }
+
+    public class Cells : IEnumerable<Table.Cell>
+    {
+        private readonly Table _table;
+        private readonly Dictionary<Point, Table.Cell> _cells = new();
+        internal readonly Dictionary<int, Layout> ColumnLayout = new();
+        internal readonly Dictionary<int, Layout> RowLayout = new();
+
+        public Table.Cell this[int row, int col]
+        {
+            get { return GetOrCreateCell(row, col); }
+            set { SetCell(row, col, value); }
+        }
+
+        internal Cells(Table table)
+        {
+            _table = table;
+        }
+
+        #region Public Methods
+
+        /// <summary>
+        /// Get the layout for the given column
+        /// </summary>
+        /// <param name="column"></param>
+        /// <returns></returns>
+        public Layout Column(int column)
+        {
+            ColumnLayout.TryGetValue(column, out Layout layout);
+            layout ??= ColumnLayout[column] = new Layout(_table, Layout.Type.Col);
+            return layout;
+        }
+
+        /// <summary>
+        /// Get the layout for the given columns
+        /// </summary>
+        /// <param name="column"></param>
+        /// <returns></returns>
+        public Layout.Range Column(params int[] columns)
+        {
+            var layouts = columns.Select(a => Column(a));
+            return new Layout.Range(layouts);
+        }
+
+        /// <summary>
+        /// Get the layout for the given row
+        /// </summary>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        public Layout Row(int row)
+        {
+            RowLayout.TryGetValue(row, out Layout layout);
+            layout ??= RowLayout[row] = new Layout(_table, Layout.Type.Row);
+            return layout;
+        }
+
+        /// <summary>
+        /// Get the layout for the given rows
+        /// </summary>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        public Layout.Range Row(params int[] rows)
+        {
+            var layouts = rows.Select(a => Row(a));
+            return new Layout.Range(layouts);
+        }
+
+        /// <summary>
+        /// Resets all the cells and layout options
+        /// </summary>
+        public void Clear(bool clearLayout = true)
+        {
+            if (clearLayout)
+            {
+                RowLayout.Clear();
+                ColumnLayout.Clear();
+            }
+            _cells.Clear();
+            _table.IsDirty = true;
+        }
+        #endregion
+
+        #region Internal Methods
+        /// <summary>
+        /// Get's the cell position on the control based on the row and column
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="col"></param>
+        /// <returns></returns>
+        internal Point GetCellPosition(int row, int col, out int rowSize, out int columnSize)
+        {
+            return new Point(GetControlIndex(col, Layout.Type.Col, out columnSize), GetControlIndex(row, Layout.Type.Row, out rowSize));
+        }
+
+        internal Table.Cell GetIfExists(int row, int col)
+        {
+            if (_cells.TryGetValue((row, col), out Table.Cell cell))
+                return cell;
+            return null;
+        }
+
+        private Table.Cell GetOrCreateCell(int row, int col)
+        {
+            if (!_cells.TryGetValue((row, col), out Table.Cell cell))
+            {
+                cell = new Table.Cell(row, col, _table, string.Empty)
+                {
+                    Position = GetCellPosition(row, col, out _, out _)
+                };
+
+                _cells[(row, col)] = cell;
+            }
+            return cell;
+        }
+
+        private int GetControlIndex(int index, Layout.Type type, out int indexSize)
+        {
+            int count = 0;
+            indexSize = type == Layout.Type.Col ?
+                _table.Cells.Column(count).Size :
+                _table.Cells.Row(count).Size;
+
+            int controlIndex = 0;
+            while (count < index)
+            {
+                controlIndex += indexSize;
+                count++;
+
+                indexSize = type == Layout.Type.Col ?
+                    _table.Cells.Column(count).Size :
+                    _table.Cells.Row(count).Size;
+            }
+            return controlIndex;
+        }
+
+        private void SetCell(int row, int col, Table.Cell cell)
+        {
+            if (cell == null)
+            {
+                if (_cells.Remove((row, col)))
+                    _table.IsDirty = true;
+                return;
+            }
+
+            if (_cells.TryGetValue((row, col), out Table.Cell oldCell))
+            {
+                if (!oldCell.Foreground.Equals(cell.Foreground) ||
+                    !oldCell.Background.Equals(cell.Background) ||
+                    !oldCell.Text.Equals(cell.Text) ||
+                    !oldCell.Settings.Equals(cell.Settings))
+                {
+                    _cells[(row, col)] = cell;
+                    _table.IsDirty = true;
+                }
+            }
+            else
+            {
+                _cells[(row, col)] = cell;
+                _table.IsDirty = true;
+            }
+        }
+
+        internal void AdjustCellsAfterResize()
+        {
+            foreach (var cell in _cells)
+                cell.Value.Position = GetCellPosition(cell.Value.Row, cell.Value.Column, out _, out _);
+        }
+
+        public IEnumerator<Table.Cell> GetEnumerator()
+        {
+            return _cells.Values.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+        #endregion
+
+        public class Layout : ILayout
+        {
+            private int _size;
+            public int Size
+            {
+                get { return _size; }
+                set
+                {
+                    if (_size != value)
+                    {
+                        _size = value;
+                        _table.Cells.AdjustCellsAfterResize();
+                        _table.IsDirty = true;
+                    }
+                }
+            }
+
+            public Color? Foreground;
+            public Color? Background;
+
+            private Table.Cell.Options _settings;
+            public Table.Cell.Options Settings
+            {
+                get { return _settings ??= new Table.Cell.Options(_table); }
+                set 
+                {
+                    if (value == null) return;
+                    _settings = value;
+                }
+            }
+
+            internal bool SettingsInitialized { get { return _settings != null; } }
+
+            private readonly Table _table;
+
+            internal enum Type
+            {
+                Col,
+                Row
+            }
+
+            internal Layout(Table table, Type type)
+            {
+                _table = table;
+                Size = type == Type.Col ? table.DefaultCellSize.X : table.DefaultCellSize.Y;
+            }
+
+            /// <summary>
+            /// Set a default layout to be used for each new cell
+            /// </summary>
+            /// <param name="width"></param>
+            /// <param name="height"></param>
+            /// <param name="foreground"></param>
+            /// <param name="background"></param>
+            public void SetLayout(int? size = null, Color? foreground = null, Color? background = null, Table.Cell.Options settings = null)
+            {
+                var prevSize = _size;
+                SetLayoutInternal(size, foreground, background, settings);
+                if (prevSize != _size)
+                {
+                    _table.Cells.AdjustCellsAfterResize();
+                    _table.IsDirty = true;
+                }
+            }
+
+            internal void SetLayoutInternal(int? size = null, Color? foreground = null, Color? background = null, Table.Cell.Options settings = null)
+            {
+                if (size != null) _size = size.Value;
+                Foreground = foreground;
+                Background = background;
+                Settings = settings;
+            }
+
+            public class Range : IEnumerable<Layout>, ILayout
+            {
+                private readonly IEnumerable<Layout> _layouts;
+
+                internal Range(IEnumerable<Layout> layouts)
+                {
+                    _layouts = layouts;
+                }
+
+                public void SetLayout(int? size = null, Color? foreground = null, Color? background = null, Table.Cell.Options settings = null)
+                {
+                    foreach (var layout in _layouts)
+                        layout.SetLayout(size, foreground, background, settings);
+                }
+
+                public IEnumerator<Layout> GetEnumerator()
+                {
+                    return _layouts.GetEnumerator();
+                }
+
+                IEnumerator IEnumerable.GetEnumerator()
+                {
+                    return GetEnumerator();
+                }
+            }
+        }
+
+        interface ILayout
+        {
+            void SetLayout(int? size = null, Color? foreground = null, Color? background = null, Table.Cell.Options settings = null);
         }
     }
 }

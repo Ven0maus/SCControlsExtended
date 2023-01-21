@@ -35,7 +35,7 @@ namespace SCControlsExtended.Themes
                     var cell = table.Cells.GetIfExists(rowIndex, colIndex);
                     if (table.DrawOnlyIndexedCells && cell == null) continue;
 
-                    cell ??= new Cells.Cell(rowIndex, colIndex, table, string.Empty)
+                    cell ??= new Table.Cell(rowIndex, colIndex, table, string.Empty)
                     {
                         Position = cellPosition
                     };
@@ -54,7 +54,7 @@ namespace SCControlsExtended.Themes
             control.IsDirty = false;
         }
 
-        private ColoredGlyph GetCustomStateAppearance(Table table, Cells.Cell cell)
+        private ColoredGlyph GetCustomStateAppearance(Table table, Table.Cell cell)
         {
             if (!cell.Settings.IsVisible || !cell.Settings.Interactable) return null;
 
@@ -101,7 +101,7 @@ namespace SCControlsExtended.Themes
             base.Attached(control);
         }
 
-        private static void AdjustControlSurface(Table table, Cells.Cell cell, ColoredGlyph customStateAppearance)
+        private static void AdjustControlSurface(Table table, Table.Cell cell, ColoredGlyph customStateAppearance)
         {
             var width = table.Cells.Column(cell.Column).Size;
             var height = table.Cells.Row(cell.Row).Size;
@@ -119,7 +119,7 @@ namespace SCControlsExtended.Themes
             }
         }
 
-        private static void PrintText(Table table, Cells.Cell cell)
+        private static void PrintText(Table table, Table.Cell cell)
         {
             if (cell.Text == null || !cell.Settings.IsVisible) return;
 
@@ -152,7 +152,7 @@ namespace SCControlsExtended.Themes
             }
         }
 
-        private static void GetTotalCellSize(Cells.Cell cell, int width, int height, out int totalWidth, out int totalHeight)
+        private static void GetTotalCellSize(Table.Cell cell, int width, int height, out int totalWidth, out int totalHeight)
         {
             int startX = cell.Position.X;
             int startY = cell.Position.Y;
@@ -162,36 +162,36 @@ namespace SCControlsExtended.Themes
             totalHeight = endY - startY;
         }
 
-        private static int GetHorizontalAlignment(Cells.Cell.Options.HorizontalAlign hAlign, int totalWidth, char[] textArr)
+        private static int GetHorizontalAlignment(Table.Cell.Options.HorizontalAlign hAlign, int totalWidth, char[] textArr)
         {
             int startPosX = 0;
             switch (hAlign)
             {
-                case Cells.Cell.Options.HorizontalAlign.Left:
+                case Table.Cell.Options.HorizontalAlign.Left:
                     startPosX = 0;
                     break;
-                case Cells.Cell.Options.HorizontalAlign.Center:
+                case Table.Cell.Options.HorizontalAlign.Center:
                     startPosX = (totalWidth - textArr.Length) / 2;
                     break;
-                case Cells.Cell.Options.HorizontalAlign.Right:
+                case Table.Cell.Options.HorizontalAlign.Right:
                     startPosX = totalWidth - textArr.Length;
                     break;
             }
             return startPosX;
         }
 
-        private static int GetVerticalAlignment(Cells.Cell.Options.VerticalAlign vAlign, int totalHeight, IEnumerable<char>[] textArrs)
+        private static int GetVerticalAlignment(Table.Cell.Options.VerticalAlign vAlign, int totalHeight, IEnumerable<char>[] textArrs)
         {
             int position = 0;
             switch (vAlign)
             {
-                case Cells.Cell.Options.VerticalAlign.Top:
+                case Table.Cell.Options.VerticalAlign.Top:
                     position = 0;
                     break;
-                case Cells.Cell.Options.VerticalAlign.Center:
+                case Table.Cell.Options.VerticalAlign.Center:
                     position = (totalHeight - textArrs.Length) / 2;
                     break;
-                case Cells.Cell.Options.VerticalAlign.Bottom:
+                case Table.Cell.Options.VerticalAlign.Bottom:
                     position = totalHeight - textArrs.Length;
                     break;
             }

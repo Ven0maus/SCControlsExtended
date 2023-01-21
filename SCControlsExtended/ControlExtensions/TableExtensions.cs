@@ -1,9 +1,7 @@
-﻿using SCControlsExtended.Controls;
-using System.Collections.Generic;
-using static SCControlsExtended.Controls.Cells.Cell;
-using System.Data.Common;
-using SadRogue.Primitives;
+﻿using SadRogue.Primitives;
+using SCControlsExtended.Controls;
 using System;
+using System.Collections.Generic;
 
 namespace SCControlsExtended.ControlExtensions
 {
@@ -17,7 +15,7 @@ namespace SCControlsExtended.ControlExtensions
         /// <param name="endRow"></param>
         /// <param name="endCol"></param>
         /// <returns></returns>
-        public static IEnumerable<Cells.Cell> Range(this Cells cells, int startRow, int startCol, int endRow, int endCol)
+        public static IEnumerable<Table.Cell> Range(this Cells cells, int startRow, int startCol, int endRow, int endCol)
         {
             var width = endCol - startCol + 1;
             var height = endRow - startRow + 1;
@@ -35,7 +33,7 @@ namespace SCControlsExtended.ControlExtensions
         /// </summary>
         /// <param name="range"></param>
         /// <param name="action"></param>
-        public static void ForEach(this IEnumerable<Cells.Cell> range, Action<Cells.Cell> action)
+        public static void ForEach(this IEnumerable<Table.Cell> range, Action<Table.Cell> action)
         {
             foreach (var cell in range)
             {
@@ -50,7 +48,7 @@ namespace SCControlsExtended.ControlExtensions
         /// <param name="foreground"></param>
         /// <param name="background"></param>
         /// <param name="settings"></param>
-        public static void SetLayout(this Cells.Cell cell, Color? foreground = null, Color? background = null, Options settings = null)
+        public static void SetLayout(this Table.Cell cell, Color? foreground = null, Color? background = null, Table.Cell.Options settings = null)
         {
             cell.Table.Cells.Column(cell.Column).SetLayout(null, foreground, background, settings);
             cell.Table.Cells.Row(cell.Row).SetLayout(null, foreground, background, settings);
@@ -63,7 +61,7 @@ namespace SCControlsExtended.ControlExtensions
         /// <param name="cell"></param>
         /// <param name="rowSize"></param>
         /// <param name="columnSize"></param>
-        public static void Resize(this Cells.Cell cell, int? rowSize, int? columnSize = null)
+        public static void Resize(this Table.Cell cell, int? rowSize, int? columnSize = null)
         {
             cell.Table.Cells.Column(cell.Column).SetLayoutInternal(columnSize);
             cell.Table.Cells.Row(cell.Row).SetLayoutInternal(rowSize);
