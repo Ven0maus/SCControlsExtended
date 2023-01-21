@@ -1,5 +1,6 @@
 ﻿using SadConsole.UI;
 using SadRogue.Primitives;
+using SCControlsExtended.ControlExtensions;
 using SCControlsExtended.Controls;
 using System;
 
@@ -56,7 +57,7 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
 
             // Custom cell size
             _table.Cells[5, 7].Text = "Support custom cell sizes!";
-            _table.Cells[5, 7].SetLayout(6, 20);
+            _table.Cells[5, 7].Resize(6, 20);
             _table.Cells[5, 7].Background = Color.Yellow;
             _table.Cells[5, 7].Foreground = Color.Black;
 
@@ -65,7 +66,7 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             _table.Cells[6, 8].Background = Color.Blue;
             _table.Cells[6, 8].Settings.Interactable = false;
             _table.Cells[7, 8].Settings.IsVisible = false;
-            _table.Cells[7, 8].Settings.Interactable = false;
+            _table.Cells[7, 8].Settings.Interactable = true;
         }
 
         private static void Table_OnCellExit(object sender, Table.CellEventArgs e)

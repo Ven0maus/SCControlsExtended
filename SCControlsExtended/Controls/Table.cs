@@ -296,33 +296,15 @@ namespace SCControlsExtended.Controls
         }
 
         /// <summary>
-        /// Creates a range of cells that can be iterated.
-        /// </summary>
-        /// <param name="startRow"></param>
-        /// <param name="startCol"></param>
-        /// <param name="endRow"></param>
-        /// <param name="endCol"></param>
-        /// <returns></returns>
-        public IEnumerable<Cell> Range(int startRow, int startCol, int endRow, int endCol)
-        {
-            var width = endCol - startCol + 1;
-            var height = endRow - startRow + 1;
-            for (int x = startCol; x < startCol + width; x++)
-            {
-                for (int y = startRow; y < startRow + height; y++)
-                {
-                    yield return this[y, x];
-                }
-            }
-        }
-
-        /// <summary>
         /// Resets all the cells and layout options
         /// </summary>
-        public void Clear()
+        public void Clear(bool clearLayout = true)
         {
-            RowLayout.Clear();
-            ColumnLayout.Clear();
+            if (clearLayout)
+            {
+                RowLayout.Clear();
+                ColumnLayout.Clear();
+            }
             _cells.Clear();
             _table.IsDirty = true;
         }
@@ -448,9 +430,15 @@ namespace SCControlsExtended.Controls
             private Cell.Options _settings;
             public Cell.Options Settings
             {
-                get { return _settings ?? new Cell.Options(_table); }
-                set { _settings = value; }
+                get { return _settings ??= new Cell.Options(_table); }
+                set 
+                {
+                    if (value == null) return;
+                    _settings = value;
+                }
             }
+
+            internal bool SettingsInitialized { get { return _settings != null; } }
 
             private readonly Table _table;
 
@@ -537,7 +525,7 @@ namespace SCControlsExtended.Controls
                 get { return _foreground; }
                 set
                 {
-                    if (_foreground != value)
+                    if (Foreground != value)
                     {
                         _foreground = value;
                         AddToTableIfNotExists();
@@ -552,7 +540,7 @@ namespace SCControlsExtended.Controls
                 get { return _background; }
                 set
                 {
-                    if (_background != value)
+                    if (Background != value)
                     {
                         _background = value;
                         AddToTableIfNotExists();
@@ -567,7 +555,7 @@ namespace SCControlsExtended.Controls
                 get { return _text; }
                 set
                 {
-                    if (_text != value)
+                    if (Text != value)
                     {
                         _text = value;
                         AddToTableIfNotExists();
@@ -579,11 +567,11 @@ namespace SCControlsExtended.Controls
             private Options _settings;
             public Options Settings
             {
-                get { return _settings; }
+                get { return _settings ??= new Options(this); }
                 set
                 {
                     if (value == null) return;
-                    if (_settings != value)
+                    if (Settings != value)
                     {
                         _settings = value;
                         AddToTableIfNotExists();
@@ -600,7 +588,6 @@ namespace SCControlsExtended.Controls
                 _text = text;
                 _foreground = table.DefaultForeground;
                 _background = table.DefaultBackground;
-                _settings = new Options(this);
 
                 Row = row;
                 Column = col;
@@ -616,7 +603,7 @@ namespace SCControlsExtended.Controls
                         _foreground = option.Foreground.Value;
                     if (option.Background != null)
                         _background = option.Background.Value;
-                    if (option.Settings != null)
+                    if (option.SettingsInitialized)
                         _settings = option.Settings;
                 }
             }
@@ -624,18 +611,7 @@ namespace SCControlsExtended.Controls
             internal void AddToTableIfNotExists()
             {
                 if (Table.Cells.GetIfExists(Row, Column) == null)
-                {
                     Table.Cells[Row, Column] = this;
-                }
-            }
-
-            public void SetLayout(int? rowSize = null, int? columnSize = null, Color? foreground = null, Color? background = null, Options settings = null)
-            {
-                Table.Cells.Column(Column).SetLayoutInternal(columnSize, foreground, background, settings);
-                Table.Cells.Row(Row).SetLayoutInternal(rowSize, foreground, background, settings);
-                if (rowSize != null || columnSize != null)
-                    Table.Cells.AdjustCellsAfterResize();
-                Table.IsDirty = true;
             }
 
             public bool Equals(Cell cell)
@@ -663,7 +639,7 @@ namespace SCControlsExtended.Controls
                     get { return _horizontalAlignment; }
                     set
                     {
-                        if (value != _horizontalAlignment)
+                        if (value != HorizontalAlignment)
                         {
                             _horizontalAlignment = value;
                             if (_usedForLayout) return;
@@ -678,7 +654,7 @@ namespace SCControlsExtended.Controls
                     get { return _verticalAlignment; }
                     set
                     {
-                        if (value != _verticalAlignment)
+                        if (value != VerticalAlignment)
                         {
                             _verticalAlignment = value;
                             if (_usedForLayout) return;
@@ -693,7 +669,7 @@ namespace SCControlsExtended.Controls
                     get { return _maxCharactersPerLine; }
                     set
                     {
-                        if (value != _maxCharactersPerLine)
+                        if (value != MaxCharactersPerLine)
                         {
                             _maxCharactersPerLine = value;
                             if (_usedForLayout) return;
@@ -708,7 +684,7 @@ namespace SCControlsExtended.Controls
                     get { return _interactable; }
                     set
                     {
-                        if (value != _interactable)
+                        if (value != Interactable)
                         {
                             _interactable = value;
                             if (_usedForLayout) return;
@@ -724,7 +700,7 @@ namespace SCControlsExtended.Controls
                     get { return _selectable; }
                     set
                     {
-                        if (value != _selectable)
+                        if (value != Selectable)
                         {
                             _selectable = value;
                             if (_usedForLayout) return;
@@ -740,7 +716,7 @@ namespace SCControlsExtended.Controls
                     get { return _isVisible; }
                     set
                     {
-                        if (value != _isVisible)
+                        if (value != IsVisible)
                         {
                             _isVisible = value;
                             if (_usedForLayout) return;
@@ -756,7 +732,7 @@ namespace SCControlsExtended.Controls
                     get { return _selectionMode; }
                     set
                     {
-                        if (value != _selectionMode)
+                        if (value != SelectionMode)
                         {
                             _selectionMode = value;
                             if (_usedForLayout) return;
@@ -772,7 +748,7 @@ namespace SCControlsExtended.Controls
                     get { return _hoverMode; }
                     set
                     {
-                        if (value != _hoverMode)
+                        if (value != HoverMode)
                         {
                             _hoverMode = value;
                             if (_usedForLayout) return;
