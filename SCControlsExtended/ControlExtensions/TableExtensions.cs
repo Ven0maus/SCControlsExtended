@@ -2,6 +2,8 @@
 using SCControlsExtended.Controls;
 using System;
 using System.Collections.Generic;
+using static SCControlsExtended.Controls.Cells;
+using System.Linq;
 
 namespace SCControlsExtended.ControlExtensions
 {
@@ -68,6 +70,28 @@ namespace SCControlsExtended.ControlExtensions
             if (rowSize != null || columnSize != null)
                 cell.Table.Cells.AdjustCellsAfterResize();
             cell.Table.IsDirty = true;
+        }
+
+        /// <summary>
+        /// Get the layout for the given columns
+        /// </summary>
+        /// <param name="column"></param>
+        /// <returns></returns>
+        public static Layout.Range Column(this Cells cells, params int[] columns)
+        {
+            var layouts = columns.Select(a => cells.Column(a));
+            return new Layout.Range(layouts);
+        }
+
+        /// <summary>
+        /// Get the layout for the given rows
+        /// </summary>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        public static Layout.Range Row(this Cells cells, params int[] rows)
+        {
+            var layouts = rows.Select(a => cells.Row(a));
+            return new Layout.Range(layouts);
         }
     }
 }

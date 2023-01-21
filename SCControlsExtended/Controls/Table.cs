@@ -3,7 +3,6 @@ using SadRogue.Primitives;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace SCControlsExtended.Controls
 {
@@ -74,17 +73,29 @@ namespace SCControlsExtended.Controls
 
         private DateTime _leftMouseLastClick = DateTime.Now;
 
-        public Table(int tableWidth, int tableHeight, int cellWidth, Color foreground, Color background, int cellHeight = 1) : base(tableWidth, tableHeight)
+        public Table(int width, int height) : base(width, height)
         {
-            DefaultCellSize = new(cellWidth, cellHeight);
-            DefaultForeground = foreground;
-            DefaultBackground = background;
             Cells = new(this);
+            DefaultForeground = Color.White;
+            DefaultBackground = Color.TransparentBlack;
+            DefaultCellSize = new(1, 1);
         }
 
-        public Table(int tableWidth, int tableHeight, int cellWidth, int cellHeight = 1)
-            : this(tableWidth, tableHeight, cellWidth, Color.White, Color.Transparent, cellHeight)
-        { }
+        public Table(int width, int height, int cellWidth, int cellHeight = 1) 
+            : this(width, height)
+        {
+            if (cellWidth < 1 || cellHeight < 1)
+                throw new Exception("Cell width/height cannot be smaller than 1.");
+
+            DefaultCellSize = new(cellWidth, cellHeight);
+        }
+
+        public Table(int width, int height, int cellWidth, Color defaultForeground, Color defaultBackground, int cellHeight = 1)
+            : this(width, height, cellWidth, cellHeight)
+        {
+            DefaultForeground = defaultForeground;
+            DefaultBackground = defaultBackground;
+        }
 
         protected override void OnMouseIn(ControlMouseState state)
         {
@@ -199,6 +210,7 @@ namespace SCControlsExtended.Controls
                 mousePosition.Y >= row && mousePosition.Y < maxY;
         }
 
+        #region Event Args
         public class CellEventArgs : EventArgs
         {
             public readonly Cell Cell;
@@ -219,6 +231,7 @@ namespace SCControlsExtended.Controls
                 PreviousCell = previousCell;
             }
         }
+        #endregion
 
         public sealed class Cell : IEquatable<Cell>
         {
@@ -545,7 +558,7 @@ namespace SCControlsExtended.Controls
         public Table.Cell this[int row, int col]
         {
             get { return GetOrCreateCell(row, col); }
-            set { SetCell(row, col, value); }
+            internal set { SetCell(row, col, value); }
         }
 
         internal Cells(Table table)
@@ -563,19 +576,8 @@ namespace SCControlsExtended.Controls
         public Layout Column(int column)
         {
             ColumnLayout.TryGetValue(column, out Layout layout);
-            layout ??= ColumnLayout[column] = new Layout(_table, Layout.Type.Col);
+            layout ??= ColumnLayout[column] = new Layout(_table, Layout.LayoutType.Col);
             return layout;
-        }
-
-        /// <summary>
-        /// Get the layout for the given columns
-        /// </summary>
-        /// <param name="column"></param>
-        /// <returns></returns>
-        public Layout.Range Column(params int[] columns)
-        {
-            var layouts = columns.Select(a => Column(a));
-            return new Layout.Range(layouts);
         }
 
         /// <summary>
@@ -586,27 +588,28 @@ namespace SCControlsExtended.Controls
         public Layout Row(int row)
         {
             RowLayout.TryGetValue(row, out Layout layout);
-            layout ??= RowLayout[row] = new Layout(_table, Layout.Type.Row);
+            layout ??= RowLayout[row] = new Layout(_table, Layout.LayoutType.Row);
             return layout;
         }
 
         /// <summary>
-        /// Get the layout for the given rows
+        /// Gets the cell at the given row and col
         /// </summary>
         /// <param name="row"></param>
+        /// <param name="col"></param>
         /// <returns></returns>
-        public Layout.Range Row(params int[] rows)
+        public Table.Cell GetCell(int row, int col)
         {
-            var layouts = rows.Select(a => Row(a));
-            return new Layout.Range(layouts);
+            return this[row, col];
         }
 
         /// <summary>
-        /// Resets all the cells and layout options
+        /// Resets all the cells data
         /// </summary>
-        public void Clear(bool clearLayout = true)
+        /// <param name="clearLayoutOptions"></param>
+        public void Clear(bool clearLayoutOptions = true)
         {
-            if (clearLayout)
+            if (clearLayoutOptions)
             {
                 RowLayout.Clear();
                 ColumnLayout.Clear();
@@ -625,7 +628,7 @@ namespace SCControlsExtended.Controls
         /// <returns></returns>
         internal Point GetCellPosition(int row, int col, out int rowSize, out int columnSize)
         {
-            return new Point(GetControlIndex(col, Layout.Type.Col, out columnSize), GetControlIndex(row, Layout.Type.Row, out rowSize));
+            return new Point(GetControlIndex(col, Layout.LayoutType.Col, out columnSize), GetControlIndex(row, Layout.LayoutType.Row, out rowSize));
         }
 
         internal Table.Cell GetIfExists(int row, int col)
@@ -649,10 +652,10 @@ namespace SCControlsExtended.Controls
             return cell;
         }
 
-        private int GetControlIndex(int index, Layout.Type type, out int indexSize)
+        private int GetControlIndex(int index, Layout.LayoutType type, out int indexSize)
         {
             int count = 0;
-            indexSize = type == Layout.Type.Col ?
+            indexSize = type == Layout.LayoutType.Col ?
                 _table.Cells.Column(count).Size :
                 _table.Cells.Row(count).Size;
 
@@ -662,7 +665,7 @@ namespace SCControlsExtended.Controls
                 controlIndex += indexSize;
                 count++;
 
-                indexSize = type == Layout.Type.Col ?
+                indexSize = type == Layout.LayoutType.Col ?
                     _table.Cells.Column(count).Size :
                     _table.Cells.Row(count).Size;
             }
@@ -713,7 +716,7 @@ namespace SCControlsExtended.Controls
         }
         #endregion
 
-        public class Layout : ILayout
+        public class Layout
         {
             private int _size;
             public int Size
@@ -730,8 +733,8 @@ namespace SCControlsExtended.Controls
                 }
             }
 
-            public Color? Foreground;
-            public Color? Background;
+            public Color? Foreground { get; set; }
+            public Color? Background { get; set; }
 
             private Table.Cell.Options _settings;
             public Table.Cell.Options Settings
@@ -748,24 +751,10 @@ namespace SCControlsExtended.Controls
 
             private readonly Table _table;
 
-            internal enum Type
-            {
-                Col,
-                Row
-            }
-
-            public enum Mode
-            {
-                Single = 0,
-                None,
-                EntireRow,
-                EntireColumn
-            }
-
-            internal Layout(Table table, Type type)
+            internal Layout(Table table, LayoutType type)
             {
                 _table = table;
-                Size = type == Type.Col ? table.DefaultCellSize.X : table.DefaultCellSize.Y;
+                Size = type == LayoutType.Col ? table.DefaultCellSize.X : table.DefaultCellSize.Y;
             }
 
             /// <summary>
@@ -786,6 +775,13 @@ namespace SCControlsExtended.Controls
                 }
             }
 
+            /// <summary>
+            /// Sets the layout without adjusting cells or setting the table dirty
+            /// </summary>
+            /// <param name="size"></param>
+            /// <param name="foreground"></param>
+            /// <param name="background"></param>
+            /// <param name="settings"></param>
             internal void SetLayoutInternal(int? size = null, Color? foreground = null, Color? background = null, Table.Cell.Options settings = null)
             {
                 if (size != null) _size = size.Value;
@@ -794,7 +790,21 @@ namespace SCControlsExtended.Controls
                 Settings = settings;
             }
 
-            public class Range : IEnumerable<Layout>, ILayout
+            internal enum LayoutType
+            {
+                Col,
+                Row
+            }
+
+            public enum Mode
+            {
+                Single = 0,
+                None,
+                EntireRow,
+                EntireColumn
+            }
+
+            public class Range : IEnumerable<Layout>
             {
                 private readonly IEnumerable<Layout> _layouts;
 
@@ -819,11 +829,6 @@ namespace SCControlsExtended.Controls
                     return GetEnumerator();
                 }
             }
-        }
-
-        interface ILayout
-        {
-            void SetLayout(int? size = null, Color? foreground = null, Color? background = null, Table.Cell.Options settings = null);
         }
     }
 }
