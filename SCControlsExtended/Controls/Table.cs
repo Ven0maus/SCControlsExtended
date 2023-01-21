@@ -634,7 +634,7 @@ namespace SCControlsExtended.Controls
                 // Set cell layout options
                 table.Cells.ColumnLayout.TryGetValue(col, out var columnLayout);
                 table.Cells.RowLayout.TryGetValue(row, out var rowLayout);
-                var layoutOptions = new[] { rowLayout, columnLayout };
+                var layoutOptions = new[] { columnLayout, rowLayout };
                 foreach (var option in layoutOptions)
                 {
                     if (option == null) continue;
