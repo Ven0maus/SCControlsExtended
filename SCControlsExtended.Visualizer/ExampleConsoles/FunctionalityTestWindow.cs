@@ -63,19 +63,19 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             _table.Cells[6, 7].Background = Color.Magenta;
             _table.Cells[5, 8].Background = Color.Orange;
             _table.Cells[6, 8].Background = Color.Blue;
-            _table.Cells[6, 8].Interactable = false;
-            _table.Cells[7, 8].IsVisible = false;
-            _table.Cells[7, 8].Interactable = false;
+            _table.Cells[6, 8].Settings.Interactable = false;
+            _table.Cells[7, 8].Settings.IsVisible = false;
+            _table.Cells[7, 8].Settings.Interactable = false;
         }
 
         private static void Table_OnCellExit(object sender, Table.CellEventArgs e)
         {
-            Console.WriteLine($"Exited cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
+            Console.WriteLine($"Exited cell: [{e.Cell.Row},{e.Cell.Column}]");
         }
 
         private static void Table_OnCellEnter(object sender, Table.CellEventArgs e)
         {
-            Console.WriteLine($"Entered cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
+            Console.WriteLine($"Entered cell: [{e.Cell.Row},{e.Cell.Column}]");
         }
 
         private static void Table_SelectedCellChanged(object sender, Table.CellChangedEventArgs e)
@@ -83,28 +83,28 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             if (e.PreviousCell != null)
             {
                 e.PreviousCell.Text = string.Empty;
-                Console.WriteLine($"Unselected cell: [{e.PreviousCell.RowIndex},{e.PreviousCell.ColumnIndex}]");
+                Console.WriteLine($"Unselected cell: [{e.PreviousCell.Row},{e.PreviousCell.Column}]");
             }
             if (e.Cell != null)
             {
                 e.Cell.Text = "Selected";
-                Console.WriteLine($"Selected cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
+                Console.WriteLine($"Selected cell: [{e.Cell.Row},{e.Cell.Column}]");
             }
         }
 
         private static void Table_OnCellRightClick(object sender, Table.CellEventArgs e)
         {
-            Console.WriteLine($"Right clicked cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
+            Console.WriteLine($"Right clicked cell: [{e.Cell.Row},{e.Cell.Column}]");
         }
 
         private static void Table_OnCellLeftClick(object sender, Table.CellEventArgs e)
         {
-            Console.WriteLine($"Left clicked cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
+            Console.WriteLine($"Left clicked cell: [{e.Cell.Row},{e.Cell.Column}]");
         }
 
         private static void Table_OnCellDoubleClick(object sender, Table.CellEventArgs e)
         {
-            Console.WriteLine($"Double clicked cell: [{e.Cell.RowIndex},{e.Cell.ColumnIndex}]");
+            Console.WriteLine($"Double clicked cell: [{e.Cell.Row},{e.Cell.Column}]");
         }
     }
 }

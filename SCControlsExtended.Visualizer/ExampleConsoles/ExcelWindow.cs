@@ -39,24 +39,24 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
 
             // Set column
             _table.Cells[0, 0].Text = ">";
-            _table.Cells[0, 0].TextAlignment.Horizontal = Cells.Cell.Alignment.TextAlignmentH.Center;
-            _table.Cells[0, 0].TextAlignment.Vertical = Cells.Cell.Alignment.TextAlignmentV.Center;
-            _table.Cells[0, 0].Interactable = false;
+            _table.Cells[0, 0].Settings.HorizontalAlignment = Cells.Cell.Options.HorizontalAlign.Center;
+            _table.Cells[0, 0].Settings.VerticalAlignment = Cells.Cell.Options.VerticalAlign.Center;
+            _table.Cells[0, 0].Settings.Interactable = false;
 
             // Set column, row texts
             _table.Cells.Range(0, 1, 0, Width / _table.DefaultCellSize.X).ForEach(cell =>
             {
                 cell.Text = GetExcelColumnName(col++);
-                cell.TextAlignment.Horizontal = Cells.Cell.Alignment.TextAlignmentH.Center;
-                cell.TextAlignment.Vertical = Cells.Cell.Alignment.TextAlignmentV.Center;
-                cell.Interactable = false;
+                cell.Settings.HorizontalAlignment = Cells.Cell.Options.HorizontalAlign.Center;
+                cell.Settings.VerticalAlignment = Cells.Cell.Options.VerticalAlign.Center;
+                cell.Settings.Interactable = false;
             });
             _table.Cells.Range(1, 0, Height / _table.DefaultCellSize.Y, 0).ForEach(cell =>
             {
                 cell.Text = row++.ToString();
-                cell.TextAlignment.Horizontal = Cells.Cell.Alignment.TextAlignmentH.Center;
-                cell.TextAlignment.Vertical = Cells.Cell.Alignment.TextAlignmentV.Center;
-                cell.Interactable = false;
+                cell.Settings.HorizontalAlignment = Cells.Cell.Options.HorizontalAlign.Center;
+                cell.Settings.VerticalAlignment = Cells.Cell.Options.VerticalAlign.Center;
+                cell.Settings.Interactable = false;
             });
 
             // Set inner cells color

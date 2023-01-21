@@ -3,7 +3,6 @@ using SadRogue.Primitives;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace SCControlsExtended.Controls
@@ -101,7 +100,7 @@ namespace SCControlsExtended.Controls
 
             // Handle mouse hovering over cell
             var mousePosCellIndex = GetCellIndexByMousePosition(state.MousePosition);
-            Point? currentPosition = CurrentMouseCell == null ? null : (CurrentMouseCell.ColumnIndex, CurrentMouseCell.RowIndex);
+            Point? currentPosition = CurrentMouseCell == null ? null : (CurrentMouseCell.Column, CurrentMouseCell.Row);
 
             if (!Equals(mousePosCellIndex, currentPosition))
             {
@@ -112,12 +111,12 @@ namespace SCControlsExtended.Controls
                         {
                             Position = Cells.GetCellPosition(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, out _, out _)
                         };
-                    if (CurrentMouseCell.Interactable)
+                    if (CurrentMouseCell.Settings.Interactable)
                         OnCellEnter?.Invoke(this, new CellEventArgs(CurrentMouseCell));
                 }
                 else
                 {
-                    if (CurrentMouseCell != null && CurrentMouseCell.Interactable)
+                    if (CurrentMouseCell != null && CurrentMouseCell.Settings.Interactable)
                         OnCellExit?.Invoke(this, new CellEventArgs(CurrentMouseCell));
                 }
                 IsDirty = true;
@@ -130,7 +129,7 @@ namespace SCControlsExtended.Controls
 
             if (CurrentMouseCell != null)
             {
-                if (SelectedCell != CurrentMouseCell && CurrentMouseCell.Interactable && CurrentMouseCell.IsVisible && CurrentMouseCell.Selectable)
+                if (SelectedCell != CurrentMouseCell && CurrentMouseCell.Settings.Interactable && CurrentMouseCell.Settings.IsVisible && CurrentMouseCell.Settings.Selectable)
                 {
                     var previous = SelectedCell;
                     SelectedCell = CurrentMouseCell;
@@ -144,7 +143,7 @@ namespace SCControlsExtended.Controls
                     SelectedCellChanged?.Invoke(this, new CellChangedEventArgs(previous, SelectedCell));
                 }
 
-                if (CurrentMouseCell.Interactable && CurrentMouseCell.IsVisible)
+                if (CurrentMouseCell.Settings.Interactable && CurrentMouseCell.Settings.IsVisible)
                     OnCellLeftClick?.Invoke(this, new CellEventArgs(CurrentMouseCell));
 
                 DateTime click = DateTime.Now;
@@ -154,7 +153,7 @@ namespace SCControlsExtended.Controls
                 if (doubleClicked)
                 {
                     _leftMouseLastClick = DateTime.MinValue;
-                    if (CurrentMouseCell.Interactable && CurrentMouseCell.IsVisible)
+                    if (CurrentMouseCell.Settings.Interactable && CurrentMouseCell.Settings.IsVisible)
                         OnCellDoubleClick?.Invoke(this, new CellEventArgs(CurrentMouseCell));
                 }
             }
@@ -168,7 +167,7 @@ namespace SCControlsExtended.Controls
         {
             base.OnRightMouseClicked(state);
 
-            if (CurrentMouseCell != null && CurrentMouseCell.Interactable && CurrentMouseCell.IsVisible)
+            if (CurrentMouseCell != null && CurrentMouseCell.Settings.Interactable && CurrentMouseCell.Settings.IsVisible)
             {
                 OnCellRightClick?.Invoke(this, new CellEventArgs(CurrentMouseCell));
             }
@@ -180,7 +179,7 @@ namespace SCControlsExtended.Controls
 
             if (CurrentMouseCell != null)
             {
-                if (CurrentMouseCell.Interactable && CurrentMouseCell.IsVisible)
+                if (CurrentMouseCell.Settings.Interactable && CurrentMouseCell.Settings.IsVisible)
                     OnCellExit?.Invoke(this, new CellEventArgs(CurrentMouseCell));
                 CurrentMouseCell = null;
             }
@@ -396,10 +395,7 @@ namespace SCControlsExtended.Controls
                 if (!oldCell.Foreground.Equals(cell.Foreground) ||
                     !oldCell.Background.Equals(cell.Background) ||
                     !oldCell.Text.Equals(cell.Text) ||
-                    !oldCell.Interactable.Equals(cell.Interactable) &&
-                    !oldCell.IsVisible.Equals(cell.IsVisible) ||
-                    oldCell.TextAlignment.Vertical != cell.TextAlignment.Vertical ||
-                    oldCell.TextAlignment.Horizontal != cell.TextAlignment.Horizontal)
+                    !oldCell.Settings.Equals(cell.Settings))
                 {
                     _cells[(row, col)] = cell;
                     _table.IsDirty = true;
@@ -415,9 +411,7 @@ namespace SCControlsExtended.Controls
         internal void AdjustCellsAfterResize()
         {
             foreach (var cell in _cells)
-            {
-                cell.Value.Position = GetCellPosition(cell.Value.RowIndex, cell.Value.ColumnIndex, out _, out _);
-            }
+                cell.Value.Position = GetCellPosition(cell.Value.Row, cell.Value.Column, out _, out _);
         }
 
         public IEnumerator<Cell> GetEnumerator()
@@ -450,12 +444,13 @@ namespace SCControlsExtended.Controls
 
             public Color? Foreground;
             public Color? Background;
-            public Cell.Alignment TextAlignment;
-            public bool? Interactable;
-            public bool? IsVisible;
-            public bool? Selectable;
-            public Table.Mode? HoverMode;
-            public Table.Mode? SelectionMode;
+
+            private Cell.Options _settings;
+            public Cell.Options Settings
+            {
+                get { return _settings ?? new Cell.Options(_table); }
+                set { _settings = value; }
+            }
 
             private readonly Table _table;
 
@@ -478,12 +473,10 @@ namespace SCControlsExtended.Controls
             /// <param name="height"></param>
             /// <param name="foreground"></param>
             /// <param name="background"></param>
-            public void SetLayout(int? size = null, Color? foreground = null, Color? background = null, 
-                Cell.Alignment textAlignment = null, bool? interactable = null, bool? isVisible = null, bool? selectable = null,
-                Table.Mode? hoverMode = null, Table.Mode? selectionMode = null)
+            public void SetLayout(int? size = null, Color? foreground = null, Color? background = null, Cell.Options settings = null)
             {
                 var prevSize = _size;
-                SetLayoutInternal(size, foreground, background, textAlignment, interactable, isVisible, selectable, hoverMode, selectionMode);
+                SetLayoutInternal(size, foreground, background, settings);
                 if (prevSize != _size)
                 {
                     _table.Cells.AdjustCellsAfterResize();
@@ -491,19 +484,12 @@ namespace SCControlsExtended.Controls
                 }
             }
 
-            internal void SetLayoutInternal(int? size = null, Color? foreground = null, Color? background = null, 
-                Cell.Alignment textAlignment = null, bool? interactable = null, bool? isVisible = null, bool? selectable = null,
-                Table.Mode? hoverMode = null, Table.Mode? selectionMode = null)
+            internal void SetLayoutInternal(int? size = null, Color? foreground = null, Color? background = null, Cell.Options settings = null)
             {
                 if (size != null) _size = size.Value;
                 Foreground = foreground;
                 Background = background;
-                TextAlignment = textAlignment;
-                Interactable = interactable;
-                IsVisible = isVisible;
-                Selectable = selectable;
-                HoverMode = hoverMode;
-                SelectionMode = selectionMode;
+                Settings = settings;
             }
 
             public class Range : IEnumerable<Layout>, ILayout
@@ -515,12 +501,10 @@ namespace SCControlsExtended.Controls
                     _layouts = layouts;
                 }
 
-                public void SetLayout(int? size = null, Color? foreground = null, Color? background = null,
-                    Cell.Alignment textAlignment = null, bool? interactable = null, bool? isVisible = null, bool? selectable = null,
-                    Table.Mode? hoverMode = null, Table.Mode? selectionMode = null)
+                public void SetLayout(int? size = null, Color? foreground = null, Color? background = null, Cell.Options settings = null)
                 {
                     foreach (var layout in _layouts)
-                        layout.SetLayout(size, foreground, background, textAlignment, interactable, isVisible, selectable, hoverMode, selectionMode);
+                        layout.SetLayout(size, foreground, background, settings);
                 }
 
                 public IEnumerator<Layout> GetEnumerator()
@@ -537,16 +521,14 @@ namespace SCControlsExtended.Controls
 
         interface ILayout
         {
-            void SetLayout(int? size = null, Color? foreground = null, Color? background = null,
-                Cell.Alignment textAlignment = null, bool? interactable = null, bool? isVisible = null, bool? selectable = null,
-                Table.Mode? hoverMode = null, Table.Mode? selectionMode = null);
+            void SetLayout(int? size = null, Color? foreground = null, Color? background = null, Cell.Options settings = null);
         }
 
-        public class Cell : IEqualityComparer<Cell>
+        public class Cell : IEquatable<Cell>
         {
             internal Point Position { get; set; }
-            public int RowIndex { get; }
-            public int ColumnIndex { get; }
+            public int Row { get; }
+            public int Column { get; }
 
             // Adjustable settings
             private Color _foreground;
@@ -559,7 +541,7 @@ namespace SCControlsExtended.Controls
                     {
                         _foreground = value;
                         AddToTableIfNotExists();
-                        _table.IsDirty = true;
+                        Table.IsDirty = true;
                     }
                 }
             }
@@ -574,7 +556,7 @@ namespace SCControlsExtended.Controls
                     {
                         _background = value;
                         AddToTableIfNotExists();
-                        _table.IsDirty = true;
+                        Table.IsDirty = true;
                     }
                 }
             }
@@ -589,111 +571,39 @@ namespace SCControlsExtended.Controls
                     {
                         _text = value;
                         AddToTableIfNotExists();
-                        _table.IsDirty = true;
+                        Table.IsDirty = true;
                     }
                 }
             }
 
-            private Alignment _textAlignment;
-            public Alignment TextAlignment
+            private Options _settings;
+            public Options Settings
             {
-                get { return _textAlignment; }
+                get { return _settings; }
                 set
                 {
                     if (value == null) return;
-                    if (_textAlignment.Vertical != value.Vertical ||
-                        _textAlignment.Horizontal != value.Horizontal)
+                    if (_settings != value)
                     {
-                        _textAlignment = value;
-                        _table.IsDirty = true;
+                        _settings = value;
+                        AddToTableIfNotExists();
+                        Table.IsDirty = true;
                     }
                 }
             }
 
-            private bool _interactable = true;
-            public bool Interactable
-            {
-                get { return _interactable; }
-                set
-                {
-                    if (value != _interactable)
-                    {
-                        _interactable = value;
-                        _table.IsDirty = true;
-                    }
-                }
-            }
-
-            private bool _selectable = true;
-            public bool Selectable
-            {
-                get { return _selectable; }
-                set
-                {
-                    if (value != _selectable)
-                    {
-                        _selectable = value;
-                        _table.IsDirty = true;
-                    }
-                }
-            }
-
-            private bool _isVisible = true;
-            public bool IsVisible
-            {
-                get { return _isVisible; }
-                set
-                {
-                    if (value != _isVisible)
-                    {
-                        _isVisible = value;
-                        _table.IsDirty = true;
-                    }
-                }
-            }
-
-            private Table.Mode _selectionMode;
-            public Table.Mode SelectionMode
-            {
-                get { return _selectionMode; }
-                set 
-                {
-                    if (value != _selectionMode)
-                    {
-                        _selectionMode = value;
-                        _table.IsDirty = true;
-                    }
-                }
-            }
-
-            private Table.Mode _hoverMode;
-            public Table.Mode HoverMode
-            {
-                get { return _hoverMode; }
-                set
-                {
-                    if (value != _hoverMode)
-                    {
-                        _hoverMode = value;
-                        _table.IsDirty = true;
-                    }
-                }
-            }
-
-            private readonly Table _table;
+            internal readonly Table Table;
 
             internal Cell(int row, int col, Table table, string text)
             {
-                _table = table;
+                Table = table;
                 _text = text;
                 _foreground = table.DefaultForeground;
                 _background = table.DefaultBackground;
-                _selectionMode = table.DefaultSelectionMode;
-                _hoverMode = table.DefaultHoverMode;
-                _textAlignment = new Alignment();
+                _settings = new Options(this);
 
-                RowIndex = row;
-                ColumnIndex = col;
+                Row = row;
+                Column = col;
 
                 // Set cell layout options
                 table.Cells.ColumnLayout.TryGetValue(col, out var columnLayout);
@@ -706,72 +616,236 @@ namespace SCControlsExtended.Controls
                         _foreground = option.Foreground.Value;
                     if (option.Background != null)
                         _background = option.Background.Value;
-                    if (option.TextAlignment != null)
-                        _textAlignment = option.TextAlignment;
-                    if (option.Interactable != null)
-                        _interactable = option.Interactable.Value;
-                    if (option.IsVisible != null)
-                        _isVisible = option.IsVisible.Value;
-                    if (option.Selectable != null)
-                        _selectable = option.Selectable.Value;
-                    if (option.HoverMode != null)
-                        _hoverMode = option.HoverMode.Value;
-                    if (option.SelectionMode != null)
-                        _selectionMode = option.SelectionMode.Value;
+                    if (option.Settings != null)
+                        _settings = option.Settings;
                 }
             }
 
-            private void AddToTableIfNotExists()
+            internal void AddToTableIfNotExists()
             {
-                if (_table.Cells.GetIfExists(RowIndex, ColumnIndex) == null)
+                if (Table.Cells.GetIfExists(Row, Column) == null)
                 {
-                    _table.Cells[RowIndex, ColumnIndex] = this;
+                    Table.Cells[Row, Column] = this;
                 }
             }
 
-            public void SetLayout(int? rowSize = null, int? columnSize = null, Color? foreground = null, Color? background = null, 
-                Alignment textAlignment = null, bool? interactable = null, bool? isVisible = null, bool? selectable = null,
-                Table.Mode? hoverMode = null, Table.Mode? selectionMode = null)
+            public void SetLayout(int? rowSize = null, int? columnSize = null, Color? foreground = null, Color? background = null, Options settings = null)
             {
-                _table.Cells.Column(ColumnIndex).SetLayoutInternal(columnSize, foreground, background, textAlignment, 
-                    interactable, isVisible, selectable, hoverMode, selectionMode);
-                _table.Cells.Row(RowIndex).SetLayoutInternal(rowSize, foreground, background, textAlignment, 
-                    interactable, isVisible, selectable, hoverMode, selectionMode);
+                Table.Cells.Column(Column).SetLayoutInternal(columnSize, foreground, background, settings);
+                Table.Cells.Row(Row).SetLayoutInternal(rowSize, foreground, background, settings);
                 if (rowSize != null || columnSize != null)
-                    _table.Cells.AdjustCellsAfterResize();
-                _table.IsDirty = true;
+                    Table.Cells.AdjustCellsAfterResize();
+                Table.IsDirty = true;
             }
 
-            public bool Equals(Cell cell1, Cell cell2)
+            public bool Equals(Cell cell)
             {
-                if (cell1 == null && cell2 != null) return false;
-                if (cell1 != null && cell2 == null) return false;
-                if (cell1 == null && cell2 == null) return true;
-                return cell1.ColumnIndex == cell2.ColumnIndex && cell1.RowIndex == cell2.RowIndex;
+                if (cell == null) return false;
+                return cell.Column == Column && cell.Row == Row;
             }
 
-            public int GetHashCode([DisallowNull] Cell obj)
+            public override bool Equals(object obj)
             {
-                return HashCode.Combine(obj.RowIndex, obj.ColumnIndex);
+                if (obj is not Cell cell) return false;
+                return Equals(cell);
             }
 
-            public class Alignment
+            public override int GetHashCode()
             {
-                public TextAlignmentH Horizontal { get; set; }
-                public TextAlignmentV Vertical { get; set; }
+                return HashCode.Combine(Column, Row);
+            }
 
-                public enum TextAlignmentH
+            public class Options : IEquatable<Options>
+            {
+                private HorizontalAlign _horizontalAlignment;
+                public HorizontalAlign HorizontalAlignment
+                { 
+                    get { return _horizontalAlignment; }
+                    set
+                    {
+                        if (value != _horizontalAlignment)
+                        {
+                            _horizontalAlignment = value;
+                            if (_usedForLayout) return;
+                            _cell.Table.IsDirty = true;
+                        }
+                    }
+                }
+
+                private VerticalAlign _verticalAlignment;
+                public VerticalAlign VerticalAlignment
+                {
+                    get { return _verticalAlignment; }
+                    set
+                    {
+                        if (value != _verticalAlignment)
+                        {
+                            _verticalAlignment = value;
+                            if (_usedForLayout) return;
+                            _cell.Table.IsDirty = true;
+                        }
+                    }
+                }
+
+                private int? _maxCharactersPerLine;
+                public int? MaxCharactersPerLine
+                {
+                    get { return _maxCharactersPerLine; }
+                    set
+                    {
+                        if (value != _maxCharactersPerLine)
+                        {
+                            _maxCharactersPerLine = value;
+                            if (_usedForLayout) return;
+                            _cell.Table.IsDirty = true;
+                        }
+                    }
+                }
+
+                private bool _interactable = true;
+                public bool Interactable
+                {
+                    get { return _interactable; }
+                    set
+                    {
+                        if (value != _interactable)
+                        {
+                            _interactable = value;
+                            if (_usedForLayout) return;
+                            _cell.AddToTableIfNotExists();
+                            _cell.Table.IsDirty = true;
+                        }
+                    }
+                }
+
+                private bool _selectable = true;
+                public bool Selectable
+                {
+                    get { return _selectable; }
+                    set
+                    {
+                        if (value != _selectable)
+                        {
+                            _selectable = value;
+                            if (_usedForLayout) return;
+                            _cell.AddToTableIfNotExists();
+                            _cell.Table.IsDirty = true;
+                        }
+                    }
+                }
+
+                private bool _isVisible = true;
+                public bool IsVisible
+                {
+                    get { return _isVisible; }
+                    set
+                    {
+                        if (value != _isVisible)
+                        {
+                            _isVisible = value;
+                            if (_usedForLayout) return;
+                            _cell.AddToTableIfNotExists();
+                            _cell.Table.IsDirty = true;
+                        }
+                    }
+                }
+
+                private Table.Mode _selectionMode;
+                public Table.Mode SelectionMode
+                {
+                    get { return _selectionMode; }
+                    set
+                    {
+                        if (value != _selectionMode)
+                        {
+                            _selectionMode = value;
+                            if (_usedForLayout) return;
+                            _cell.AddToTableIfNotExists();
+                            _cell.Table.IsDirty = true;
+                        }
+                    }
+                }
+
+                private Table.Mode _hoverMode;
+                public Table.Mode HoverMode
+                {
+                    get { return _hoverMode; }
+                    set
+                    {
+                        if (value != _hoverMode)
+                        {
+                            _hoverMode = value;
+                            if (_usedForLayout) return;
+                            _cell.AddToTableIfNotExists();
+                            _cell.Table.IsDirty = true;
+                        }
+                    }
+                }
+
+                private readonly bool _usedForLayout;
+                private readonly Cell _cell;
+
+                internal Options(Cell cell)
+                {
+                    _usedForLayout = false;
+                    _cell = cell;
+                    _hoverMode = _cell.Table.DefaultHoverMode;
+                    _selectionMode = _cell.Table.DefaultSelectionMode;
+                }
+
+                public Options(Table table)
+                {
+                    _usedForLayout = true;
+                    _hoverMode = table.DefaultHoverMode;
+                    _selectionMode = table.DefaultSelectionMode;
+                }
+
+                public enum HorizontalAlign
                 {
                     Left = 0,
                     Center,
                     Right
                 }
 
-                public enum TextAlignmentV
+                public enum VerticalAlign
                 {
-                    Up = 0,
+                    Top = 0,
                     Center,
-                    Down
+                    Bottom
+                }
+
+                public bool Equals(Options other)
+                {
+                    if (other == null) return false;
+                    return other.HorizontalAlignment == HorizontalAlignment &&
+                        other.VerticalAlignment == VerticalAlignment &&
+                        other.MaxCharactersPerLine == MaxCharactersPerLine &&
+                        other.IsVisible == IsVisible &&
+                        other.Selectable == Selectable &&
+                        other.SelectionMode == SelectionMode &&
+                        other.HoverMode == HoverMode &&
+                        other.Interactable == Interactable;
+                }
+
+                public override bool Equals(object obj)
+                {
+                    if (obj is not Options to) return false;
+                    return Equals(to);
+                }
+
+                public override int GetHashCode()
+                {
+                    return HashCode.Combine(new object[]
+                    {
+                        HorizontalAlignment,
+                        VerticalAlignment,
+                        MaxCharactersPerLine,
+                        IsVisible,
+                        Selectable,
+                        SelectionMode,
+                        HoverMode,
+                        Interactable
+                    });
                 }
             }
         }

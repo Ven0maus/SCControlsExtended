@@ -56,36 +56,36 @@ namespace SCControlsExtended.Themes
 
         private ColoredGlyph GetCustomStateAppearance(Table table, Cells.Cell cell)
         {
-            if (!cell.IsVisible || !cell.Interactable) return null;
+            if (!cell.Settings.IsVisible || !cell.Settings.Interactable) return null;
 
-            if (cell.Selectable && table.SelectedCell != null)
+            if (cell.Settings.Selectable && table.SelectedCell != null)
             {
-                switch (cell.SelectionMode)
+                switch (cell.Settings.SelectionMode)
                 {
                     case Table.Mode.Single:
                         if (!cell.Equals(table.SelectedCell)) break;
                         return ControlThemeState.Selected;
                     case Table.Mode.EntireRow:
-                        if (cell.RowIndex != table.SelectedCell.RowIndex) break;
+                        if (cell.Row != table.SelectedCell.Row) break;
                         return ControlThemeState.Selected;
                     case Table.Mode.EntireColumn:
-                        if (cell.ColumnIndex != table.SelectedCell.ColumnIndex) break;
+                        if (cell.Column != table.SelectedCell.Column) break;
                         return ControlThemeState.Selected;
                     case Table.Mode.None:
                         break;
                 }
             }
 
-            switch (cell.HoverMode)
+            switch (cell.Settings.HoverMode)
             {
                 case Table.Mode.Single:
                     if (table.CurrentMouseCell == null || !cell.Equals(table.CurrentMouseCell)) break;
                     return ControlThemeState.MouseOver;
                 case Table.Mode.EntireRow:
-                    if (table.CurrentMouseCell == null || table.CurrentMouseCell.RowIndex != cell.RowIndex) break;
+                    if (table.CurrentMouseCell == null || table.CurrentMouseCell.Row != cell.Row) break;
                     return ControlThemeState.MouseOver;
                 case Table.Mode.EntireColumn:
-                    if (table.CurrentMouseCell == null || table.CurrentMouseCell.ColumnIndex != cell.ColumnIndex) break;
+                    if (table.CurrentMouseCell == null || table.CurrentMouseCell.Column != cell.Column) break;
                     return ControlThemeState.MouseOver;
                 case Table.Mode.None:
                     break;
@@ -103,8 +103,8 @@ namespace SCControlsExtended.Themes
 
         private static void AdjustControlSurface(Table table, Cells.Cell cell, ColoredGlyph customStateAppearance)
         {
-            var width = table.Cells.Column(cell.ColumnIndex).Size;
-            var height = table.Cells.Row(cell.RowIndex).Size;
+            var width = table.Cells.Column(cell.Column).Size;
+            var height = table.Cells.Row(cell.Row).Size;
             for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < height; y++)
@@ -112,7 +112,7 @@ namespace SCControlsExtended.Themes
                     int colIndex = cell.Position.X + x;
                     int rowIndex = cell.Position.Y + y;
                     if (!table.Surface.IsValidCell(colIndex, rowIndex)) continue;
-                    table.Surface[colIndex, rowIndex].IsVisible = cell.IsVisible;
+                    table.Surface[colIndex, rowIndex].IsVisible = cell.Settings.IsVisible;
                     table.Surface.SetForeground(colIndex, rowIndex, customStateAppearance != null ? customStateAppearance.Foreground : cell.Foreground);
                     table.Surface.SetBackground(colIndex, rowIndex, customStateAppearance != null ? customStateAppearance.Background : cell.Background);
                 }
@@ -121,14 +121,14 @@ namespace SCControlsExtended.Themes
 
         private static void PrintText(Table table, Cells.Cell cell)
         {
-            if (cell.Text == null || !cell.IsVisible) return;
+            if (cell.Text == null || !cell.Settings.IsVisible) return;
 
-            var width = table.Cells.Column(cell.ColumnIndex).Size;
-            var height = table.Cells.Row(cell.RowIndex).Size;
+            var width = table.Cells.Column(cell.Column).Size;
+            var height = table.Cells.Row(cell.Row).Size;
 
             // Handle alignments
-            var vAlign = cell.TextAlignment.Vertical;
-            var hAlign = cell.TextAlignment.Horizontal;
+            var vAlign = cell.Settings.VerticalAlignment;
+            var hAlign = cell.Settings.HorizontalAlignment;
             GetTotalCellSize(cell, width, height, out int totalWidth, out int totalHeight);
 
             // Split the character array into parts based on cell width
@@ -162,36 +162,36 @@ namespace SCControlsExtended.Themes
             totalHeight = endY - startY;
         }
 
-        private static int GetHorizontalAlignment(Cells.Cell.Alignment.TextAlignmentH hAlign, int totalWidth, char[] textArr)
+        private static int GetHorizontalAlignment(Cells.Cell.Options.HorizontalAlign hAlign, int totalWidth, char[] textArr)
         {
             int startPosX = 0;
             switch (hAlign)
             {
-                case Cells.Cell.Alignment.TextAlignmentH.Left:
+                case Cells.Cell.Options.HorizontalAlign.Left:
                     startPosX = 0;
                     break;
-                case Cells.Cell.Alignment.TextAlignmentH.Center:
+                case Cells.Cell.Options.HorizontalAlign.Center:
                     startPosX = (totalWidth - textArr.Length) / 2;
                     break;
-                case Cells.Cell.Alignment.TextAlignmentH.Right:
+                case Cells.Cell.Options.HorizontalAlign.Right:
                     startPosX = totalWidth - textArr.Length;
                     break;
             }
             return startPosX;
         }
 
-        private static int GetVerticalAlignment(Cells.Cell.Alignment.TextAlignmentV vAlign, int totalHeight, IEnumerable<char>[] textArrs)
+        private static int GetVerticalAlignment(Cells.Cell.Options.VerticalAlign vAlign, int totalHeight, IEnumerable<char>[] textArrs)
         {
             int position = 0;
             switch (vAlign)
             {
-                case Cells.Cell.Alignment.TextAlignmentV.Up:
+                case Cells.Cell.Options.VerticalAlign.Top:
                     position = 0;
                     break;
-                case Cells.Cell.Alignment.TextAlignmentV.Center:
+                case Cells.Cell.Options.VerticalAlign.Center:
                     position = (totalHeight - textArrs.Length) / 2;
                     break;
-                case Cells.Cell.Alignment.TextAlignmentV.Down:
+                case Cells.Cell.Options.VerticalAlign.Bottom:
                     position = totalHeight - textArrs.Length;
                     break;
             }
