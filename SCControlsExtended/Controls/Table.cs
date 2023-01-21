@@ -460,7 +460,7 @@ namespace SCControlsExtended.Controls
                 Table.Mode? hoverMode = null, Table.Mode? selectionMode = null)
             {
                 var prevSize = _size;
-                SetLayoutInternal(size, foreground, background, textAlignment, interactable, isVisible, selectable);
+                SetLayoutInternal(size, foreground, background, textAlignment, interactable, isVisible, selectable, hoverMode, selectionMode);
                 if (prevSize != _size)
                 {
                     _table.Cells.AdjustCellsAfterResize();
