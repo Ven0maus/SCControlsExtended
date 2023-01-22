@@ -163,11 +163,8 @@ namespace SCControlsExtended.Themes
                     var verticalScrollBarValue = table.IsVerticalScrollBarVisible ? table.VerticalScrollBar.Value : 0;
                     var horizontalScrollBarValue = table.IsHorizontalScrollBarVisible ? table.HorizontalScrollBar.Value : 0;
 
-                    int? startIndexRow = null, startIndexColumn = null;
-                    //GetStartIndex(table, rowIndex, row, colIndex, col, out startIndexRow, out startIndexColumn);
-
                     var cellPosition = table.Cells.GetCellPosition(rowIndex, colIndex, out fullRowSize, out int columnSize,
-                        verticalScrollBarValue, horizontalScrollBarValue, startIndexRow, startIndexColumn);
+                        verticalScrollBarValue, horizontalScrollBarValue);
 
                     col += columnSize - 1;
 
@@ -208,7 +205,7 @@ namespace SCControlsExtended.Themes
             control.IsDirty = false;
         }
 
-        private static void GetStartIndex(Table table, int rowIndex, int row, int colIndex, int col, out int startIndexRow, out int startIndexColumn)
+        private static void GetStartIndex(Table table, int rowIndex, int row, int colIndex, int col, out int? startIndexRow, out int? startIndexColumn)
         {
             startIndexRow = table.Cells.RowLayout.TryGetValue(rowIndex, out Layout layout) ? layout.Size : table.DefaultCellSize.Y;
             if (row < table.Height && (row + startIndexRow) >= table.Height)
@@ -217,11 +214,19 @@ namespace SCControlsExtended.Themes
                     System.Console.WriteLine("Line 20");
                 startIndexRow = table.Cells.RowLayout.TryGetValue(rowIndex + 1, out layout) ? layout.Size : table.DefaultCellSize.Y;
             }
+            else
+            {
+                startIndexRow = null;
+            }
 
             startIndexColumn = table.Cells.ColumnLayout.TryGetValue(colIndex, out layout) ? layout.Size : table.DefaultCellSize.X;
             if (col < table.Width && (col + startIndexColumn) >= table.Width)
             {
                 startIndexColumn = table.Cells.ColumnLayout.TryGetValue(colIndex + 1, out layout) ? layout.Size : table.DefaultCellSize.X;
+            }
+            else
+            {
+                startIndexColumn = null;
             }
         }
 

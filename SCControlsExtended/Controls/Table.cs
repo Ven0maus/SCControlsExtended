@@ -261,6 +261,10 @@ namespace SCControlsExtended.Controls
 
                     var orientation = scrollBar.Orientation;
                     int selectedIndex = SelectedCell != null ? (orientation == Orientation.Vertical ? SelectedCell.Row : SelectedCell.Column) : 0;
+
+                    // TODO: Check if this is the last row on the screen
+                    // get the next row size off screen and scroll the initial indexSize by this amount
+
                     var indexSize = (selectedIndex + 1) * Cells.GetSizeOrDefault(selectedIndex, orientation == Orientation.Vertical ?
                         Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column);
 
@@ -859,11 +863,10 @@ namespace SCControlsExtended.Controls
         /// <param name="row"></param>
         /// <param name="col"></param>
         /// <returns></returns>
-        internal Point GetCellPosition(int row, int col, out int rowSize, out int columnSize, int verticalScrollBarValue = 0, int horizontalScrollbarValue = 0,
-            int? startIndexSizeVertical = null, int? startIndexSizeHorizontal = null)
+        internal Point GetCellPosition(int row, int col, out int rowSize, out int columnSize, int verticalScrollBarValue = 0, int horizontalScrollbarValue = 0)
         {
-            int columnIndex = GetControlIndex(col, horizontalScrollbarValue, startIndexSizeHorizontal, Layout.LayoutType.Column, out columnSize);
-            int rowIndex = GetControlIndex(row, verticalScrollBarValue, startIndexSizeVertical, Layout.LayoutType.Row, out rowSize);
+            int columnIndex = GetControlIndex(col, horizontalScrollbarValue, Layout.LayoutType.Column, out columnSize);
+            int rowIndex = GetControlIndex(row, verticalScrollBarValue, Layout.LayoutType.Row, out rowSize);
             return new Point(columnIndex, rowIndex);
         }
 
@@ -908,16 +911,12 @@ namespace SCControlsExtended.Controls
             return cell;
         }
 
-        private int GetControlIndex(int index, int scrollBarValue, int? startIndex, Layout.LayoutType type, out int indexSize)
+        private int GetControlIndex(int index, int scrollBarValue, Layout.LayoutType type, out int indexSize)
         {
-            // TODO: Check if this is the last row on the screen
-            // get the next row size off screen and scroll the initial indexSize by this amount
-            // also deduct the right amount from the ScrollBar value in this case
-
             int count = scrollBarValue;
-            indexSize = startIndex ?? (type == Layout.LayoutType.Column ?
+            indexSize = type == Layout.LayoutType.Column ?
                 (ColumnLayout.TryGetValue(count, out Layout layout) ? layout.Size : _table.DefaultCellSize.X) :
-                (RowLayout.TryGetValue(count, out layout) ? layout.Size : _table.DefaultCellSize.Y));
+                (RowLayout.TryGetValue(count, out layout) ? layout.Size : _table.DefaultCellSize.Y);
 
             int controlIndex = 0;
             while (count < index)
