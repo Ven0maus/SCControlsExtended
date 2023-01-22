@@ -262,6 +262,7 @@ namespace SCControlsExtended.Controls
                     var orientation = scrollBar.Orientation;
                     int selectedIndex = SelectedCell != null ? (orientation == Orientation.Vertical ? SelectedCell.Row : SelectedCell.Column) : 0;
 
+                    // TODO: Fix based on cell size
                     var indexSize = (selectedIndex + 1) * Cells.GetSizeOrDefault(selectedIndex, orientation == Orientation.Vertical ?
                         Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column);
 
@@ -321,6 +322,8 @@ namespace SCControlsExtended.Controls
                                 IsVerticalScrollBarVisible ? VerticalScrollBar.Value : 0, IsHorizontalScrollBarVisible ? HorizontalScrollBar.Value : 0)
                         };
                     }
+                    if (CurrentMouseCell != cell)
+                        IsDirty = true;
                     CurrentMouseCell = cell;
 
                     if (CurrentMouseCell != null && (!CurrentMouseCell.IsSettingsInitialized || CurrentMouseCell.Settings.Interactable))
@@ -331,7 +334,6 @@ namespace SCControlsExtended.Controls
                     if (CurrentMouseCell != null && (!CurrentMouseCell.IsSettingsInitialized || CurrentMouseCell.Settings.Interactable))
                         OnCellExit?.Invoke(this, new CellEventArgs(CurrentMouseCell));
                 }
-                IsDirty = true;
             }
 
             if (state.OriginalMouseState.Mouse.ScrollWheelValueChange != 0)
