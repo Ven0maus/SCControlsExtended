@@ -72,18 +72,18 @@ namespace SCControlsExtended.Themes
             var order = orientation == Orientation.Vertical ?
                 table.Cells.OrderBy(a => a.Row).GroupBy(a => a.Row) :
                 table.Cells.OrderBy(a => a.Column).GroupBy(a => a.Column);
-            var lastIndexes = order.Select(a => a.Key);
-            int indexes = 0;
+            var indexes = order.Select(a => a.Key);
+            int scrollBarItems = 0;
             int totalIndexSize = 0;
-            foreach (var index in lastIndexes)
+            foreach (var index in indexes)
             {
                 var cellSize = table.Cells.GetSizeOrDefault(index,
                     orientation == Orientation.Vertical ? Layout.LayoutType.Row : Layout.LayoutType.Column);
                 totalIndexSize += cellSize;
                 if (totalIndexSize > (orientation == Orientation.Vertical ? table.Height : table.Width))
-                    indexes += cellSize / (orientation == Orientation.Vertical ? table.DefaultCellSize.Y : table.DefaultCellSize.X);
+                    scrollBarItems += cellSize / (orientation == Orientation.Vertical ? table.DefaultCellSize.Y : table.DefaultCellSize.X);
             }
-            return indexes;
+            return scrollBarItems;
         }
 
         private static void SetScrollBarPropertiesOnTable(Table table, ScrollBar scrollBar, int maxRowsHeight, int maxColumnsWidth)
@@ -108,7 +108,7 @@ namespace SCControlsExtended.Themes
             }
         }
         
-        private void SetScrollBarVisibility(Table table, int maxRowsHeight, int maxColumnsWidth)
+        private static void SetScrollBarVisibility(Table table, int maxRowsHeight, int maxColumnsWidth)
         {
             if (table._checkScrollBarVisibility)
             {
@@ -145,8 +145,6 @@ namespace SCControlsExtended.Themes
                 maxRowsHeight = table.Height;
 
             SetScrollBarVisibility(table, maxRowsHeight, maxColumnsWidth);
-
-            System.Console.WriteLine("Is dirty! oiii");
 
             var columns = maxColumnsWidth;
             var rows = maxRowsHeight;

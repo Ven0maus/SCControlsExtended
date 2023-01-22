@@ -92,12 +92,12 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
         {
             if (e.PreviousCell != null)
             {
-                e.PreviousCell.Text = string.Empty;
+                //e.PreviousCell.Text = string.Empty;
                 Console.WriteLine($"Unselected cell: [{e.PreviousCell.Row},{e.PreviousCell.Column}]");
             }
             if (e.Cell != null)
             {
-                e.Cell.Text = "Selected";
+                //e.Cell.Text = "Selected";
                 Console.WriteLine($"Selected cell: [{e.Cell.Row},{e.Cell.Column}]");
             }
         }

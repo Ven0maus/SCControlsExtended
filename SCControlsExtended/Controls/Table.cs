@@ -7,6 +7,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using static SCControlsExtended.Controls.Cells;
+using System.Reflection;
 
 namespace SCControlsExtended.Controls
 {
@@ -262,18 +264,33 @@ namespace SCControlsExtended.Controls
                     var orientation = scrollBar.Orientation;
                     int selectedIndex = SelectedCell != null ? (orientation == Orientation.Vertical ? SelectedCell.Row : SelectedCell.Column) : 0;
 
-                    // TODO: Fix based on cell size
-                    var indexSize = (selectedIndex + 1) * Cells.GetSizeOrDefault(selectedIndex, orientation == Orientation.Vertical ?
-                        Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column);
+                    var isRowType = orientation == Orientation.Vertical;
+                    var indexes = Cells
+                        .GroupBy(a => isRowType ? a.Row : a.Column)
+                        .Select(a => a.Key)
+                        .OrderBy(a => a);
+                    int totalIndexSize = 0;
+                    foreach (var index in indexes)
+                    {
+                        var cellSize = Cells.GetSizeOrDefault(index, isRowType ? 
+                            Layout.LayoutType.Row : Layout.LayoutType.Column);
+                        totalIndexSize += cellSize;
+
+                        if (index > selectedIndex)
+                            break;
+                    }
 
                     var maxIndexSize = orientation == Orientation.Vertical ? GetMaxRowsBasedOnRowSizes() : GetMaxColumnsBasedOnColumnSizes();
+                    var max = orientation == Orientation.Vertical ? VisibleRowsMax : VisibleColumnsMax;
+                    var total = orientation == Orientation.Vertical ? VisibleRowsTotal : VisibleColumnsTotal;
+                    var defaultIndexSize = orientation == Orientation.Vertical ? DefaultCellSize.Y : DefaultCellSize.X;
 
-                    if (indexSize < VisibleRowsMax)
+                    if (totalIndexSize < max)
                         scrollBar.Value = 0;
-                    else if (indexSize > maxIndexSize - VisibleRowsTotal)
+                    else if (totalIndexSize > maxIndexSize - total)
                         scrollBar.Value = scrollBar.Maximum;
                     else
-                        scrollBar.Value = indexSize - VisibleRowsTotal;
+                        scrollBar.Value = (totalIndexSize - total) / defaultIndexSize;
                 }
             }
         }
@@ -361,14 +378,13 @@ namespace SCControlsExtended.Controls
         private int GetScrollAmount(Orientation orientation, bool increment)
         {
             var type = orientation == Orientation.Vertical ? 
-                Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column;
-            var isRowType = type == Cells.Layout.LayoutType.Row;
-            var orderedCells = increment ? 
-                Cells.OrderBy(a => isRowType ? a.Row : a.Column) :
-                Cells.OrderByDescending(a => isRowType ? a.Row : a.Column);
-            var cells = orderedCells
-                .GroupBy(a => isRowType ? a.Row : a.Column);
-            foreach (var group in cells)
+                Layout.LayoutType.Row : Layout.LayoutType.Column;
+            var isRowType = type == Layout.LayoutType.Row;
+            var cellGroups = Cells.GroupBy(a => isRowType ? a.Row : a.Column);
+            var orderedCells = increment ?
+                cellGroups.OrderBy(a => a.Key) :
+                cellGroups.OrderByDescending(a => a.Key);
+            foreach (var group in orderedCells)
             {
                 foreach (var cell in group)
                 {
