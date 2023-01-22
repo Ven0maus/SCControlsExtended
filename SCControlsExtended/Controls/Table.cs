@@ -79,8 +79,8 @@ namespace SCControlsExtended.Controls
 
         internal bool IsScrollBarVisible
         {
-            get => ScrollBar.IsVisible;
-            set => ScrollBar.IsVisible = value;
+            get => ScrollBar != null && ScrollBar.IsVisible;
+            set { if (ScrollBar == null) return; ScrollBar.IsVisible = value; }
         }
 
         /// <summary>
@@ -93,10 +93,17 @@ namespace SCControlsExtended.Controls
         /// </summary>
         public int VisibleRowsMax { get; set; }
 
+        internal bool _scrollValueChanged = false;
+
         private DateTime _leftMouseLastClick = DateTime.Now;
         private Point? _leftMouseLastClickPosition;
 
-        private void _scrollbar_ValueChanged(object sender, EventArgs e) => IsDirty = true;
+        private void _scrollbar_ValueChanged(object sender, EventArgs e)
+        {
+            Cells.AdjustCellsAfterResize();
+            _scrollValueChanged = true;
+            IsDirty = true;
+        }
 
         public Table(int width, int height) : base(width, height)
         {
@@ -204,7 +211,7 @@ namespace SCControlsExtended.Controls
                     CurrentMouseCell = Cells.GetIfExists(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X) ??
                         new Cell(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, this, string.Empty)
                         {
-                            Position = Cells.GetCellPosition(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, out _, out _)
+                            Position = Cells.GetCellPosition(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, out _, out _, IsScrollBarVisible ? ScrollBar.Value : 0)
                         };
                     if (CurrentMouseCell.Settings.Interactable)
                         OnCellEnter?.Invoke(this, new CellEventArgs(CurrentMouseCell));
@@ -297,7 +304,7 @@ namespace SCControlsExtended.Controls
             {
                 for (int row = 0; row < Height; row++)
                 {
-                    var position = Cells.GetCellPosition(row, col, out int rowSize, out int columnSize);
+                    var position = Cells.GetCellPosition(row, col, out int rowSize, out int columnSize, IsScrollBarVisible ? ScrollBar.Value : 0);
                     if (IsMouseWithinCell(mousePosition, position.Y, position.X, columnSize, rowSize))
                         return (col, row);
                 }
@@ -752,9 +759,9 @@ namespace SCControlsExtended.Controls
         /// <param name="row"></param>
         /// <param name="col"></param>
         /// <returns></returns>
-        internal Point GetCellPosition(int row, int col, out int rowSize, out int columnSize)
+        internal Point GetCellPosition(int row, int col, out int rowSize, out int columnSize, int scrollBarValue = 0)
         {
-            return new Point(GetControlIndex(col, Layout.LayoutType.Col, out columnSize), GetControlIndex(row, Layout.LayoutType.Row, out rowSize));
+            return new Point(GetControlIndex(col, 0, Layout.LayoutType.Col, out columnSize), GetControlIndex(row, scrollBarValue, Layout.LayoutType.Row, out rowSize));
         }
 
         /// <summary>
@@ -788,7 +795,7 @@ namespace SCControlsExtended.Controls
             {
                 cell = new Table.Cell(row, col, _table, string.Empty)
                 {
-                    Position = GetCellPosition(row, col, out _, out _)
+                    Position = GetCellPosition(row, col, out _, out _, _table.IsScrollBarVisible ? _table.ScrollBar.Value : 0)
                 };
 
                 _cells[(row, col)] = cell;
@@ -796,9 +803,9 @@ namespace SCControlsExtended.Controls
             return cell;
         }
 
-        private int GetControlIndex(int index, Layout.LayoutType type, out int indexSize)
+        private int GetControlIndex(int index, int scrollBarValue, Layout.LayoutType type, out int indexSize)
         {
-            int count = 0;
+            int count = scrollBarValue;
             indexSize = type == Layout.LayoutType.Col ?
                 (ColumnLayout.TryGetValue(count, out Layout layout) ? layout.Size : _table.DefaultCellSize.X) :
                 (RowLayout.TryGetValue(count, out layout) ? layout.Size : _table.DefaultCellSize.Y);
@@ -846,7 +853,7 @@ namespace SCControlsExtended.Controls
         internal void AdjustCellsAfterResize()
         {
             foreach (var cell in _cells)
-                cell.Value.Position = GetCellPosition(cell.Value.Row, cell.Value.Column, out _, out _);
+                cell.Value.Position = GetCellPosition(cell.Value.Row, cell.Value.Column, out _, out _, _table.IsScrollBarVisible ? _table.ScrollBar.Value : 0);
         }
 
         public IEnumerator<Table.Cell> GetEnumerator()
