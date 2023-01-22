@@ -35,8 +35,11 @@ namespace SCControlsExtended.Themes
 
             if (control is not Table table) return;
 
-            table.ScrollBar.Theme = ScrollBarTheme;
-            ScrollBarTheme?.RefreshTheme(_colorsLastUsed, table.ScrollBar);
+            if (table.ScrollBar != null)
+            {
+                table.ScrollBar.Theme = ScrollBarTheme;
+                ScrollBarTheme?.RefreshTheme(_colorsLastUsed, table.ScrollBar);
+            }
         }
 
         /// <summary>
@@ -61,7 +64,7 @@ namespace SCControlsExtended.Themes
 
         private static int GetScrollBarItems(Table table, Orientation orientation)
         {
-            var order = orientation == Orientation.Vertical ? 
+            var order = orientation == Orientation.Vertical ?
                 table.Cells.OrderByDescending(a => a.Row).GroupBy(a => a.Row) :
                 table.Cells.OrderByDescending(a => a.Column).GroupBy(a => a.Column);
             var lastIndexes = order.Select(a => a.Key);
@@ -69,7 +72,7 @@ namespace SCControlsExtended.Themes
             foreach (var index in lastIndexes)
             {
                 // + 1 because its 0 based
-                int totalSize = ((index == 0 ? 1 : index) + 1) * table.Cells.GetSizeOrDefault(index, 
+                int totalSize = ((index == 0 ? 1 : index) + 1) * table.Cells.GetSizeOrDefault(index,
                     orientation == Orientation.Vertical ? Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column);
                 if (totalSize > (orientation == Orientation.Vertical ? table.Height : table.Width))
                 {
@@ -90,26 +93,30 @@ namespace SCControlsExtended.Themes
             // Draw the basic table surface foreground and background, and clear the glyphs
             control.Surface.Fill(table.DefaultForeground, table.DefaultBackground, 0);
 
-            if (table._checkScrollBarVisibility)
+            if (table._checkScrollBarVisibility && table.ScrollBar != null)
                 ShowHideScrollBar(table);
 
             var maxColumnsWidth = table.GetMaxColumnsBasedOnColumnSizes();
             var maxRowsHeight = table.GetMaxRowsBasedOnRowSizes();
-            table.VisibleIndexesTotal = table.ScrollBar.Orientation == Orientation.Vertical ?
-                (maxRowsHeight >= table.Height ? table.Height : maxRowsHeight) :
-                (maxColumnsWidth >= table.Width ? table.Width : maxColumnsWidth);
-            table.VisibleIndexesMax = table.ScrollBar.Orientation == Orientation.Vertical ? table.Height : table.Width;
+
+            if (table.ScrollBar != null)
+            {
+                table.VisibleIndexesTotal = table.ScrollBar.Orientation == Orientation.Vertical ?
+                    (maxRowsHeight >= table.Height ? table.Height : maxRowsHeight) :
+                    (maxColumnsWidth >= table.Width ? table.Width : maxColumnsWidth);
+                table.VisibleIndexesMax = table.ScrollBar.Orientation == Orientation.Vertical ? table.Height : table.Width;
+            }
 
             var columns = maxColumnsWidth;
             var rows = maxRowsHeight;
-            int rowIndex = table.IsScrollBarVisible && table.ScrollBar.Orientation == Orientation.Vertical ? table.ScrollBar.Value : 0;
+            int rowIndex = table.ScrollBar != null && table.IsScrollBarVisible && table.ScrollBar.Orientation == Orientation.Vertical ? table.ScrollBar.Value : 0;
             for (int row = 0; row < rows; row++)
             {
-                int colIndex = table.IsScrollBarVisible && table.ScrollBar.Orientation == Orientation.Horizontal ? table.ScrollBar.Value : 0;
+                int colIndex = table.ScrollBar != null && table.IsScrollBarVisible && table.ScrollBar.Orientation == Orientation.Horizontal ? table.ScrollBar.Value : 0;
                 int fullRowSize = 0;
                 for (int col = 0; col < columns; col++)
                 {
-                    var scrollBarValue = table.IsScrollBarVisible ? table.ScrollBar.Value : 0;
+                    var scrollBarValue = table.ScrollBar != null && table.IsScrollBarVisible ? table.ScrollBar.Value : 0;
                     var cellPosition = table.Cells.GetCellPosition(rowIndex, colIndex, out fullRowSize, out int columnSize, scrollBarValue);
 
                     col += columnSize - 1;

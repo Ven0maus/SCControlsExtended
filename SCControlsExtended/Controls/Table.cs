@@ -192,7 +192,7 @@ namespace SCControlsExtended.Controls
             {
                 var orientation = ScrollBar.Orientation;
                 int selectedIndex = SelectedCell != null ? (orientation == Orientation.Vertical ? SelectedCell.Row : SelectedCell.Column) : 0;
-                var indexSize = (selectedIndex + 1) * Cells.GetSizeOrDefault(selectedIndex, orientation == Orientation.Vertical ? 
+                var indexSize = (selectedIndex + 1) * Cells.GetSizeOrDefault(selectedIndex, orientation == Orientation.Vertical ?
                     Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column);
 
                 var maxIndexSize = orientation == Orientation.Vertical ? GetMaxRowsBasedOnRowSizes() : GetMaxColumnsBasedOnColumnSizes();
@@ -247,7 +247,7 @@ namespace SCControlsExtended.Controls
                 IsDirty = true;
             }
 
-            if (state.OriginalMouseState.Mouse.ScrollWheelValueChange != 0)
+            if (state.OriginalMouseState.Mouse.ScrollWheelValueChange != 0 && ScrollBar != null)
             {
                 if (state.OriginalMouseState.Mouse.ScrollWheelValueChange < 0)
                     ScrollBar.Value -= 1;
