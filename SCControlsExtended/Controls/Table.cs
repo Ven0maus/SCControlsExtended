@@ -39,10 +39,25 @@ namespace SCControlsExtended.Controls
         /// Returns the cell the mouse is over, if the property <see cref="IsMouseEnabled"/> is true.
         /// </summary>
         public Cell CurrentMouseCell { get; private set; }
+
+        private Cell _selectedCell;
         /// <summary>
         /// Returns the current selected cell
         /// </summary>
-        public Cell SelectedCell { get; private set; }
+        public Cell SelectedCell
+        {
+            get { return _selectedCell; }
+            internal set
+            {
+                var prev = _selectedCell;
+                _selectedCell = value;
+                if (prev != _selectedCell)
+                {
+                    SelectedCellChanged?.Invoke(this, new CellChangedEventArgs(prev, _selectedCell));
+                    IsDirty = true;
+                }
+            }
+        }
 
         /// <summary>
         /// By default, only cells that have been indexed (eg. accessing table[0, 0]) will be rendered on the table control.
@@ -262,19 +277,16 @@ namespace SCControlsExtended.Controls
 
             if (CurrentMouseCell != null)
             {
-                if (SelectedCell != CurrentMouseCell && CurrentMouseCell.Settings.Interactable && CurrentMouseCell.Settings.IsVisible && CurrentMouseCell.Settings.Selectable)
+                if (SelectedCell != CurrentMouseCell && CurrentMouseCell.Settings.Interactable && 
+                    CurrentMouseCell.Settings.IsVisible && CurrentMouseCell.Settings.Selectable)
                 {
-                    var previous = SelectedCell;
                     SelectedCell = CurrentMouseCell;
                     ScrollToSelectedItem();
-                    SelectedCellChanged?.Invoke(this, new CellChangedEventArgs(previous, SelectedCell));
                 }
                 else
                 {
                     // Unselect after clicking the selected cell again
-                    var previous = SelectedCell;
                     SelectedCell = null;
-                    SelectedCellChanged?.Invoke(this, new CellChangedEventArgs(previous, SelectedCell));
                 }
 
                 if (CurrentMouseCell.Settings.Interactable && CurrentMouseCell.Settings.IsVisible)
@@ -757,6 +769,28 @@ namespace SCControlsExtended.Controls
         public Table.Cell GetCell(int row, int col)
         {
             return this[row, col];
+        }
+
+        /// <summary>
+        /// Sets the specified cell as the selected cell if it exists.
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="col"></param>
+        public void Select(int row, int column)
+        {
+            // Set existing cell, or a fake one if it does not yet exists, but modifying this fake cell with add it to the table
+            _table.SelectedCell = GetIfExists(row, column) ?? new Table.Cell(row, column, _table, string.Empty)
+            {
+                Position = GetCellPosition(row, column, out _, out _, _table.ScrollBar != null ? _table.ScrollBar.Value : 0)
+            };
+        }
+
+        /// <summary>
+        /// Deselects the current selected cell.
+        /// </summary>
+        public void Deselect()
+        {
+            _table.SelectedCell = null;
         }
 
         /// <summary>

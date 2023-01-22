@@ -66,7 +66,7 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             _table.Cells[6, 8].Background = Color.Blue;
             _table.Cells[6, 8].Settings.Interactable = false;
             _table.Cells[7, 8].Settings.IsVisible = false;
-            _table.Cells[7, 8].Settings.Interactable = true;
+            _table.Cells[1, 5].Select();
         }
 
         private static void Table_OnCellExit(object sender, Table.CellEventArgs e)

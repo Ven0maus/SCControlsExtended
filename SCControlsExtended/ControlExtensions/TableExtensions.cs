@@ -72,6 +72,24 @@ namespace SCControlsExtended.ControlExtensions
         }
 
         /// <summary>
+        /// Sets the cell as the selected cell.
+        /// </summary>
+        /// <param name="cell"></param>
+        public static void Select(this Table.Cell cell)
+        {
+            cell.Table.Cells.Select(cell.Row, cell.Column);
+        }
+
+        /// <summary>
+        /// Incase this cell is the selected cell, it will unselect it.
+        /// </summary>
+        /// <param name="cell"></param>
+        public static void Deselect(this Table.Cell cell)
+        {
+            cell.Table.Cells.Deselect();
+        }
+
+        /// <summary>
         /// Get the layout for the given columns
         /// </summary>
         /// <param name="column"></param>
