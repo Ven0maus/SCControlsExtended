@@ -13,7 +13,7 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
 
         public ExcelWindow(int width, int height) : base(width, height)
         {
-            _table = new Table(Width, Height, 10, 4);
+            _table = new Table(Width, Height, 10, 3);
             _table.SetThemeColors(Colors.CreateSadConsoleBlue());
             _table.DefaultForeground = Color.Black;
             _table.DrawOnlyIndexedCells = true;
@@ -53,7 +53,7 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
                 cell.Settings.VerticalAlignment = Table.Cell.Options.VerticalAlign.Center;
                 cell.Settings.Interactable = false;
             });
-            _table.Cells.Range(1, 0, Height / _table.DefaultCellSize.Y, 0).ForEach(cell =>
+            _table.Cells.Range(1, 0, (Height / _table.DefaultCellSize.Y)+3, 0).ForEach(cell =>
             {
                 cell.Text = row++.ToString();
                 cell.Settings.HorizontalAlignment = Table.Cell.Options.HorizontalAlign.Center;
@@ -62,7 +62,7 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             });
 
             // Set inner cells color
-            _table.Cells.Range(1, 1, Height / _table.DefaultCellSize.Y + 1, Width / _table.DefaultCellSize.X).ForEach(cell => cell.Background = innerCellColor);
+            _table.Cells.Range(1, 1, (Height / _table.DefaultCellSize.Y)+3, Width / _table.DefaultCellSize.X).ForEach(cell => cell.Background = innerCellColor);
         }
 
         private static string GetExcelColumnName(int index)

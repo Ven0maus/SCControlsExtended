@@ -86,22 +86,20 @@ namespace SCControlsExtended.Controls
         /// <summary>
         /// The total rows visible in the table.
         /// </summary>
-        public int VisibleRowsTotal { get; set; }
+        internal int VisibleRowsTotal { get; set; }
 
         /// <summary>
         /// The maximum amount of rows that can be shown in the table.
         /// </summary>
-        public int VisibleRowsMax { get; set; }
-
-        internal bool _scrollValueChanged = false;
+        internal int VisibleRowsMax { get; set; }
 
         private DateTime _leftMouseLastClick = DateTime.Now;
         private Point? _leftMouseLastClickPosition;
+        internal bool _checkScrollBarVisibility;
 
         private void _scrollbar_ValueChanged(object sender, EventArgs e)
         {
             Cells.AdjustCellsAfterResize();
-            _scrollValueChanged = true;
             IsDirty = true;
         }
 
@@ -160,6 +158,7 @@ namespace SCControlsExtended.Controls
 
             ScrollBar.ValueChanged += _scrollbar_ValueChanged;
             ScrollBar.Position = position;
+            _checkScrollBarVisibility = true;
             AddControl(ScrollBar);
 
             OnThemeChanged();
@@ -799,6 +798,7 @@ namespace SCControlsExtended.Controls
                 };
 
                 _cells[(row, col)] = cell;
+                _table._checkScrollBarVisibility = true;
             }
             return cell;
         }
@@ -828,7 +828,10 @@ namespace SCControlsExtended.Controls
             if (cell == null)
             {
                 if (_cells.Remove((row, col)))
+                {
+                    _table._checkScrollBarVisibility = true;
                     _table.IsDirty = true;
+                }
                 return;
             }
 
@@ -840,12 +843,14 @@ namespace SCControlsExtended.Controls
                     !oldCell.Settings.Equals(cell.Settings))
                 {
                     _cells[(row, col)] = cell;
+                    _table._checkScrollBarVisibility = true;
                     _table.IsDirty = true;
                 }
             }
             else
             {
                 _cells[(row, col)] = cell;
+                _table._checkScrollBarVisibility = true;
                 _table.IsDirty = true;
             }
         }
@@ -854,6 +859,8 @@ namespace SCControlsExtended.Controls
         {
             foreach (var cell in _cells)
                 cell.Value.Position = GetCellPosition(cell.Value.Row, cell.Value.Column, out _, out _, _table.IsScrollBarVisible ? _table.ScrollBar.Value : 0);
+            _table._checkScrollBarVisibility = true;
+            _table.IsDirty = true;
         }
 
         public IEnumerator<Table.Cell> GetEnumerator()

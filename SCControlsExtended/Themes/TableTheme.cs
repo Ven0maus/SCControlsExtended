@@ -54,7 +54,8 @@ namespace SCControlsExtended.Themes
         {
             return !table.Cells.Any() ? 0 : table.Cells
                 .GroupBy(a => a.Row)
-                .Select(a => a.Key * table.Cells.GetSizeOrDefault(a.Key, Cells.Layout.LayoutType.Row))
+                // Row 0 should also get atleast a size, add +1 since its 0 based
+                .Select(a => ((a.Key == 0 ? 1 : a.Key) + 1) * table.Cells.GetSizeOrDefault(a.Key, Cells.Layout.LayoutType.Row))
                 .Max();
         }
 
@@ -62,7 +63,8 @@ namespace SCControlsExtended.Themes
         {
             return !table.Cells.Any() ? 0 : table.Cells
                 .GroupBy(a => a.Column)
-                .Select(a => a.Key * table.Cells.GetSizeOrDefault(a.Key, Cells.Layout.LayoutType.Col))
+                // Column 0 should also get atleast a size, add +1 since its 0 based
+                .Select(a => ((a.Key == 0 ? 1 : a.Key) + 1) * table.Cells.GetSizeOrDefault(a.Key, Cells.Layout.LayoutType.Col))
                 .Max();
         }
 
@@ -73,7 +75,7 @@ namespace SCControlsExtended.Themes
         private static void ShowHideScrollBar(Table table)
         {
             // process the scroll bar
-            int scrollbarItems = GetScrollBarItems(table, GetMaxRowsBasedOnRowSizes(table) - table.Height);
+            int scrollbarItems = GetScrollBarItems(table);
 
             if (scrollbarItems > 0)
             {
@@ -83,25 +85,24 @@ namespace SCControlsExtended.Themes
             else
             {
                 table.ScrollBar.Maximum = 0;
-                table.IsScrollBarVisible = true;
+                table.IsScrollBarVisible = false;
             }
         }
 
-        private static int GetScrollBarItems(Table table, int scrollbarItems)
+        private static int GetScrollBarItems(Table table)
         {
-            var lastCells = table.Cells.OrderByDescending(a => a.Row);
-            int totalSize = 0;
+            var lastRows = table.Cells.OrderByDescending(a => a.Row).GroupBy(a => a.Row).Select(a => a.Key);
             int rows = 0;
-            foreach (var cell in lastCells)
+            foreach (var row in lastRows)
             {
-                totalSize += cell.Row * table.Cells.GetSizeOrDefault(cell.Row, Cells.Layout.LayoutType.Row);
-                if (totalSize < scrollbarItems)
+                // + 1 because its 0 based
+                int totalSize = ((row == 0 ? 1 : row) + 1) * table.Cells.GetSizeOrDefault(row, Cells.Layout.LayoutType.Row);
+                if (totalSize > table.Height)
                 {
                     rows++;
                 }
             }
-            scrollbarItems = rows;
-            return scrollbarItems;
+            return rows;
         }
 
         /// <inheritdoc />
@@ -121,17 +122,18 @@ namespace SCControlsExtended.Themes
             // Draw the basic table surface foreground and background, and clear the glyphs
             control.Surface.Fill(table.DefaultForeground, table.DefaultBackground, 0);
 
-            if (table._scrollValueChanged)
+            if (table._checkScrollBarVisibility)
                 ShowHideScrollBar(table);
 
-            var maxColumns = GetMaxColumnsBasedOnColumnSizes(table);
-            var maxRows = GetMaxRowsBasedOnRowSizes(table);
-            table.VisibleRowsTotal = maxRows >= table.Height ? table.Height : maxRows;
+            var maxColumnsHeight = GetMaxColumnsBasedOnColumnSizes(table);
+            var maxRowsHeight = GetMaxRowsBasedOnRowSizes(table);
+            table.VisibleRowsTotal = maxRowsHeight >= table.Height ? table.Height : maxRowsHeight;
             table.VisibleRowsMax = table.Height;
 
-            var columns = maxColumns;
-            var rows = maxRows;
+            var columns = maxColumnsHeight;
+            var rows = maxRowsHeight;
             int rowIndex = table.IsScrollBarVisible ? table.ScrollBar.Value : 0;
+            System.Console.WriteLine("Test: " + rowIndex);
             for (int row = 0; row < rows; row++)
             {
                 int colIndex = 0;
@@ -142,7 +144,7 @@ namespace SCControlsExtended.Themes
                     var cellPosition = table.Cells.GetCellPosition(rowIndex, colIndex, out fullRowSize, out int columnSize, scrollBarValue);
 
                     // Don't attempt to render off-screen rows/columns
-                    if (cellPosition.X > table.Width || cellPosition.Y > table.Height) continue;
+                    //if (cellPosition.X > table.Width || cellPosition.Y > table.Height) continue;
 
                     var cell = table.Cells.GetIfExists(rowIndex, colIndex);
                     if (table.DrawOnlyIndexedCells && cell == null) continue;
