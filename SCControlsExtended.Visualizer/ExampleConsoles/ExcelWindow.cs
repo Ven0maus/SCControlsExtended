@@ -18,6 +18,7 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             _table.DefaultForeground = Color.Black;
             _table.DrawOnlyIndexedCells = true;
             _table.SetupScrollBar(Orientation.Vertical, Height -1, new Point(Width - 1, 0));
+            _table.SetupScrollBar(Orientation.Horizontal, Width - 1, new Point(0, Height - 2));
             Controls.Add(_table);
 
             AdjustTable();
@@ -48,7 +49,7 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             _table.Cells[5, 0].Resize(6);
 
             // Set column, row texts
-            _table.Cells.Range(0, 1, 0, (Width / _table.DefaultCellSize.X)-1).ForEach(cell =>
+            _table.Cells.Range(0, 1, 0, (Width / _table.DefaultCellSize.X)+9).ForEach(cell =>
             {
                 cell.Text = GetExcelColumnName(col++);
                 cell.Settings.HorizontalAlignment = Table.Cell.Options.HorizontalAlign.Center;
@@ -64,7 +65,13 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             });
 
             // Set inner cells color
-            _table.Cells.Range(1, 1, (Height / _table.DefaultCellSize.Y)+9, (Width / _table.DefaultCellSize.X)-1).ForEach(cell => cell.Background = innerCellColor);
+            _table.Cells.Range(1, 1, (Height / _table.DefaultCellSize.Y)+9, (Width / _table.DefaultCellSize.X)+9)
+                .ForEach(cell => 
+                {
+                    cell.Foreground = Color.Lerp(Color.WhiteSmoke, Color.Black, 0.3f);
+                    cell.Background = innerCellColor;
+                    cell.Text = GetExcelColumnName(cell.Column) + cell.Row;
+                });
         }
 
         private static string GetExcelColumnName(int index)

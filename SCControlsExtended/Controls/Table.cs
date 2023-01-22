@@ -90,29 +90,42 @@ namespace SCControlsExtended.Controls
         /// </summary>
         public event EventHandler<CellEventArgs> OnCellDoubleClick;
 
-        internal ScrollBar ScrollBar { get; private set; }
+        internal ScrollBar VerticalScrollBar { get; private set; }
+        internal ScrollBar HorizontalScrollBar { get; private set; }
 
-        internal bool IsScrollBarVisible
+        internal bool IsVerticalScrollBarVisible
         {
-            get => ScrollBar != null && ScrollBar.IsVisible;
-            set { if (ScrollBar == null) return; ScrollBar.IsVisible = value; }
+            get => VerticalScrollBar != null && VerticalScrollBar.IsVisible;
+            set { if (VerticalScrollBar == null) return; VerticalScrollBar.IsVisible = value; }
+        }
+        internal bool IsHorizontalScrollBarVisible
+        {
+            get => HorizontalScrollBar != null && HorizontalScrollBar.IsVisible;
+            set { if (HorizontalScrollBar == null) return; HorizontalScrollBar.IsVisible = value; }
         }
 
         /// <summary>
         /// The total rows visible in the table.
         /// </summary>
-        internal int VisibleIndexesTotal { get; set; }
-
+        internal int VisibleRowsTotal { get; set; }
         /// <summary>
         /// The maximum amount of rows that can be shown in the table.
         /// </summary>
-        internal int VisibleIndexesMax { get; set; }
+        internal int VisibleRowsMax { get; set; }
+        /// <summary>
+        /// The total columns visible in the table.
+        /// </summary>
+        internal int VisibleColumnsTotal { get; set; }
+        /// <summary>
+        /// The maximum amount of columns that can be shown in the table.
+        /// </summary>
+        internal int VisibleColumnsMax { get; set; }
 
         private DateTime _leftMouseLastClick = DateTime.Now;
         private Point? _leftMouseLastClickPosition;
         internal bool _checkScrollBarVisibility;
 
-        private void _scrollbar_ValueChanged(object sender, EventArgs e)
+        private void ScrollBar_ValueChanged(object sender, EventArgs e)
         {
             Cells.AdjustCellsAfterResize();
             IsDirty = true;
@@ -143,7 +156,7 @@ namespace SCControlsExtended.Controls
         }
 
         /// <summary>
-        /// Configures the associated <see cref="ScrollBar"/>.
+        /// Configures the associated <see cref="VerticalScrollBar"/>.
         /// </summary>
         /// <param name="orientation">The orientation of the scrollbar.</param>
         /// <param name="sizeValue">The size of the scrollbar.</param>
@@ -154,27 +167,34 @@ namespace SCControlsExtended.Controls
             int value = 0;
             int max = 0;
 
-            if (ScrollBar != null)
+            var existingScrollBar = orientation == Orientation.Vertical ? VerticalScrollBar : HorizontalScrollBar;
+            if (existingScrollBar != null)
             {
-                ScrollBar.ValueChanged -= _scrollbar_ValueChanged;
-                value = ScrollBar.Value;
-                max = ScrollBar.Maximum;
-                RemoveControl(ScrollBar);
+                existingScrollBar.ValueChanged -= ScrollBar_ValueChanged;
+                value = existingScrollBar.Value;
+                max = existingScrollBar.Maximum;
+                RemoveControl(existingScrollBar);
                 scrollBarExists = true;
             }
 
-            ScrollBar = new ScrollBar(orientation, size);
+            existingScrollBar = new ScrollBar(orientation, size);
 
             if (scrollBarExists)
             {
-                ScrollBar.Maximum = max;
-                ScrollBar.Value = value;
+                existingScrollBar.Maximum = max;
+                existingScrollBar.Value = value;
             }
 
-            ScrollBar.ValueChanged += _scrollbar_ValueChanged;
-            ScrollBar.Position = position;
+            existingScrollBar.ValueChanged += ScrollBar_ValueChanged;
+            existingScrollBar.Position = position;
+            AddControl(existingScrollBar);
+
+            if (orientation == Orientation.Vertical)
+                VerticalScrollBar = existingScrollBar;
+            else
+                HorizontalScrollBar = existingScrollBar;
+
             _checkScrollBarVisibility = true;
-            AddControl(ScrollBar);
 
             OnThemeChanged();
             DetermineState();
@@ -203,21 +223,27 @@ namespace SCControlsExtended.Controls
         /// </summary>
         public void ScrollToSelectedItem()
         {
-            if (IsScrollBarVisible)
+            if (IsVerticalScrollBarVisible || IsHorizontalScrollBarVisible)
             {
-                var orientation = ScrollBar.Orientation;
-                int selectedIndex = SelectedCell != null ? (orientation == Orientation.Vertical ? SelectedCell.Row : SelectedCell.Column) : 0;
-                var indexSize = (selectedIndex + 1) * Cells.GetSizeOrDefault(selectedIndex, orientation == Orientation.Vertical ?
-                    Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column);
+                var scrollBars = new[] { VerticalScrollBar, HorizontalScrollBar };
+                foreach (var scrollBar in scrollBars)
+                {
+                    if (scrollBar == null) continue;
 
-                var maxIndexSize = orientation == Orientation.Vertical ? GetMaxRowsBasedOnRowSizes() : GetMaxColumnsBasedOnColumnSizes();
+                    var orientation = scrollBar.Orientation;
+                    int selectedIndex = SelectedCell != null ? (orientation == Orientation.Vertical ? SelectedCell.Row : SelectedCell.Column) : 0;
+                    var indexSize = (selectedIndex + 1) * Cells.GetSizeOrDefault(selectedIndex, orientation == Orientation.Vertical ?
+                        Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column);
 
-                if (indexSize < VisibleIndexesMax)
-                    ScrollBar.Value = 0;
-                else if (indexSize > maxIndexSize - VisibleIndexesTotal)
-                    ScrollBar.Value = ScrollBar.Maximum;
-                else
-                    ScrollBar.Value = indexSize - VisibleIndexesTotal;
+                    var maxIndexSize = orientation == Orientation.Vertical ? GetMaxRowsBasedOnRowSizes() : GetMaxColumnsBasedOnColumnSizes();
+
+                    if (indexSize < VisibleRowsMax)
+                        scrollBar.Value = 0;
+                    else if (indexSize > maxIndexSize - VisibleRowsTotal)
+                        scrollBar.Value = scrollBar.Maximum;
+                    else
+                        scrollBar.Value = indexSize - VisibleRowsTotal;
+                }
             }
         }
 
@@ -226,12 +252,22 @@ namespace SCControlsExtended.Controls
         /// </summary>
         protected override void OnThemeChanged()
         {
-            if (ScrollBar == null) return;
+            if (VerticalScrollBar == null && HorizontalScrollBar == null) return;
 
             if (Theme is TableTheme theme)
-                ScrollBar.Theme = theme.ScrollBarTheme;
+            {
+                if (VerticalScrollBar != null)
+                    VerticalScrollBar.Theme = theme.ScrollBarTheme;
+                if (HorizontalScrollBar != null)
+                    HorizontalScrollBar.Theme = theme.ScrollBarTheme;
+            }
             else
-                ScrollBar.Theme = null;
+            {
+                if (VerticalScrollBar != null)
+                    VerticalScrollBar.Theme = null;
+                if (HorizontalScrollBar != null)
+                    HorizontalScrollBar.Theme = null;
+            }
         }
 
         protected override void OnMouseIn(ControlMouseState state)
@@ -249,7 +285,8 @@ namespace SCControlsExtended.Controls
                     CurrentMouseCell = Cells.GetIfExists(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X) ??
                         new Cell(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, this, string.Empty)
                         {
-                            Position = Cells.GetCellPosition(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, out _, out _, IsScrollBarVisible ? ScrollBar.Value : 0)
+                            Position = Cells.GetCellPosition(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, out _, out _, 
+                                IsVerticalScrollBarVisible ? VerticalScrollBar.Value : 0, IsHorizontalScrollBarVisible ? HorizontalScrollBar.Value : 0)
                         };
                     if (CurrentMouseCell.Settings.Interactable)
                         OnCellEnter?.Invoke(this, new CellEventArgs(CurrentMouseCell));
@@ -262,12 +299,24 @@ namespace SCControlsExtended.Controls
                 IsDirty = true;
             }
 
-            if (state.OriginalMouseState.Mouse.ScrollWheelValueChange != 0 && ScrollBar != null)
+            if (state.OriginalMouseState.Mouse.ScrollWheelValueChange != 0)
             {
-                if (state.OriginalMouseState.Mouse.ScrollWheelValueChange < 0)
-                    ScrollBar.Value -= 1;
-                else
-                    ScrollBar.Value += 1;
+                ScrollBar scrollBar = null;
+                if (IsVerticalScrollBarVisible && !IsHorizontalScrollBarVisible)
+                    scrollBar = VerticalScrollBar;
+                else if (!IsVerticalScrollBarVisible && IsHorizontalScrollBarVisible)
+                    scrollBar = HorizontalScrollBar;
+                // If both scroll bars are not null, we only wanna scroll on the vertical scrollbar with the mousewheel
+                else if (IsVerticalScrollBarVisible && IsHorizontalScrollBarVisible)
+                    scrollBar = VerticalScrollBar;
+
+                if (scrollBar != null)
+                {
+                    if (state.OriginalMouseState.Mouse.ScrollWheelValueChange < 0)
+                        scrollBar.Value -= 1;
+                    else
+                        scrollBar.Value += 1;
+                }
             }
         }
 
@@ -339,7 +388,8 @@ namespace SCControlsExtended.Controls
             {
                 for (int row = 0; row < Height; row++)
                 {
-                    var position = Cells.GetCellPosition(row, col, out int rowSize, out int columnSize, IsScrollBarVisible ? ScrollBar.Value : 0);
+                    var position = Cells.GetCellPosition(row, col, out int rowSize, out int columnSize, 
+                        IsVerticalScrollBarVisible ? VerticalScrollBar.Value : 0, IsHorizontalScrollBarVisible ? HorizontalScrollBar.Value : 0);
                     if (IsMouseWithinCell(mousePosition, position.Y, position.X, columnSize, rowSize))
                         return (col, row);
                 }
@@ -781,7 +831,8 @@ namespace SCControlsExtended.Controls
             // Set existing cell, or a fake one if it does not yet exists, but modifying this fake cell with add it to the table
             _table.SelectedCell = GetIfExists(row, column) ?? new Table.Cell(row, column, _table, string.Empty)
             {
-                Position = GetCellPosition(row, column, out _, out _, _table.ScrollBar != null ? _table.ScrollBar.Value : 0)
+                Position = GetCellPosition(row, column, out _, out _, 
+                    _table.IsVerticalScrollBarVisible ? _table.VerticalScrollBar.Value : 0, _table.IsHorizontalScrollBarVisible ? _table.HorizontalScrollBar.Value : 0)
             };
         }
 
@@ -816,12 +867,10 @@ namespace SCControlsExtended.Controls
         /// <param name="row"></param>
         /// <param name="col"></param>
         /// <returns></returns>
-        internal Point GetCellPosition(int row, int col, out int rowSize, out int columnSize, int scrollBarValue = 0)
+        internal Point GetCellPosition(int row, int col, out int rowSize, out int columnSize, int verticalScrollBarValue = 0, int horizontalScrollbarValue = 0)
         {
-            var colScrollbarValue = _table.ScrollBar != null && _table.ScrollBar.Orientation == Orientation.Horizontal ? scrollBarValue : 0;
-            var rowScrollbarValue = _table.ScrollBar != null && _table.ScrollBar.Orientation == Orientation.Vertical ? scrollBarValue : 0;
-            int columnIndex = GetControlIndex(col, colScrollbarValue, Layout.LayoutType.Column, out columnSize);
-            int rowIndex = GetControlIndex(row, rowScrollbarValue, Layout.LayoutType.Row, out rowSize);
+            int columnIndex = GetControlIndex(col, horizontalScrollbarValue, Layout.LayoutType.Column, out columnSize);
+            int rowIndex = GetControlIndex(row, verticalScrollBarValue, Layout.LayoutType.Row, out rowSize);
             return new Point(columnIndex, rowIndex);
         }
 
@@ -856,7 +905,8 @@ namespace SCControlsExtended.Controls
             {
                 cell = new Table.Cell(row, col, _table, string.Empty)
                 {
-                    Position = GetCellPosition(row, col, out _, out _, _table.IsScrollBarVisible ? _table.ScrollBar.Value : 0)
+                    Position = GetCellPosition(row, col, out _, out _, 
+                        _table.IsVerticalScrollBarVisible ? _table.VerticalScrollBar.Value : 0, _table.IsHorizontalScrollBarVisible ? _table.HorizontalScrollBar.Value : 0)
                 };
 
                 _cells[(row, col)] = cell;
@@ -920,7 +970,8 @@ namespace SCControlsExtended.Controls
         internal void AdjustCellsAfterResize()
         {
             foreach (var cell in _cells)
-                cell.Value.Position = GetCellPosition(cell.Value.Row, cell.Value.Column, out _, out _, _table.IsScrollBarVisible ? _table.ScrollBar.Value : 0);
+                cell.Value.Position = GetCellPosition(cell.Value.Row, cell.Value.Column, out _, out _, 
+                    _table.IsVerticalScrollBarVisible ? _table.VerticalScrollBar.Value : 0, _table.IsHorizontalScrollBarVisible ? _table.HorizontalScrollBar.Value : 0);
             _table._checkScrollBarVisibility = true;
             _table.IsDirty = true;
         }

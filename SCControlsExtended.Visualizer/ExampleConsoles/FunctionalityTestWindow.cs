@@ -60,7 +60,6 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             _table.Cells[5, 7].Resize(6, 20);
             _table.Cells[5, 7].Background = Color.Yellow;
             _table.Cells[5, 7].Foreground = Color.Black;
-
             _table.Cells[6, 7].Background = Color.Magenta;
             _table.Cells[5, 8].Background = Color.Orange;
             _table.Cells[6, 8].Background = Color.Blue;
