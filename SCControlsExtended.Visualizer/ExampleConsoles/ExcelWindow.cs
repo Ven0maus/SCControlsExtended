@@ -16,9 +16,14 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             _table = new Table(Width, Height, 10, 3);
             _table.SetThemeColors(Colors.CreateSadConsoleBlue());
             _table.DefaultForeground = Color.Black;
-            _table.DrawOnlyIndexedCells = true;
+            _table.DefaultBackground = Color.Lerp(Color.WhiteSmoke, Color.Black, 0.075f);
             _table.SetupScrollBar(Orientation.Vertical, Height -1, new Point(Width - 1, 0));
             _table.SetupScrollBar(Orientation.Horizontal, Width - 1, new Point(0, Height - 2));
+
+            // Only add layout and let the console draw the rest
+            _table.OnDrawFakeCell += DrawFakeCell;
+            _table.DrawFakeCells = true;
+
             Controls.Add(_table);
 
             AdjustTable();
@@ -32,13 +37,36 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             Position = new Point(0, 8);
         }
 
+        private void DrawFakeCell(object sender, Table.CellEventArgs args)
+        {
+            var cell = args.Cell;
+
+            // Setting the headers
+            bool isHeader = cell.Row == 0 || cell.Column == 0;
+            if (isHeader)
+            {
+                // Skip the first row and column
+                if (cell.Row == 0 && cell.Column == 0) 
+                    return;
+
+                cell.Text = cell.Row == 0 ? GetExcelColumnName(cell.Column) : cell.Row.ToString();
+                cell.Settings.HorizontalAlignment = Table.Cell.Options.HorizontalAlign.Center;
+                cell.Settings.VerticalAlignment = Table.Cell.Options.VerticalAlign.Center;
+                cell.Settings.Interactable = false;
+                return;
+            }
+
+            // Setting the inner cells
+            cell.Foreground = Color.Lerp(Color.WhiteSmoke, Color.Black, 0.3f);
+            cell.Background = Color.Lerp(Color.WhiteSmoke, Color.Black, 0.075f);
+            cell.Text = GetExcelColumnName(cell.Column) + cell.Row;
+            cell.Settings.Interactable = true;
+        }
+
         private void AdjustTable()
         {
             _table.Cells.Row(0).SetLayout(background: Color.Lerp(Color.WhiteSmoke, Color.Black, 0.25f));
             _table.Cells.Column(0).SetLayout(background: Color.Lerp(Color.WhiteSmoke, Color.Black, 0.25f));
-
-            var innerCellColor = Color.Lerp(Color.WhiteSmoke, Color.Black, 0.075f);
-            int col = 1, row = 1;
 
             // Set column
             _table.Cells[0, 0].Text = ">";
@@ -46,32 +74,8 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             _table.Cells[0, 0].Settings.VerticalAlignment = Table.Cell.Options.VerticalAlign.Center;
             _table.Cells[0, 0].Settings.Interactable = false;
 
-            _table.Cells[5, 0].Resize(6);
-
-            // Set column, row texts
-            _table.Cells.Range(0, 1, 0, (Width / _table.DefaultCellSize.X)+9).ForEach(cell =>
-            {
-                cell.Text = GetExcelColumnName(col++);
-                cell.Settings.HorizontalAlignment = Table.Cell.Options.HorizontalAlign.Center;
-                cell.Settings.VerticalAlignment = Table.Cell.Options.VerticalAlign.Center;
-                cell.Settings.Interactable = false;
-            });
-            _table.Cells.Range(1, 0, (Height / _table.DefaultCellSize.Y)+9, 0).ForEach(cell =>
-            {
-                cell.Text = row++.ToString();
-                cell.Settings.HorizontalAlignment = Table.Cell.Options.HorizontalAlign.Center;
-                cell.Settings.VerticalAlignment = Table.Cell.Options.VerticalAlign.Center;
-                cell.Settings.Interactable = false;
-            });
-
-            // Set inner cells color
-            _table.Cells.Range(1, 1, (Height / _table.DefaultCellSize.Y)+9, (Width / _table.DefaultCellSize.X)+9)
-                .ForEach(cell => 
-                {
-                    cell.Foreground = Color.Lerp(Color.WhiteSmoke, Color.Black, 0.3f);
-                    cell.Background = innerCellColor;
-                    cell.Text = GetExcelColumnName(cell.Column) + cell.Row;
-                });
+            _table.Cells[5, 0].Settings.UseFakeLayout = true;
+            _table.Cells[5, 0].Resize(1);
         }
 
         private static string GetExcelColumnName(int index)

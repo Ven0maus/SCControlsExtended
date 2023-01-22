@@ -20,6 +20,9 @@ namespace SCControlsExtended.Controls
         public Cells.Layout.Mode DefaultSelectionMode { get; set; }
 
         private bool _useMouse = true;
+        /// <summary>
+        /// When <see langword="true"/>, this object will use the mouse; otherwise <see langword="false"/>.
+        /// </summary>
         public new bool UseMouse
         {
             get { return _useMouse; }
@@ -36,7 +39,7 @@ namespace SCControlsExtended.Controls
         }
 
         /// <summary>
-        /// Returns the cell the mouse is over, if the property <see cref="IsMouseEnabled"/> is true.
+        /// Returns the cell the mouse is over, if <see cref="IsMouseEnabled"/> is <see langword="true"/>.
         /// </summary>
         public Cell CurrentMouseCell { get; private set; }
 
@@ -60,10 +63,10 @@ namespace SCControlsExtended.Controls
         }
 
         /// <summary>
-        /// By default, only cells that have been indexed (eg. accessing table[0, 0]) will be rendered on the table control.
-        /// Turn this off, if the whole table should draw as many cells  as it fits, even with no data.
+        /// By default, only cells that have been modified in anyway will be rendered on the table control.
+        /// Turn this off, if the whole table should draw as many cells as it fits with their default layout.
         /// </summary>
-        public bool DrawOnlyIndexedCells { get; set; } = true;
+        public bool DrawFakeCells { get; set; } = false;
 
         /// <summary>
         /// Fires an event when a cell is entered by the mouse.
@@ -89,15 +92,31 @@ namespace SCControlsExtended.Controls
         /// Fires an event when a cell is double clicked.
         /// </summary>
         public event EventHandler<CellEventArgs> OnCellDoubleClick;
+        /// <summary>
+        /// Called when a fake cells is being drawn, you can use this to modify the cell layout.
+        /// </summary>
+        public event EventHandler<CellEventArgs> OnDrawFakeCell;
 
+        /// <summary>
+        /// The vertical scrollbar, use the SetupScrollBar method with Vertical orientation to initialize it.
+        /// </summary>
         public ScrollBar VerticalScrollBar { get; private set; }
+        /// <summary>
+        /// The horizontal scrollbar, use the SetupScrollBar method with Horizontal orientation to initialize it.
+        /// </summary>
         public ScrollBar HorizontalScrollBar { get; private set; }
 
+        /// <summary>
+        /// Returns true if the vertical scroll bar is currently visible.
+        /// </summary>
         public bool IsVerticalScrollBarVisible
         {
             get => VerticalScrollBar != null && VerticalScrollBar.IsVisible;
             internal set { if (VerticalScrollBar == null) return; VerticalScrollBar.IsVisible = value; }
         }
+        /// <summary>
+        /// Returns true if the horizontal scroll bar is currently visible.
+        /// </summary>
         public bool IsHorizontalScrollBarVisible
         {
             get => HorizontalScrollBar != null && HorizontalScrollBar.IsVisible;
@@ -153,6 +172,16 @@ namespace SCControlsExtended.Controls
         {
             DefaultForeground = defaultForeground;
             DefaultBackground = defaultBackground;
+        }
+
+        /// <summary>
+        /// Called when a fake cell is being drawn, this fake cell cannot be added to the table when it is modified.
+        /// This method can only be used to modify the cell layout when drawn, and thus will not count as a new cell within the table.
+        /// </summary>
+        /// <param name="cell"></param>
+        internal void DrawFakeCell(Cell cell)
+        {
+            OnDrawFakeCell?.Invoke(this, new CellEventArgs(cell));
         }
 
         /// <summary>
@@ -438,45 +467,21 @@ namespace SCControlsExtended.Controls
             public Color Foreground
             {
                 get { return _foreground; }
-                set
-                {
-                    if (Foreground != value)
-                    {
-                        _foreground = value;
-                        AddToTableIfNotExists();
-                        Table.IsDirty = true;
-                    }
-                }
+                set { SetFieldValue(this, Foreground, ref _foreground, value, false); }
             }
 
             private Color _background;
             public Color Background
             {
                 get { return _background; }
-                set
-                {
-                    if (Background != value)
-                    {
-                        _background = value;
-                        AddToTableIfNotExists();
-                        Table.IsDirty = true;
-                    }
-                }
+                set { SetFieldValue(this, Background, ref _background, value, false); }
             }
 
             private string _text;
             public string Text
             {
                 get { return _text; }
-                set
-                {
-                    if (Text != value)
-                    {
-                        _text = value;
-                        AddToTableIfNotExists();
-                        Table.IsDirty = true;
-                    }
-                }
+                set { SetFieldValue(this, Text, ref _text, value, false); }
             }
 
             private Options _settings;
@@ -495,14 +500,16 @@ namespace SCControlsExtended.Controls
                 }
             }
 
+            private readonly bool _addToTableIfModified;
             internal readonly Table Table;
 
-            internal Cell(int row, int col, Table table, string text)
+            internal Cell(int row, int col, Table table, string text, bool addToTableIfModified = true)
             {
                 Table = table;
                 _text = text;
                 _foreground = table.DefaultForeground;
                 _background = table.DefaultBackground;
+                _addToTableIfModified = addToTableIfModified;
 
                 Row = row;
                 Column = col;
@@ -525,8 +532,13 @@ namespace SCControlsExtended.Controls
 
             internal void AddToTableIfNotExists()
             {
-                if (Table.Cells.GetIfExists(Row, Column) == null)
+                if (_addToTableIfModified && Table.Cells.GetIfExists(Row, Column) == null)
                     Table.Cells[Row, Column] = this;
+            }
+
+            internal bool IsSettingsInitialized
+            {
+                get { return _settings != null; }
             }
 
             public bool Equals(Cell cell)
@@ -546,134 +558,107 @@ namespace SCControlsExtended.Controls
                 return HashCode.Combine(Column, Row);
             }
 
+            /// <summary>
+            /// Copies the appearance of the cell passed to this method, onto the this cell.
+            /// </summary>
+            /// <param name="cell"></param>
+            public void CopyAppearanceFrom(Cell cell)
+            {
+                Text = cell.Text;
+                Foreground = cell.Foreground;
+                Background = cell.Background;
+                if (_settings != cell._settings)
+                {
+                    if (cell._settings == null)
+                        _settings = null;
+                    else
+                        Settings.CopyFrom(cell.Settings);
+                }
+            }
+
+            /// <summary>
+            /// Helper to set the underlying field value with some checks.
+            /// </summary>
+            /// <typeparam name="T"></typeparam>
+            /// <param name="cell"></param>
+            /// <param name="previousValue"></param>
+            /// <param name="field"></param>
+            /// <param name="newValue"></param>
+            /// <param name="usedForLayout"></param>
+            internal static void SetFieldValue<T>(Cell cell, T previousValue, ref T field, T newValue, bool usedForLayout)
+            {
+                if (!EqualityComparer<T>.Default.Equals(previousValue, newValue))
+                {
+                    field = newValue;
+                    if (usedForLayout) return;
+                    cell.AddToTableIfNotExists();
+                    cell.Table.IsDirty = true;
+                }
+            }
+
             public class Options : IEquatable<Options>
             {
                 private HorizontalAlign _horizontalAlignment;
                 public HorizontalAlign HorizontalAlignment
                 {
                     get { return _horizontalAlignment; }
-                    set
-                    {
-                        if (value != HorizontalAlignment)
-                        {
-                            _horizontalAlignment = value;
-                            if (_usedForLayout) return;
-                            _cell.AddToTableIfNotExists();
-                            _cell.Table.IsDirty = true;
-                        }
-                    }
+                    set { SetFieldValue(_cell, HorizontalAlignment, ref _horizontalAlignment, value, _usedForLayout); }
                 }
 
                 private VerticalAlign _verticalAlignment;
                 public VerticalAlign VerticalAlignment
                 {
                     get { return _verticalAlignment; }
-                    set
-                    {
-                        if (value != VerticalAlignment)
-                        {
-                            _verticalAlignment = value;
-                            if (_usedForLayout) return;
-                            _cell.AddToTableIfNotExists();
-                            _cell.Table.IsDirty = true;
-                        }
-                    }
+                    set { SetFieldValue(_cell, VerticalAlignment, ref _verticalAlignment, value, _usedForLayout); }
+                }
+
+                private bool _useFakeLayout;
+                public bool UseFakeLayout
+                {
+                    get { return _useFakeLayout; }
+                    set { SetFieldValue(_cell, UseFakeLayout, ref _useFakeLayout, value, _usedForLayout); }
                 }
 
                 private int? _maxCharactersPerLine;
                 public int? MaxCharactersPerLine
                 {
                     get { return _maxCharactersPerLine; }
-                    set
-                    {
-                        if (value != MaxCharactersPerLine)
-                        {
-                            _maxCharactersPerLine = value;
-                            if (_usedForLayout) return;
-                            _cell.AddToTableIfNotExists();
-                            _cell.Table.IsDirty = true;
-                        }
-                    }
+                    set { SetFieldValue(_cell, MaxCharactersPerLine, ref _maxCharactersPerLine, value, _usedForLayout); }
                 }
 
                 private bool _interactable = true;
                 public bool Interactable
                 {
                     get { return _interactable; }
-                    set
-                    {
-                        if (value != Interactable)
-                        {
-                            _interactable = value;
-                            if (_usedForLayout) return;
-                            _cell.AddToTableIfNotExists();
-                            _cell.Table.IsDirty = true;
-                        }
-                    }
+                    set { SetFieldValue(_cell, Interactable, ref _interactable, value, _usedForLayout); }
                 }
 
                 private bool _selectable = true;
                 public bool Selectable
                 {
                     get { return _selectable; }
-                    set
-                    {
-                        if (value != Selectable)
-                        {
-                            _selectable = value;
-                            if (_usedForLayout) return;
-                            _cell.AddToTableIfNotExists();
-                            _cell.Table.IsDirty = true;
-                        }
-                    }
+                    set { SetFieldValue(_cell, Selectable, ref _selectable, value, _usedForLayout); }
                 }
 
                 private bool _isVisible = true;
                 public bool IsVisible
                 {
                     get { return _isVisible; }
-                    set
-                    {
-                        if (value != IsVisible)
-                        {
-                            _isVisible = value;
-                            if (_usedForLayout) return;
-                            _cell.AddToTableIfNotExists();
-                            _cell.Table.IsDirty = true;
-                        }
-                    }
+                    set { SetFieldValue(_cell, IsVisible, ref _isVisible, value, _usedForLayout); }
                 }
 
                 private Cells.Layout.Mode _selectionMode;
                 public Cells.Layout.Mode SelectionMode
                 {
                     get { return _selectionMode; }
-                    set
-                    {
-                        if (value != SelectionMode)
-                        {
-                            _selectionMode = value;
-                            if (_usedForLayout) return;
-                            _cell.AddToTableIfNotExists();
-                            _cell.Table.IsDirty = true;
-                        }
-                    }
+                    set { SetFieldValue(_cell, SelectionMode, ref _selectionMode, value, _usedForLayout); }
                 }
 
                 private Cells.Layout.Mode _hoverMode;
                 public Cells.Layout.Mode HoverMode
                 {
                     get { return _hoverMode; }
-                    set
-                    {
-                        if (value != HoverMode)
-                        {
-                            _hoverMode = value;
-                            if (_usedForLayout) return;
-                            _cell.AddToTableIfNotExists();
-                            _cell.Table.IsDirty = true;
-                        }
-                    }
+                    set { SetFieldValue(_cell, HoverMode, ref _hoverMode, value, _usedForLayout); }
                 }
 
                 private readonly bool _usedForLayout;
@@ -738,7 +723,8 @@ namespace SCControlsExtended.Controls
                         Selectable,
                         SelectionMode,
                         HoverMode,
-                        Interactable
+                        Interactable,
+                        UseFakeLayout
                     });
                 }
 
@@ -752,6 +738,7 @@ namespace SCControlsExtended.Controls
                     SelectionMode = settings.SelectionMode;
                     HoverMode = settings.HoverMode;
                     Interactable = settings.Interactable;
+                    UseFakeLayout = settings.UseFakeLayout;
                 }
             }
         }

@@ -15,7 +15,7 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             _table.SetThemeColors(Colors.CreateSadConsoleBlue());
             _table.DefaultBackground = Color.Lerp(Color.Gray, Color.Black, 0.85f);
             _table.DefaultForeground = Color.Yellow;
-            _table.DrawOnlyIndexedCells = false;
+            _table.DrawFakeCells = false;
             _table.DefaultSelectionMode = Cells.Layout.Mode.None;
             Controls.Add(_table);
         }

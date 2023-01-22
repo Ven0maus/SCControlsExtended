@@ -139,6 +139,11 @@ namespace SCControlsExtended.Themes
             var maxColumnsWidth = table.GetMaxColumnsBasedOnColumnSizes();
             var maxRowsHeight = table.GetMaxRowsBasedOnRowSizes();
 
+            if (table.DrawFakeCells && maxColumnsWidth < table.Width)
+                maxColumnsWidth = table.Width;
+            if (table.DrawFakeCells && maxRowsHeight < table.Height)
+                maxRowsHeight = table.Height;
+
             SetScrollBarVisibility(table, maxRowsHeight, maxColumnsWidth);
 
             var columns = maxColumnsWidth;
@@ -165,16 +170,21 @@ namespace SCControlsExtended.Themes
                     }
 
                     var cell = table.Cells.GetIfExists(rowIndex, colIndex);
-                    if (table.DrawOnlyIndexedCells && cell == null)
+                    if (!table.DrawFakeCells && cell == null)
                     {
                         colIndex++;
                         continue;
                     }
 
-                    cell ??= new Table.Cell(rowIndex, colIndex, table, string.Empty)
+                    var fakeCellCreated = cell == null;
+                    cell ??= new Table.Cell(rowIndex, colIndex, table, string.Empty, addToTableIfModified: false)
                     {
                         Position = cellPosition
                     };
+
+                    // This method raises an event that the user can use to modify the cell layout
+                    if (fakeCellCreated || (cell.IsSettingsInitialized && cell.Settings.UseFakeLayout))
+                        table.DrawFakeCell(cell);
 
                     AdjustControlSurface(table, cell, GetCustomStateAppearance(table, cell));
                     PrintText(table, cell);
@@ -191,39 +201,42 @@ namespace SCControlsExtended.Themes
 
         private ColoredGlyph GetCustomStateAppearance(Table table, Table.Cell cell)
         {
-            if (!cell.Settings.IsVisible || !cell.Settings.Interactable) return null;
-
-            if (cell.Settings.Selectable && table.SelectedCell != null)
+            if (cell.IsSettingsInitialized)
             {
-                switch (cell.Settings.SelectionMode)
+                if (!cell.Settings.IsVisible || !cell.Settings.Interactable) return null;
+
+                if (cell.Settings.Selectable && table.SelectedCell != null)
+                {
+                    switch (cell.Settings.SelectionMode)
+                    {
+                        case Cells.Layout.Mode.Single:
+                            if (!cell.Equals(table.SelectedCell)) break;
+                            return ControlThemeState.Selected;
+                        case Cells.Layout.Mode.EntireRow:
+                            if (cell.Row != table.SelectedCell.Row) break;
+                            return ControlThemeState.Selected;
+                        case Cells.Layout.Mode.EntireColumn:
+                            if (cell.Column != table.SelectedCell.Column) break;
+                            return ControlThemeState.Selected;
+                        case Cells.Layout.Mode.None:
+                            break;
+                    }
+                }
+
+                switch (cell.Settings.HoverMode)
                 {
                     case Cells.Layout.Mode.Single:
-                        if (!cell.Equals(table.SelectedCell)) break;
-                        return ControlThemeState.Selected;
+                        if (table.CurrentMouseCell == null || !cell.Equals(table.CurrentMouseCell)) break;
+                        return ControlThemeState.MouseOver;
                     case Cells.Layout.Mode.EntireRow:
-                        if (cell.Row != table.SelectedCell.Row) break;
-                        return ControlThemeState.Selected;
+                        if (table.CurrentMouseCell == null || table.CurrentMouseCell.Row != cell.Row) break;
+                        return ControlThemeState.MouseOver;
                     case Cells.Layout.Mode.EntireColumn:
-                        if (cell.Column != table.SelectedCell.Column) break;
-                        return ControlThemeState.Selected;
+                        if (table.CurrentMouseCell == null || table.CurrentMouseCell.Column != cell.Column) break;
+                        return ControlThemeState.MouseOver;
                     case Cells.Layout.Mode.None:
                         break;
                 }
-            }
-
-            switch (cell.Settings.HoverMode)
-            {
-                case Cells.Layout.Mode.Single:
-                    if (table.CurrentMouseCell == null || !cell.Equals(table.CurrentMouseCell)) break;
-                    return ControlThemeState.MouseOver;
-                case Cells.Layout.Mode.EntireRow:
-                    if (table.CurrentMouseCell == null || table.CurrentMouseCell.Row != cell.Row) break;
-                    return ControlThemeState.MouseOver;
-                case Cells.Layout.Mode.EntireColumn:
-                    if (table.CurrentMouseCell == null || table.CurrentMouseCell.Column != cell.Column) break;
-                    return ControlThemeState.MouseOver;
-                case Cells.Layout.Mode.None:
-                    break;
             }
             return null;
         }
@@ -239,7 +252,8 @@ namespace SCControlsExtended.Themes
                     int colIndex = cell.Position.X + x;
                     int rowIndex = cell.Position.Y + y;
                     if (!table.Surface.IsValidCell(colIndex, rowIndex)) continue;
-                    table.Surface[colIndex, rowIndex].IsVisible = cell.Settings.IsVisible;
+                    if (cell.IsSettingsInitialized)
+                        table.Surface[colIndex, rowIndex].IsVisible = cell.Settings.IsVisible;
                     table.Surface.SetForeground(colIndex, rowIndex, customStateAppearance != null ? customStateAppearance.Foreground : cell.Foreground);
                     table.Surface.SetBackground(colIndex, rowIndex, customStateAppearance != null ? customStateAppearance.Background : cell.Background);
                 }
@@ -248,18 +262,18 @@ namespace SCControlsExtended.Themes
 
         private static void PrintText(Table table, Table.Cell cell)
         {
-            if (cell.Text == null || !cell.Settings.IsVisible) return;
+            if (cell.Text == null || (cell.IsSettingsInitialized && !cell.Settings.IsVisible)) return;
 
             var width = table.Cells.GetSizeOrDefault(cell.Column, Cells.Layout.LayoutType.Column);
             var height = table.Cells.GetSizeOrDefault(cell.Row, Cells.Layout.LayoutType.Row);
 
             // Handle alignments
-            var vAlign = cell.Settings.VerticalAlignment;
-            var hAlign = cell.Settings.HorizontalAlignment;
+            var vAlign = cell.IsSettingsInitialized ? cell.Settings.VerticalAlignment : default;
+            var hAlign = cell.IsSettingsInitialized ? cell.Settings.HorizontalAlignment : default;
             GetTotalCellSize(cell, width, height, out int totalWidth, out int totalHeight);
 
             // Set the amount of characters to split on for wrapping
-            var maxCharsPerLine = cell.Settings.MaxCharactersPerLine ?? width;
+            var maxCharsPerLine = cell.IsSettingsInitialized ? (cell.Settings.MaxCharactersPerLine ?? width) : width;
             if (maxCharsPerLine > width)
                 maxCharsPerLine = width;
 
