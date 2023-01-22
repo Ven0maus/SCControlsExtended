@@ -205,31 +205,6 @@ namespace SCControlsExtended.Themes
             control.IsDirty = false;
         }
 
-        private static void GetStartIndex(Table table, int rowIndex, int row, int colIndex, int col, out int? startIndexRow, out int? startIndexColumn)
-        {
-            startIndexRow = table.Cells.RowLayout.TryGetValue(rowIndex, out Layout layout) ? layout.Size : table.DefaultCellSize.Y;
-            if (row < table.Height && (row + startIndexRow) >= table.Height)
-            {
-                if (rowIndex == 19)
-                    System.Console.WriteLine("Line 20");
-                startIndexRow = table.Cells.RowLayout.TryGetValue(rowIndex + 1, out layout) ? layout.Size : table.DefaultCellSize.Y;
-            }
-            else
-            {
-                startIndexRow = null;
-            }
-
-            startIndexColumn = table.Cells.ColumnLayout.TryGetValue(colIndex, out layout) ? layout.Size : table.DefaultCellSize.X;
-            if (col < table.Width && (col + startIndexColumn) >= table.Width)
-            {
-                startIndexColumn = table.Cells.ColumnLayout.TryGetValue(colIndex + 1, out layout) ? layout.Size : table.DefaultCellSize.X;
-            }
-            else
-            {
-                startIndexColumn = null;
-            }
-        }
-
         private ColoredGlyph GetCustomStateAppearance(Table table, Table.Cell cell)
         {
             if (cell.IsSettingsInitialized && (!cell.Settings.IsVisible || !cell.Settings.Interactable))
