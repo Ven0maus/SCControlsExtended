@@ -125,6 +125,8 @@ namespace SCControlsExtended.Controls
             internal set { if (HorizontalScrollBar == null) return; HorizontalScrollBar.IsVisible = value; }
         }
 
+        public bool AutoScrollOnCellSelection { get; set; } = true;
+
         /// <summary>
         /// The total rows visible in the table.
         /// </summary>
@@ -254,6 +256,7 @@ namespace SCControlsExtended.Controls
         /// </summary>
         public void ScrollToSelectedItem()
         {
+            if (!AutoScrollOnCellSelection) return;
             if (IsVerticalScrollBarVisible || IsHorizontalScrollBarVisible)
             {
                 var scrollBars = new[] { VerticalScrollBar, HorizontalScrollBar };
