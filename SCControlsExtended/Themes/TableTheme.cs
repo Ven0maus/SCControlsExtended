@@ -201,42 +201,42 @@ namespace SCControlsExtended.Themes
 
         private ColoredGlyph GetCustomStateAppearance(Table table, Table.Cell cell)
         {
-            if (cell.IsSettingsInitialized)
+            if (cell.IsSettingsInitialized && (!cell.Settings.IsVisible || !cell.Settings.Interactable))
+                return null;
+
+            if ((!cell.IsSettingsInitialized || cell.Settings.Selectable) && table.SelectedCell != null)
             {
-                if (!cell.Settings.IsVisible || !cell.Settings.Interactable) return null;
-
-                if (cell.Settings.Selectable && table.SelectedCell != null)
-                {
-                    switch (cell.Settings.SelectionMode)
-                    {
-                        case Cells.Layout.Mode.Single:
-                            if (!cell.Equals(table.SelectedCell)) break;
-                            return ControlThemeState.Selected;
-                        case Cells.Layout.Mode.EntireRow:
-                            if (cell.Row != table.SelectedCell.Row) break;
-                            return ControlThemeState.Selected;
-                        case Cells.Layout.Mode.EntireColumn:
-                            if (cell.Column != table.SelectedCell.Column) break;
-                            return ControlThemeState.Selected;
-                        case Cells.Layout.Mode.None:
-                            break;
-                    }
-                }
-
-                switch (cell.Settings.HoverMode)
+                var selectionMode = !cell.IsSettingsInitialized ? default : cell.Settings.SelectionMode;
+                switch (selectionMode)
                 {
                     case Cells.Layout.Mode.Single:
-                        if (table.CurrentMouseCell == null || !cell.Equals(table.CurrentMouseCell)) break;
-                        return ControlThemeState.MouseOver;
+                        if (!cell.Equals(table.SelectedCell)) break;
+                        return ControlThemeState.Selected;
                     case Cells.Layout.Mode.EntireRow:
-                        if (table.CurrentMouseCell == null || table.CurrentMouseCell.Row != cell.Row) break;
-                        return ControlThemeState.MouseOver;
+                        if (cell.Row != table.SelectedCell.Row) break;
+                        return ControlThemeState.Selected;
                     case Cells.Layout.Mode.EntireColumn:
-                        if (table.CurrentMouseCell == null || table.CurrentMouseCell.Column != cell.Column) break;
-                        return ControlThemeState.MouseOver;
+                        if (cell.Column != table.SelectedCell.Column) break;
+                        return ControlThemeState.Selected;
                     case Cells.Layout.Mode.None:
                         break;
                 }
+            }
+
+            var hoverMode = !cell.IsSettingsInitialized ? default : cell.Settings.HoverMode;
+            switch (hoverMode)
+            {
+                case Cells.Layout.Mode.Single:
+                    if (table.CurrentMouseCell == null || !cell.Equals(table.CurrentMouseCell)) break;
+                    return ControlThemeState.MouseOver;
+                case Cells.Layout.Mode.EntireRow:
+                    if (table.CurrentMouseCell == null || table.CurrentMouseCell.Row != cell.Row) break;
+                    return ControlThemeState.MouseOver;
+                case Cells.Layout.Mode.EntireColumn:
+                    if (table.CurrentMouseCell == null || table.CurrentMouseCell.Column != cell.Column) break;
+                    return ControlThemeState.MouseOver;
+                case Cells.Layout.Mode.None:
+                    break;
             }
             return null;
         }
