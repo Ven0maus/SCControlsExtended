@@ -912,6 +912,7 @@ namespace SCControlsExtended.Controls
         {
             // TODO: Check if this is the last row on the screen
             // get the next row size off screen and scroll the initial indexSize by this amount
+            // also deduct the right amount from the ScrollBar value in this case
 
             int count = scrollBarValue;
             indexSize = startIndex ?? (type == Layout.LayoutType.Column ?
