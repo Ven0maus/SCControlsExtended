@@ -17,11 +17,6 @@ namespace SCControlsExtended.Themes
         /// </summary>
         public ScrollBarTheme ScrollBarTheme { get; set; }
 
-        /// <summary>
-        /// Internal flag to indicate the scroll bar needs to be reconfigured.
-        /// </summary>
-        protected bool ReconfigureScrollBar { get; set; }
-
         public TableTheme(ScrollBarTheme scrollBarTheme)
         {
             ScrollBarTheme = scrollBarTheme;
@@ -43,11 +38,6 @@ namespace SCControlsExtended.Themes
 
             table.ScrollBar.Theme = ScrollBarTheme;
             ScrollBarTheme?.RefreshTheme(_colorsLastUsed, table.ScrollBar);
-        }
-
-        private static void SetupScrollBar(Table table)
-        {
-            table.SetupScrollBar(Orientation.Vertical, table.Height, new Point(table.Width - 1, 0));
         }
 
         /// <summary>
@@ -95,12 +85,6 @@ namespace SCControlsExtended.Themes
         {
             if (control is not Table table || !table.IsDirty)
                 return;
-
-            if (ReconfigureScrollBar)
-            {
-                SetupScrollBar(table);
-                ReconfigureScrollBar = false;
-            }
 
             RefreshTheme(control.FindThemeColors(), control);
 
