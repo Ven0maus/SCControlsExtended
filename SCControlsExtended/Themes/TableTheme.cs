@@ -141,6 +141,9 @@ namespace SCControlsExtended.Themes
                     var scrollBarValue = table.IsScrollBarVisible ? table.ScrollBar.Value : 0;
                     var cellPosition = table.Cells.GetCellPosition(rowIndex, colIndex, out fullRowSize, out int columnSize, scrollBarValue);
 
+                    // Don't attempt to render off-screen rows/columns
+                    if (cellPosition.X > table.Width || cellPosition.Y > table.Height) continue;
+
                     var cell = table.Cells.GetIfExists(rowIndex, colIndex);
                     if (table.DrawOnlyIndexedCells && cell == null) continue;
 
