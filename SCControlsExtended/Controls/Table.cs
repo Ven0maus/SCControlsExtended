@@ -369,9 +369,6 @@ namespace SCControlsExtended.Controls
 
                 if (scrollBar != null)
                 {
-                    // TODO: Would be nice to resize the slider based on the cells & their sizes
-                    // so the slider isn't super tiny because of the amount of index sizes
-
                     // Scroll amount is based on the size of the next cell
                     if (state.OriginalMouseState.Mouse.ScrollWheelValueChange < 0)
                         scrollBar.Value -= GetScrollAmount(scrollBar.Orientation, false);

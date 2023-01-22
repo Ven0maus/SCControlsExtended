@@ -158,6 +158,7 @@ namespace SCControlsExtended.Themes
                     var verticalScrollBarValue = table.IsVerticalScrollBarVisible ? table.VerticalScrollBar.Value : 0;
                     var horizontalScrollBarValue = table.IsHorizontalScrollBarVisible ? table.HorizontalScrollBar.Value : 0;
 
+                    // TODO: Attempt to fix the scrollbar amount, using 1 increments instead of cellsize / defaultSize
                     var cellPosition = table.Cells.GetCellPosition(rowIndex, colIndex, out fullRowSize, out int columnSize,
                         verticalScrollBarValue, horizontalScrollBarValue);
 
