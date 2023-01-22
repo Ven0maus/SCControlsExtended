@@ -133,7 +133,11 @@ namespace SCControlsExtended.Themes
                     col += columnSize - 1;
 
                     // Don't attempt to render off-screen rows/columns
-                    if (cellPosition.X > table.Width || cellPosition.Y > table.Height) continue;
+                    if (cellPosition.X > table.Width || cellPosition.Y > table.Height)
+                    {
+                        colIndex++;
+                        continue;
+                    }
 
                     var cell = table.Cells.GetIfExists(rowIndex, colIndex);
                     if (table.DrawOnlyIndexedCells && cell == null)
