@@ -93,15 +93,15 @@ namespace SCControlsExtended.Controls
         internal ScrollBar VerticalScrollBar { get; private set; }
         internal ScrollBar HorizontalScrollBar { get; private set; }
 
-        internal bool IsVerticalScrollBarVisible
+        public bool IsVerticalScrollBarVisible
         {
             get => VerticalScrollBar != null && VerticalScrollBar.IsVisible;
-            set { if (VerticalScrollBar == null) return; VerticalScrollBar.IsVisible = value; }
+            internal set { if (VerticalScrollBar == null) return; VerticalScrollBar.IsVisible = value; }
         }
-        internal bool IsHorizontalScrollBarVisible
+        public bool IsHorizontalScrollBarVisible
         {
             get => HorizontalScrollBar != null && HorizontalScrollBar.IsVisible;
-            set { if (HorizontalScrollBar == null) return; HorizontalScrollBar.IsVisible = value; }
+            internal set { if (HorizontalScrollBar == null) return; HorizontalScrollBar.IsVisible = value; }
         }
 
         /// <summary>
