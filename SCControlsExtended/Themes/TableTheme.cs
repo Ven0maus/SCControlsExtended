@@ -2,7 +2,6 @@
 using SadConsole.UI;
 using SadConsole.UI.Controls;
 using SadConsole.UI.Themes;
-using SadRogue.Primitives;
 using SCControlsExtended.Controls;
 using System;
 using System.Collections.Generic;
