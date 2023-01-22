@@ -146,6 +146,8 @@ namespace SCControlsExtended.Themes
 
             SetScrollBarVisibility(table, maxRowsHeight, maxColumnsWidth);
 
+            System.Console.WriteLine("Is dirty! oiii");
+
             var columns = maxColumnsWidth;
             var rows = maxRowsHeight;
             int rowIndex = table.IsVerticalScrollBarVisible ? table.VerticalScrollBar.Value : 0;
@@ -155,11 +157,6 @@ namespace SCControlsExtended.Themes
                 int fullRowSize = 0;
                 for (int col = 0; col < columns; col++)
                 {
-                    if (rowIndex == 16 && colIndex == 0)
-                    {
-                        // TODO: Fix why it becomes IsDirty = true when hovering on invalid cell
-                        System.Console.WriteLine("Is dirty! oiii");
-                    }
                     var verticalScrollBarValue = table.IsVerticalScrollBarVisible ? table.VerticalScrollBar.Value : 0;
                     var horizontalScrollBarValue = table.IsHorizontalScrollBarVisible ? table.HorizontalScrollBar.Value : 0;
 

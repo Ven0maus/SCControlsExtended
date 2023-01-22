@@ -262,9 +262,6 @@ namespace SCControlsExtended.Controls
                     var orientation = scrollBar.Orientation;
                     int selectedIndex = SelectedCell != null ? (orientation == Orientation.Vertical ? SelectedCell.Row : SelectedCell.Column) : 0;
 
-                    // TODO: Check if this is the last row on the screen
-                    // get the next row size off screen and scroll the initial indexSize by this amount
-
                     var indexSize = (selectedIndex + 1) * Cells.GetSizeOrDefault(selectedIndex, orientation == Orientation.Vertical ?
                         Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column);
 
@@ -350,12 +347,43 @@ namespace SCControlsExtended.Controls
 
                 if (scrollBar != null)
                 {
+                    // Scroll amount is based on the size of the next cell
                     if (state.OriginalMouseState.Mouse.ScrollWheelValueChange < 0)
-                        scrollBar.Value -= 1;
+                        scrollBar.Value -= GetScrollAmount(scrollBar.Orientation, false);
                     else
-                        scrollBar.Value += 1;
+                        scrollBar.Value += GetScrollAmount(scrollBar.Orientation, true);
                 }
             }
+        }
+
+        private int GetScrollAmount(Orientation orientation, bool increment)
+        {
+            var type = orientation == Orientation.Vertical ? 
+                Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column;
+            var isRowType = type == Cells.Layout.LayoutType.Row;
+            var orderedCells = increment ? 
+                Cells.OrderBy(a => isRowType ? a.Row : a.Column) :
+                Cells.OrderByDescending(a => isRowType ? a.Row : a.Column);
+            var cells = orderedCells
+                .GroupBy(a => isRowType ? a.Row : a.Column);
+            foreach (var group in cells)
+            {
+                foreach (var cell in group)
+                {
+                    var isPositionOfScreen = isRowType ? 
+                        cell.Position.Y >= Height :
+                        cell.Position.X >= Width;
+                    if (increment ? !isPositionOfScreen : isPositionOfScreen)
+                    {
+                        break;
+                    }
+
+                    var layoutDict = isRowType ? Cells.RowLayout : Cells.ColumnLayout;
+                    return layoutDict.TryGetValue(isRowType ? cell.Row : cell.Column, out var layout) ?
+                        (layout.Size / (isRowType ? DefaultCellSize.Y : DefaultCellSize.X)) : 1;
+                }
+            }
+            return 1;
         }
 
         protected override void OnLeftMouseClicked(ControlMouseState state)
