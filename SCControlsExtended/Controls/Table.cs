@@ -970,10 +970,14 @@ namespace SCControlsExtended.Controls
             /// <param name="settings"></param>
             internal void SetLayoutInternal(int? size = null, Color? foreground = null, Color? background = null, Table.Cell.Options settings = null)
             {
-                if (size != null) _size = size.Value;
-                Foreground = foreground;
-                Background = background;
-                Settings = settings;
+                if (size != null) 
+                    _size = size.Value;
+                if (foreground != null)
+                    Foreground = foreground;
+                if (background != null)
+                    Background = background;
+                if (settings != null)
+                    Settings = settings;
             }
 
             internal enum LayoutType

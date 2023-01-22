@@ -45,6 +45,8 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             _table.Cells[0, 0].Settings.VerticalAlignment = Table.Cell.Options.VerticalAlign.Center;
             _table.Cells[0, 0].Settings.Interactable = false;
 
+            _table.Cells[5, 0].Resize(6);
+
             // Set column, row texts
             _table.Cells.Range(0, 1, 0, (Width / _table.DefaultCellSize.X)-1).ForEach(cell =>
             {
@@ -53,7 +55,7 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
                 cell.Settings.VerticalAlignment = Table.Cell.Options.VerticalAlign.Center;
                 cell.Settings.Interactable = false;
             });
-            _table.Cells.Range(1, 0, (Height / _table.DefaultCellSize.Y)+4, 0).ForEach(cell =>
+            _table.Cells.Range(1, 0, (Height / _table.DefaultCellSize.Y)+9, 0).ForEach(cell =>
             {
                 cell.Text = row++.ToString();
                 cell.Settings.HorizontalAlignment = Table.Cell.Options.HorizontalAlign.Center;
@@ -62,7 +64,7 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             });
 
             // Set inner cells color
-            _table.Cells.Range(1, 1, (Height / _table.DefaultCellSize.Y)+4, (Width / _table.DefaultCellSize.X)-1).ForEach(cell => cell.Background = innerCellColor);
+            _table.Cells.Range(1, 1, (Height / _table.DefaultCellSize.Y)+9, (Width / _table.DefaultCellSize.X)-1).ForEach(cell => cell.Background = innerCellColor);
         }
 
         private static string GetExcelColumnName(int index)
