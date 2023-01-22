@@ -17,7 +17,7 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             _table.SetThemeColors(Colors.CreateSadConsoleBlue());
             _table.DefaultForeground = Color.Black;
             _table.DrawOnlyIndexedCells = true;
-            _table.SetupScrollBar(Orientation.Vertical, height - 1, new Point(width - 1, 0));
+            _table.SetupScrollBar(Orientation.Horizontal, Width, new Point(0, Height - 2));
             Controls.Add(_table);
 
             AdjustTable();

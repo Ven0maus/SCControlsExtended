@@ -75,8 +75,7 @@ namespace SCControlsExtended.Themes
         private static void ShowHideScrollBar(Table table)
         {
             // process the scroll bar
-            int scrollbarItems = GetScrollBarItems(table);
-
+            int scrollbarItems = GetScrollBarItems(table, table.ScrollBar.Orientation);
             if (scrollbarItems > 0)
             {
                 table.ScrollBar.Maximum = scrollbarItems;
@@ -89,20 +88,24 @@ namespace SCControlsExtended.Themes
             }
         }
 
-        private static int GetScrollBarItems(Table table)
+        private static int GetScrollBarItems(Table table, Orientation orientation)
         {
-            var lastRows = table.Cells.OrderByDescending(a => a.Row).GroupBy(a => a.Row).Select(a => a.Key);
-            int rows = 0;
-            foreach (var row in lastRows)
+            var order = orientation == Orientation.Vertical ? 
+                table.Cells.OrderByDescending(a => a.Row).GroupBy(a => a.Row) :
+                table.Cells.OrderByDescending(a => a.Column).GroupBy(a => a.Column);
+            var lastIndexes = order.Select(a => a.Key);
+            int indexes = 0;
+            foreach (var index in lastIndexes)
             {
                 // + 1 because its 0 based
-                int totalSize = ((row == 0 ? 1 : row) + 1) * table.Cells.GetSizeOrDefault(row, Cells.Layout.LayoutType.Row);
-                if (totalSize > table.Height)
+                int totalSize = ((index == 0 ? 1 : index) + 1) * table.Cells.GetSizeOrDefault(index, 
+                    orientation == Orientation.Vertical ? Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Col);
+                if (totalSize > (orientation == Orientation.Vertical ? table.Height : table.Width))
                 {
-                    rows++;
+                    indexes++;
                 }
             }
-            return rows;
+            return indexes;
         }
 
         /// <inheritdoc />
@@ -125,18 +128,19 @@ namespace SCControlsExtended.Themes
             if (table._checkScrollBarVisibility)
                 ShowHideScrollBar(table);
 
-            var maxColumnsHeight = GetMaxColumnsBasedOnColumnSizes(table);
+            var maxColumnsWidth = GetMaxColumnsBasedOnColumnSizes(table);
             var maxRowsHeight = GetMaxRowsBasedOnRowSizes(table);
-            table.VisibleRowsTotal = maxRowsHeight >= table.Height ? table.Height : maxRowsHeight;
-            table.VisibleRowsMax = table.Height;
+            table.VisibleIndexesTotal = table.ScrollBar.Orientation == Orientation.Vertical ?
+                (maxRowsHeight >= table.Height ? table.Height : maxRowsHeight) :
+                (maxColumnsWidth >= table.Width ? table.Width : maxColumnsWidth);
+            table.VisibleIndexesMax = table.ScrollBar.Orientation == Orientation.Vertical ? table.Height : table.Width;
 
-            var columns = maxColumnsHeight;
+            var columns = maxColumnsWidth;
             var rows = maxRowsHeight;
-            int rowIndex = table.IsScrollBarVisible ? table.ScrollBar.Value : 0;
-            System.Console.WriteLine("Test: " + rowIndex);
+            int rowIndex = table.IsScrollBarVisible && table.ScrollBar.Orientation == Orientation.Vertical ? table.ScrollBar.Value : 0;
             for (int row = 0; row < rows; row++)
             {
-                int colIndex = 0;
+                int colIndex = table.IsScrollBarVisible && table.ScrollBar.Orientation == Orientation.Horizontal ? table.ScrollBar.Value : 0;
                 int fullRowSize = 0;
                 for (int col = 0; col < columns; col++)
                 {
@@ -144,7 +148,7 @@ namespace SCControlsExtended.Themes
                     var cellPosition = table.Cells.GetCellPosition(rowIndex, colIndex, out fullRowSize, out int columnSize, scrollBarValue);
 
                     // Don't attempt to render off-screen rows/columns
-                    //if (cellPosition.X > table.Width || cellPosition.Y > table.Height) continue;
+                    if (cellPosition.X > table.Width || cellPosition.Y > table.Height) continue;
 
                     var cell = table.Cells.GetIfExists(rowIndex, colIndex);
                     if (table.DrawOnlyIndexedCells && cell == null) continue;

@@ -86,12 +86,12 @@ namespace SCControlsExtended.Controls
         /// <summary>
         /// The total rows visible in the table.
         /// </summary>
-        internal int VisibleRowsTotal { get; set; }
+        internal int VisibleIndexesTotal { get; set; }
 
         /// <summary>
         /// The maximum amount of rows that can be shown in the table.
         /// </summary>
-        internal int VisibleRowsMax { get; set; }
+        internal int VisibleIndexesMax { get; set; }
 
         private DateTime _leftMouseLastClick = DateTime.Now;
         private Point? _leftMouseLastClickPosition;
@@ -133,7 +133,7 @@ namespace SCControlsExtended.Controls
         /// <param name="orientation">The orientation of the scrollbar.</param>
         /// <param name="sizeValue">The size of the scrollbar.</param>
         /// <param name="position">The position of the scrollbar.</param>
-        public void SetupScrollBar(Orientation orientation, int height, Point position)
+        public void SetupScrollBar(Orientation orientation, int size, Point position)
         {
             bool scrollBarExists = false;
             int value = 0;
@@ -148,7 +148,7 @@ namespace SCControlsExtended.Controls
                 scrollBarExists = true;
             }
 
-            ScrollBar = new ScrollBar(orientation, height);
+            ScrollBar = new ScrollBar(orientation, size);
 
             if (scrollBarExists)
             {
@@ -170,15 +170,16 @@ namespace SCControlsExtended.Controls
         /// </summary>
         public void ScrollToSelectedItem()
         {
+            // TODO: Fix
             if (IsScrollBarVisible)
             {
                 int selectedRow = SelectedCell != null ? SelectedCell.Row * Cells.GetSizeOrDefault(SelectedCell.Row, Cells.Layout.LayoutType.Row) : 0;
-                if (selectedRow < VisibleRowsMax)
+                if (selectedRow < VisibleIndexesMax)
                     ScrollBar.Value = 0;
-                else if (selectedRow > Cells.MaxRows - VisibleRowsTotal)
+                else if (selectedRow > Cells.MaxRows - VisibleIndexesTotal)
                     ScrollBar.Value = ScrollBar.Maximum;
                 else
-                    ScrollBar.Value = selectedRow - VisibleRowsTotal;
+                    ScrollBar.Value = selectedRow - VisibleIndexesTotal;
             }
         }
 
@@ -760,7 +761,11 @@ namespace SCControlsExtended.Controls
         /// <returns></returns>
         internal Point GetCellPosition(int row, int col, out int rowSize, out int columnSize, int scrollBarValue = 0)
         {
-            return new Point(GetControlIndex(col, 0, Layout.LayoutType.Col, out columnSize), GetControlIndex(row, scrollBarValue, Layout.LayoutType.Row, out rowSize));
+            var colScrollbarValue = _table.ScrollBar != null && _table.ScrollBar.Orientation == Orientation.Horizontal ? scrollBarValue : 0;
+            var rowScrollbarValue = _table.ScrollBar != null && _table.ScrollBar.Orientation == Orientation.Vertical ? scrollBarValue : 0;
+            int columnIndex = GetControlIndex(col, colScrollbarValue, Layout.LayoutType.Col, out columnSize);
+            int rowIndex = GetControlIndex(row, rowScrollbarValue, Layout.LayoutType.Row, out rowSize);
+            return new Point(columnIndex, rowIndex);
         }
 
         /// <summary>
