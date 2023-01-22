@@ -90,8 +90,8 @@ namespace SCControlsExtended.Controls
         /// </summary>
         public event EventHandler<CellEventArgs> OnCellDoubleClick;
 
-        internal ScrollBar VerticalScrollBar { get; private set; }
-        internal ScrollBar HorizontalScrollBar { get; private set; }
+        public ScrollBar VerticalScrollBar { get; private set; }
+        public ScrollBar HorizontalScrollBar { get; private set; }
 
         public bool IsVerticalScrollBarVisible
         {
