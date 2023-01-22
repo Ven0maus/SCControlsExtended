@@ -131,8 +131,7 @@ namespace SCControlsExtended.Themes
 
             var columns = maxColumns;
             var rows = maxRows;
-            int rowIndex = 0;
-            System.Console.WriteLine("Scrollbar value: " + table.ScrollBar.Value);
+            int rowIndex = table.IsScrollBarVisible ? table.ScrollBar.Value : 0;
             for (int row = 0; row < rows; row++)
             {
                 int colIndex = 0;
