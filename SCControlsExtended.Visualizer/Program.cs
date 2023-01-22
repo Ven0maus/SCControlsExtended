@@ -31,7 +31,7 @@ namespace SCControlsExtended.Visualizer
 
         private static void SetCustomThemes()
         {
-            Library.Default.SetControlTheme(typeof(Table), new TableTheme());
+            Library.Default.SetControlTheme(typeof(Table), new TableTheme(new ScrollBarTheme()));
         }
 
         private static void Init()

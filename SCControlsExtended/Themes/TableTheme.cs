@@ -1,6 +1,8 @@
 ﻿using SadConsole;
+using SadConsole.UI;
 using SadConsole.UI.Controls;
 using SadConsole.UI.Themes;
+using SadRogue.Primitives;
 using SCControlsExtended.Controls;
 using System;
 using System.Collections.Generic;
@@ -10,30 +12,139 @@ namespace SCControlsExtended.Themes
 {
     public class TableTheme : ThemeBase
     {
+        /// <summary>
+        /// The appearance of the scrollbar used by the table control.
+        /// </summary>
+        public ScrollBarTheme ScrollBarTheme { get; set; }
+
+        /// <summary>
+        /// Internal flag to indicate the scroll bar needs to be reconfigured.
+        /// </summary>
+        protected bool ReconfigureScrollBar { get; set; }
+
+        public TableTheme(ScrollBarTheme scrollBarTheme)
+        {
+            ScrollBarTheme = scrollBarTheme;
+        }
+
+        public override void Attached(ControlBase control)
+        {
+            if (control is not Table table)
+                throw new Exception("Added TableTheme to a control that isn't a Table.");
+
+            base.Attached(control);
+        }
+
+        public override void RefreshTheme(Colors colors, ControlBase control)
+        {
+            base.RefreshTheme(colors, control);
+
+            if (control is not Table table) return;
+
+            table.ScrollBar.Theme = ScrollBarTheme;
+            ScrollBarTheme?.RefreshTheme(_colorsLastUsed, table.ScrollBar);
+        }
+
+        private static void SetupScrollBar(Table table)
+        {
+            table.SetupScrollBar(Orientation.Vertical, table.Height, new Point(table.Width - 1, 0));
+        }
+
+        /// <summary>
+        /// Shows the scroll bar when there are too many items to display; otherwise, hides it.
+        /// </summary>
+        /// <param name="table">Reference to the listbox being processed.</param>
+        private static void ShowHideScrollBar(Table table)
+        {
+            // process the scroll bar
+            int scrollbarItems = GetScrollBarItems(table, table.ScrollBar.Orientation);
+            if (scrollbarItems > 0)
+            {
+                table.ScrollBar.Maximum = scrollbarItems;
+                table.IsScrollBarVisible = true;
+            }
+            else
+            {
+                table.ScrollBar.Maximum = 0;
+                table.IsScrollBarVisible = false;
+            }
+        }
+
+        private static int GetScrollBarItems(Table table, Orientation orientation)
+        {
+            var order = orientation == Orientation.Vertical ? 
+                table.Cells.OrderByDescending(a => a.Row).GroupBy(a => a.Row) :
+                table.Cells.OrderByDescending(a => a.Column).GroupBy(a => a.Column);
+            var lastIndexes = order.Select(a => a.Key);
+            int indexes = 0;
+            foreach (var index in lastIndexes)
+            {
+                // + 1 because its 0 based
+                int totalSize = ((index == 0 ? 1 : index) + 1) * table.Cells.GetSizeOrDefault(index, 
+                    orientation == Orientation.Vertical ? Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Col);
+                if (totalSize > (orientation == Orientation.Vertical ? table.Height : table.Width))
+                {
+                    indexes++;
+                }
+            }
+            return indexes;
+        }
+
         /// <inheritdoc />
         public override void UpdateAndDraw(ControlBase control, TimeSpan time)
         {
-            if (!control.IsDirty || control is not Table table)
+            if (control is not Table table || !table.IsDirty)
                 return;
+
+            if (ReconfigureScrollBar)
+            {
+                SetupScrollBar(table);
+                ReconfigureScrollBar = false;
+            }
 
             RefreshTheme(control.FindThemeColors(), control);
 
             // Draw the basic table surface foreground and background, and clear the glyphs
             control.Surface.Fill(table.DefaultForeground, table.DefaultBackground, 0);
 
-            var columns = table.Width;
-            var rows = table.Height;
-            int rowIndex = 0;
+            if (table._checkScrollBarVisibility)
+                ShowHideScrollBar(table);
+
+            var maxColumnsWidth = table.GetMaxColumnsBasedOnColumnSizes();
+            var maxRowsHeight = table.GetMaxRowsBasedOnRowSizes();
+            table.VisibleIndexesTotal = table.ScrollBar.Orientation == Orientation.Vertical ?
+                (maxRowsHeight >= table.Height ? table.Height : maxRowsHeight) :
+                (maxColumnsWidth >= table.Width ? table.Width : maxColumnsWidth);
+            table.VisibleIndexesMax = table.ScrollBar.Orientation == Orientation.Vertical ? table.Height : table.Width;
+
+            var columns = maxColumnsWidth;
+            var rows = maxRowsHeight;
+            System.Console.WriteLine("Value: " + table.ScrollBar.Value + " | Total: " + table.VisibleIndexesTotal + " | Max: " + table.VisibleIndexesMax);
+            int rowIndex = table.IsScrollBarVisible && table.ScrollBar.Orientation == Orientation.Vertical ? table.ScrollBar.Value : 0;
             for (int row = 0; row < rows; row++)
             {
-                int colIndex = 0;
+                int colIndex = table.IsScrollBarVisible && table.ScrollBar.Orientation == Orientation.Horizontal ? table.ScrollBar.Value : 0;
                 int fullRowSize = 0;
                 for (int col = 0; col < columns; col++)
                 {
-                    var cellPosition = table.Cells.GetCellPosition(rowIndex, colIndex, out fullRowSize, out int columnSize);
+                    var scrollBarValue = table.IsScrollBarVisible ? table.ScrollBar.Value : 0;
+                    var cellPosition = table.Cells.GetCellPosition(rowIndex, colIndex, out fullRowSize, out int columnSize, scrollBarValue);
+
+                    col += columnSize - 1;
+
+                    // Don't attempt to render off-screen rows/columns
+                    if (cellPosition.X > table.Width || cellPosition.Y > table.Height)
+                    {
+                        colIndex++;
+                        continue;
+                    }
 
                     var cell = table.Cells.GetIfExists(rowIndex, colIndex);
-                    if (table.DrawOnlyIndexedCells && cell == null) continue;
+                    if (table.DrawOnlyIndexedCells && cell == null)
+                    {
+                        colIndex++;
+                        continue;
+                    }
 
                     cell ??= new Table.Cell(rowIndex, colIndex, table, string.Empty)
                     {
@@ -43,7 +154,6 @@ namespace SCControlsExtended.Themes
                     AdjustControlSurface(table, cell, GetCustomStateAppearance(table, cell));
                     PrintText(table, cell);
 
-                    col += columnSize - 1;
                     colIndex++;
                 }
 
@@ -91,14 +201,6 @@ namespace SCControlsExtended.Themes
                     break;
             }
             return null;
-        }
-
-        public override void Attached(ControlBase control)
-        {
-            if (control is not Table)
-                throw new Exception("Added TableTheme to a control that isn't a Table.");
-
-            base.Attached(control);
         }
 
         private static void AdjustControlSurface(Table table, Table.Cell cell, ColoredGlyph customStateAppearance)
@@ -213,7 +315,7 @@ namespace SCControlsExtended.Themes
         }
 
         /// <inheritdoc />
-        public override ThemeBase Clone() => new TableTheme()
+        public override ThemeBase Clone() => new TableTheme((ScrollBarTheme)ScrollBarTheme.Clone())
         {
             ControlThemeState = ControlThemeState.Clone(),
         };
