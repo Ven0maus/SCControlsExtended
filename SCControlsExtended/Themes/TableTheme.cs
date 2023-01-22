@@ -119,7 +119,6 @@ namespace SCControlsExtended.Themes
 
             var columns = maxColumnsWidth;
             var rows = maxRowsHeight;
-            System.Console.WriteLine("Value: " + table.ScrollBar.Value + " | Total: " + table.VisibleIndexesTotal + " | Max: " + table.VisibleIndexesMax);
             int rowIndex = table.IsScrollBarVisible && table.ScrollBar.Orientation == Orientation.Vertical ? table.ScrollBar.Value : 0;
             for (int row = 0; row < rows; row++)
             {
