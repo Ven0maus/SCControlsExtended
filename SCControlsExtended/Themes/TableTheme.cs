@@ -81,7 +81,7 @@ namespace SCControlsExtended.Themes
             {
                 // + 1 because its 0 based
                 int totalSize = ((index == 0 ? 1 : index) + 1) * table.Cells.GetSizeOrDefault(index, 
-                    orientation == Orientation.Vertical ? Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Col);
+                    orientation == Orientation.Vertical ? Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column);
                 if (totalSize > (orientation == Orientation.Vertical ? table.Height : table.Width))
                 {
                     indexes++;
@@ -204,7 +204,7 @@ namespace SCControlsExtended.Themes
 
         private static void AdjustControlSurface(Table table, Table.Cell cell, ColoredGlyph customStateAppearance)
         {
-            var width = table.Cells.GetSizeOrDefault(cell.Column, Cells.Layout.LayoutType.Col);
+            var width = table.Cells.GetSizeOrDefault(cell.Column, Cells.Layout.LayoutType.Column);
             var height = table.Cells.GetSizeOrDefault(cell.Row, Cells.Layout.LayoutType.Row);
             for (int x = 0; x < width; x++)
             {
@@ -224,7 +224,7 @@ namespace SCControlsExtended.Themes
         {
             if (cell.Text == null || !cell.Settings.IsVisible) return;
 
-            var width = table.Cells.GetSizeOrDefault(cell.Column, Cells.Layout.LayoutType.Col);
+            var width = table.Cells.GetSizeOrDefault(cell.Column, Cells.Layout.LayoutType.Column);
             var height = table.Cells.GetSizeOrDefault(cell.Row, Cells.Layout.LayoutType.Row);
 
             // Handle alignments

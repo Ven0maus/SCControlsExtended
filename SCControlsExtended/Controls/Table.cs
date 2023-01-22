@@ -179,7 +179,7 @@ namespace SCControlsExtended.Controls
             return !Cells.Any() ? 0 : Cells
                 .GroupBy(a => a.Column)
                 // Column 0 should also get atleast a size, add +1 since its 0 based
-                .Select(a => ((a.Key == 0 ? 1 : a.Key) + 1) * Cells.GetSizeOrDefault(a.Key, Cells.Layout.LayoutType.Col))
+                .Select(a => ((a.Key == 0 ? 1 : a.Key) + 1) * Cells.GetSizeOrDefault(a.Key, Cells.Layout.LayoutType.Column))
                 .Max();
         }
 
@@ -193,7 +193,7 @@ namespace SCControlsExtended.Controls
                 var orientation = ScrollBar.Orientation;
                 int selectedIndex = SelectedCell != null ? (orientation == Orientation.Vertical ? SelectedCell.Row : SelectedCell.Column) : 0;
                 var indexSize = (selectedIndex + 1) * Cells.GetSizeOrDefault(selectedIndex, orientation == Orientation.Vertical ? 
-                    Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Col);
+                    Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column);
 
                 var maxIndexSize = orientation == Orientation.Vertical ? GetMaxRowsBasedOnRowSizes() : GetMaxColumnsBasedOnColumnSizes();
 
@@ -732,7 +732,7 @@ namespace SCControlsExtended.Controls
         public Layout Column(int column)
         {
             ColumnLayout.TryGetValue(column, out Layout layout);
-            layout ??= ColumnLayout[column] = new Layout(_table, Layout.LayoutType.Col);
+            layout ??= ColumnLayout[column] = new Layout(_table, Layout.LayoutType.Column);
             return layout;
         }
 
@@ -786,7 +786,7 @@ namespace SCControlsExtended.Controls
         {
             var colScrollbarValue = _table.ScrollBar != null && _table.ScrollBar.Orientation == Orientation.Horizontal ? scrollBarValue : 0;
             var rowScrollbarValue = _table.ScrollBar != null && _table.ScrollBar.Orientation == Orientation.Vertical ? scrollBarValue : 0;
-            int columnIndex = GetControlIndex(col, colScrollbarValue, Layout.LayoutType.Col, out columnSize);
+            int columnIndex = GetControlIndex(col, colScrollbarValue, Layout.LayoutType.Column, out columnSize);
             int rowIndex = GetControlIndex(row, rowScrollbarValue, Layout.LayoutType.Row, out rowSize);
             return new Point(columnIndex, rowIndex);
         }
@@ -800,7 +800,7 @@ namespace SCControlsExtended.Controls
         {
             switch (type)
             {
-                case Layout.LayoutType.Col:
+                case Layout.LayoutType.Column:
                     return ColumnLayout.TryGetValue(index, out Layout layout) ? layout.Size : _table.DefaultCellSize.X;
                 case Layout.LayoutType.Row:
                     return RowLayout.TryGetValue(index, out layout) ? layout.Size : _table.DefaultCellSize.Y;
@@ -834,7 +834,7 @@ namespace SCControlsExtended.Controls
         private int GetControlIndex(int index, int scrollBarValue, Layout.LayoutType type, out int indexSize)
         {
             int count = scrollBarValue;
-            indexSize = type == Layout.LayoutType.Col ?
+            indexSize = type == Layout.LayoutType.Column ?
                 (ColumnLayout.TryGetValue(count, out Layout layout) ? layout.Size : _table.DefaultCellSize.X) :
                 (RowLayout.TryGetValue(count, out layout) ? layout.Size : _table.DefaultCellSize.Y);
 
@@ -844,7 +844,7 @@ namespace SCControlsExtended.Controls
                 controlIndex += indexSize;
                 count++;
 
-                indexSize = type == Layout.LayoutType.Col ?
+                indexSize = type == Layout.LayoutType.Column ?
                     (ColumnLayout.TryGetValue(count, out layout) ? layout.Size : _table.DefaultCellSize.X) :
                     (RowLayout.TryGetValue(count, out layout) ? layout.Size : _table.DefaultCellSize.Y);
             }
@@ -940,7 +940,7 @@ namespace SCControlsExtended.Controls
             internal Layout(Table table, LayoutType type)
             {
                 _table = table;
-                Size = type == LayoutType.Col ? table.DefaultCellSize.X : table.DefaultCellSize.Y;
+                Size = type == LayoutType.Column ? table.DefaultCellSize.X : table.DefaultCellSize.Y;
             }
 
             /// <summary>
@@ -978,7 +978,7 @@ namespace SCControlsExtended.Controls
 
             internal enum LayoutType
             {
-                Col,
+                Column,
                 Row
             }
 
