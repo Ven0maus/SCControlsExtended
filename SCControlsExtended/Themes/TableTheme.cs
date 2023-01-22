@@ -50,24 +50,6 @@ namespace SCControlsExtended.Themes
             table.SetupScrollBar(Orientation.Vertical, table.Height, new Point(table.Width - 1, 0));
         }
 
-        private static int GetMaxRowsBasedOnRowSizes(Table table)
-        {
-            return !table.Cells.Any() ? 0 : table.Cells
-                .GroupBy(a => a.Row)
-                // Row 0 should also get atleast a size, add +1 since its 0 based
-                .Select(a => ((a.Key == 0 ? 1 : a.Key) + 1) * table.Cells.GetSizeOrDefault(a.Key, Cells.Layout.LayoutType.Row))
-                .Max();
-        }
-
-        private static int GetMaxColumnsBasedOnColumnSizes(Table table)
-        {
-            return !table.Cells.Any() ? 0 : table.Cells
-                .GroupBy(a => a.Column)
-                // Column 0 should also get atleast a size, add +1 since its 0 based
-                .Select(a => ((a.Key == 0 ? 1 : a.Key) + 1) * table.Cells.GetSizeOrDefault(a.Key, Cells.Layout.LayoutType.Col))
-                .Max();
-        }
-
         /// <summary>
         /// Shows the scroll bar when there are too many items to display; otherwise, hides it.
         /// </summary>
@@ -128,8 +110,8 @@ namespace SCControlsExtended.Themes
             if (table._checkScrollBarVisibility)
                 ShowHideScrollBar(table);
 
-            var maxColumnsWidth = GetMaxColumnsBasedOnColumnSizes(table);
-            var maxRowsHeight = GetMaxRowsBasedOnRowSizes(table);
+            var maxColumnsWidth = table.GetMaxColumnsBasedOnColumnSizes();
+            var maxRowsHeight = table.GetMaxRowsBasedOnRowSizes();
             table.VisibleIndexesTotal = table.ScrollBar.Orientation == Orientation.Vertical ?
                 (maxRowsHeight >= table.Height ? table.Height : maxRowsHeight) :
                 (maxColumnsWidth >= table.Width ? table.Width : maxColumnsWidth);

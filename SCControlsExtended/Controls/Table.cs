@@ -165,21 +165,44 @@ namespace SCControlsExtended.Controls
             DetermineState();
         }
 
+        internal int GetMaxRowsBasedOnRowSizes()
+        {
+            return !Cells.Any() ? 0 : Cells
+                .GroupBy(a => a.Row)
+                // Row 0 should also get atleast a size, add +1 since its 0 based
+                .Select(a => ((a.Key == 0 ? 1 : a.Key) + 1) * Cells.GetSizeOrDefault(a.Key, Cells.Layout.LayoutType.Row))
+                .Max();
+        }
+
+        internal int GetMaxColumnsBasedOnColumnSizes()
+        {
+            return !Cells.Any() ? 0 : Cells
+                .GroupBy(a => a.Column)
+                // Column 0 should also get atleast a size, add +1 since its 0 based
+                .Select(a => ((a.Key == 0 ? 1 : a.Key) + 1) * Cells.GetSizeOrDefault(a.Key, Cells.Layout.LayoutType.Col))
+                .Max();
+        }
+
         /// <summary>
         /// Scrolls the list to the item currently selected.
         /// </summary>
         public void ScrollToSelectedItem()
         {
-            // TODO: Fix
             if (IsScrollBarVisible)
             {
-                int selectedRow = SelectedCell != null ? SelectedCell.Row * Cells.GetSizeOrDefault(SelectedCell.Row, Cells.Layout.LayoutType.Row) : 0;
-                if (selectedRow < VisibleIndexesMax)
+                var orientation = ScrollBar.Orientation;
+                int selectedIndex = SelectedCell != null ? (orientation == Orientation.Vertical ? SelectedCell.Row : SelectedCell.Column) : 0;
+                var indexSize = (selectedIndex + 1) * Cells.GetSizeOrDefault(selectedIndex, orientation == Orientation.Vertical ? 
+                    Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Col);
+
+                var maxIndexSize = orientation == Orientation.Vertical ? GetMaxRowsBasedOnRowSizes() : GetMaxColumnsBasedOnColumnSizes();
+
+                if (indexSize < VisibleIndexesMax)
                     ScrollBar.Value = 0;
-                else if (selectedRow > Cells.MaxRows - VisibleIndexesTotal)
+                else if (indexSize > maxIndexSize - VisibleIndexesTotal)
                     ScrollBar.Value = ScrollBar.Maximum;
                 else
-                    ScrollBar.Value = selectedRow - VisibleIndexesTotal;
+                    ScrollBar.Value = indexSize - VisibleIndexesTotal;
             }
         }
 
