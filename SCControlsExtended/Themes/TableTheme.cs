@@ -119,6 +119,7 @@ namespace SCControlsExtended.Themes
 
             var columns = maxColumnsWidth;
             var rows = maxRowsHeight;
+            System.Console.WriteLine("Value: " + table.ScrollBar.Value + " | Total: " + table.VisibleIndexesTotal + " | Max: " + table.VisibleIndexesMax);
             int rowIndex = table.IsScrollBarVisible && table.ScrollBar.Orientation == Orientation.Vertical ? table.ScrollBar.Value : 0;
             for (int row = 0; row < rows; row++)
             {
@@ -129,11 +130,17 @@ namespace SCControlsExtended.Themes
                     var scrollBarValue = table.IsScrollBarVisible ? table.ScrollBar.Value : 0;
                     var cellPosition = table.Cells.GetCellPosition(rowIndex, colIndex, out fullRowSize, out int columnSize, scrollBarValue);
 
+                    col += columnSize - 1;
+
                     // Don't attempt to render off-screen rows/columns
                     if (cellPosition.X > table.Width || cellPosition.Y > table.Height) continue;
 
                     var cell = table.Cells.GetIfExists(rowIndex, colIndex);
-                    if (table.DrawOnlyIndexedCells && cell == null) continue;
+                    if (table.DrawOnlyIndexedCells && cell == null)
+                    {
+                        colIndex++;
+                        continue;
+                    }
 
                     cell ??= new Table.Cell(rowIndex, colIndex, table, string.Empty)
                     {
@@ -143,7 +150,6 @@ namespace SCControlsExtended.Themes
                     AdjustControlSurface(table, cell, GetCustomStateAppearance(table, cell));
                     PrintText(table, cell);
 
-                    col += columnSize - 1;
                     colIndex++;
                 }
 
