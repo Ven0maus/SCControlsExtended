@@ -6,6 +6,7 @@ using SCControlsExtended.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static SCControlsExtended.Controls.Cells;
 
 namespace SCControlsExtended.Themes
 {
@@ -69,19 +70,18 @@ namespace SCControlsExtended.Themes
         private static int GetScrollBarItems(Table table, Orientation orientation)
         {
             var order = orientation == Orientation.Vertical ?
-                table.Cells.OrderByDescending(a => a.Row).GroupBy(a => a.Row) :
-                table.Cells.OrderByDescending(a => a.Column).GroupBy(a => a.Column);
+                table.Cells.OrderBy(a => a.Row).GroupBy(a => a.Row) :
+                table.Cells.OrderBy(a => a.Column).GroupBy(a => a.Column);
             var lastIndexes = order.Select(a => a.Key);
             int indexes = 0;
+            int totalIndexSize = 0;
             foreach (var index in lastIndexes)
             {
-                // + 1 because its 0 based
-                int totalSize = ((index == 0 ? 1 : index) + 1) * table.Cells.GetSizeOrDefault(index,
-                    orientation == Orientation.Vertical ? Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column);
-                if (totalSize > (orientation == Orientation.Vertical ? table.Height : table.Width))
-                {
-                    indexes++;
-                }
+                var cellSize = table.Cells.GetSizeOrDefault(index,
+                    orientation == Orientation.Vertical ? Layout.LayoutType.Row : Layout.LayoutType.Column);
+                totalIndexSize += cellSize;
+                if (totalIndexSize > (orientation == Orientation.Vertical ? table.Height : table.Width))
+                    indexes += cellSize / (orientation == Orientation.Vertical ? table.DefaultCellSize.Y : table.DefaultCellSize.X);
             }
             return indexes;
         }
@@ -139,15 +139,6 @@ namespace SCControlsExtended.Themes
             var maxColumnsWidth = table.GetMaxColumnsBasedOnColumnSizes();
             var maxRowsHeight = table.GetMaxRowsBasedOnRowSizes();
 
-            // Re-adjust for columns that are still left to draw (for fake layouts)
-            // Tts impossible to get the row/column sizes as they can be custom and they are not all yet known at this point
-            /*
-            var columnsLeft = (table.Width - maxColumnsWidth) / table.DefaultCellSize.X;
-            maxColumnsWidth = (table.Width - maxColumnsWidth) + columnsLeft;
-            var rowsLeft = (table.Height - maxRowsHeight) / table.DefaultCellSize.Y;
-            maxRowsHeight = (table.Height - maxRowsHeight) + rowsLeft;
-            */
-
             if (table.DrawFakeCells && maxColumnsWidth < table.Width)
                 maxColumnsWidth = table.Width;
             if (table.DrawFakeCells && maxRowsHeight < table.Height)
@@ -164,10 +155,19 @@ namespace SCControlsExtended.Themes
                 int fullRowSize = 0;
                 for (int col = 0; col < columns; col++)
                 {
+                    if (rowIndex == 16 && colIndex == 0)
+                    {
+                        // TODO: Fix why it becomes IsDirty = true when hovering on invalid cell
+                        System.Console.WriteLine("Is dirty! oiii");
+                    }
                     var verticalScrollBarValue = table.IsVerticalScrollBarVisible ? table.VerticalScrollBar.Value : 0;
                     var horizontalScrollBarValue = table.IsHorizontalScrollBarVisible ? table.HorizontalScrollBar.Value : 0;
-                    var cellPosition = table.Cells.GetCellPosition(rowIndex, colIndex, out fullRowSize, out int columnSize, 
-                        verticalScrollBarValue, horizontalScrollBarValue);
+
+                    int? startIndexRow = null, startIndexColumn = null;
+                    //GetStartIndex(table, rowIndex, row, colIndex, col, out startIndexRow, out startIndexColumn);
+
+                    var cellPosition = table.Cells.GetCellPosition(rowIndex, colIndex, out fullRowSize, out int columnSize,
+                        verticalScrollBarValue, horizontalScrollBarValue, startIndexRow, startIndexColumn);
 
                     col += columnSize - 1;
 
@@ -206,6 +206,23 @@ namespace SCControlsExtended.Themes
             }
 
             control.IsDirty = false;
+        }
+
+        private static void GetStartIndex(Table table, int rowIndex, int row, int colIndex, int col, out int startIndexRow, out int startIndexColumn)
+        {
+            startIndexRow = table.Cells.RowLayout.TryGetValue(rowIndex, out Layout layout) ? layout.Size : table.DefaultCellSize.Y;
+            if (row < table.Height && (row + startIndexRow) >= table.Height)
+            {
+                if (rowIndex == 19)
+                    System.Console.WriteLine("Line 20");
+                startIndexRow = table.Cells.RowLayout.TryGetValue(rowIndex + 1, out layout) ? layout.Size : table.DefaultCellSize.Y;
+            }
+
+            startIndexColumn = table.Cells.ColumnLayout.TryGetValue(colIndex, out layout) ? layout.Size : table.DefaultCellSize.X;
+            if (col < table.Width && (col + startIndexColumn) >= table.Width)
+            {
+                startIndexColumn = table.Cells.ColumnLayout.TryGetValue(colIndex + 1, out layout) ? layout.Size : table.DefaultCellSize.X;
+            }
         }
 
         private ColoredGlyph GetCustomStateAppearance(Table table, Table.Cell cell)

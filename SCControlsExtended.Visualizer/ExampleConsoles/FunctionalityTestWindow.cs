@@ -21,6 +21,7 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
 
             // Set some default theme colors, for selection & hovering appearances
             _table.SetThemeColors(Colors.CreateSadConsoleBlue());
+            _table.SetupScrollBar(SadConsole.Orientation.Vertical, Height - 1, new Point(Width - 1, 0));
 
             // Test events
             _table.OnCellDoubleClick += Table_OnCellDoubleClick;
@@ -58,7 +59,7 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
 
             // Custom cell size
             _table.Cells[5, 7].Text = "Support custom cell sizes!";
-            _table.Cells[5, 7].Resize(6, 20);
+            //_table.Cells[5, 7].Resize(6, 20);
             _table.Cells[5, 7].Background = Color.Yellow;
             _table.Cells[5, 7].Foreground = Color.Black;
             _table.Cells[6, 7].Background = Color.Magenta;
@@ -67,6 +68,14 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             _table.Cells[6, 8].Settings.Interactable = false;
             _table.Cells[7, 8].Settings.IsVisible = false;
             _table.Cells[1, 5].Select();
+            _table.Cells[10, 0].Resize(8);
+            for (int i=1; i <= 9; i++)
+                _table.Cells[10 + i, 0].Text = (10 + i).ToString();
+            _table.Cells[19, 0].Background = Color.Blue;
+            _table.Cells[20, 0].Background = Color.Red;
+            _table.Cells[20, 0].Text = "hello";
+            _table.Cells[20, 0].Resize(10);
+            _table.Cells[21, 0].Text = "test";
         }
 
         private static void Table_OnCellExit(object sender, Table.CellEventArgs e)
