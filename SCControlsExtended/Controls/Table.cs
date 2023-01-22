@@ -311,18 +311,23 @@ namespace SCControlsExtended.Controls
             {
                 if (mousePosCellIndex != null)
                 {
-                    CurrentMouseCell = Cells.GetIfExists(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X) ??
-                        new Cell(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, this, string.Empty)
+                    var cell = Cells.GetIfExists(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X);
+                    if (cell == null && DrawFakeCells)
+                    {
+                        cell = new Cell(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, this, string.Empty)
                         {
-                            Position = Cells.GetCellPosition(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, out _, out _, 
+                            Position = Cells.GetCellPosition(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, out _, out _,
                                 IsVerticalScrollBarVisible ? VerticalScrollBar.Value : 0, IsHorizontalScrollBarVisible ? HorizontalScrollBar.Value : 0)
                         };
-                    if (CurrentMouseCell.Settings.Interactable)
+                    }
+                    CurrentMouseCell = cell;
+
+                    if (CurrentMouseCell != null && (!CurrentMouseCell.IsSettingsInitialized || CurrentMouseCell.Settings.Interactable))
                         OnCellEnter?.Invoke(this, new CellEventArgs(CurrentMouseCell));
                 }
                 else
                 {
-                    if (CurrentMouseCell != null && CurrentMouseCell.Settings.Interactable)
+                    if (CurrentMouseCell != null && (!CurrentMouseCell.IsSettingsInitialized || CurrentMouseCell.Settings.Interactable))
                         OnCellExit?.Invoke(this, new CellEventArgs(CurrentMouseCell));
                 }
                 IsDirty = true;
@@ -355,8 +360,8 @@ namespace SCControlsExtended.Controls
 
             if (CurrentMouseCell != null)
             {
-                if (SelectedCell != CurrentMouseCell && CurrentMouseCell.Settings.Interactable && 
-                    CurrentMouseCell.Settings.IsVisible && CurrentMouseCell.Settings.Selectable)
+                if (SelectedCell != CurrentMouseCell && (!CurrentMouseCell.IsSettingsInitialized || (CurrentMouseCell.Settings.Interactable && 
+                    CurrentMouseCell.Settings.IsVisible && CurrentMouseCell.Settings.Selectable)))
                 {
                     SelectedCell = CurrentMouseCell;
                     ScrollToSelectedItem();
@@ -367,7 +372,7 @@ namespace SCControlsExtended.Controls
                     SelectedCell = null;
                 }
 
-                if (CurrentMouseCell.Settings.Interactable && CurrentMouseCell.Settings.IsVisible)
+                if (!CurrentMouseCell.IsSettingsInitialized || (CurrentMouseCell.Settings.Interactable && CurrentMouseCell.Settings.IsVisible))
                     OnCellLeftClick?.Invoke(this, new CellEventArgs(CurrentMouseCell));
 
                 DateTime click = DateTime.Now;
@@ -379,7 +384,7 @@ namespace SCControlsExtended.Controls
                 {
                     _leftMouseLastClick = DateTime.MinValue;
                     _leftMouseLastClickPosition = null;
-                    if (CurrentMouseCell.Settings.Interactable && CurrentMouseCell.Settings.IsVisible)
+                    if (!CurrentMouseCell.IsSettingsInitialized || (CurrentMouseCell.Settings.Interactable && CurrentMouseCell.Settings.IsVisible))
                         OnCellDoubleClick?.Invoke(this, new CellEventArgs(CurrentMouseCell));
                 }
             }
@@ -393,7 +398,7 @@ namespace SCControlsExtended.Controls
         {
             base.OnRightMouseClicked(state);
 
-            if (CurrentMouseCell != null && CurrentMouseCell.Settings.Interactable && CurrentMouseCell.Settings.IsVisible)
+            if (CurrentMouseCell != null && (!CurrentMouseCell.IsSettingsInitialized || (CurrentMouseCell.Settings.Interactable && CurrentMouseCell.Settings.IsVisible)))
             {
                 OnCellRightClick?.Invoke(this, new CellEventArgs(CurrentMouseCell));
             }
@@ -405,7 +410,7 @@ namespace SCControlsExtended.Controls
 
             if (CurrentMouseCell != null)
             {
-                if (CurrentMouseCell.Settings.Interactable && CurrentMouseCell.Settings.IsVisible)
+                if (!CurrentMouseCell.IsSettingsInitialized || (CurrentMouseCell.Settings.Interactable && CurrentMouseCell.Settings.IsVisible))
                     OnCellExit?.Invoke(this, new CellEventArgs(CurrentMouseCell));
                 CurrentMouseCell = null;
             }

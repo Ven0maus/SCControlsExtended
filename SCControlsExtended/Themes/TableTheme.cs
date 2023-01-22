@@ -86,7 +86,7 @@ namespace SCControlsExtended.Themes
             return indexes;
         }
 
-        private void SetScrollBarPropertiesOnTable(Table table, ScrollBar scrollBar, int maxRowsHeight, int maxColumnsWidth)
+        private static void SetScrollBarPropertiesOnTable(Table table, ScrollBar scrollBar, int maxRowsHeight, int maxColumnsWidth)
         {
             if (scrollBar != null)
             {
@@ -138,6 +138,15 @@ namespace SCControlsExtended.Themes
 
             var maxColumnsWidth = table.GetMaxColumnsBasedOnColumnSizes();
             var maxRowsHeight = table.GetMaxRowsBasedOnRowSizes();
+
+            // Re-adjust for columns that are still left to draw (for fake layouts)
+            // Tts impossible to get the row/column sizes as they can be custom and they are not all yet known at this point
+            /*
+            var columnsLeft = (table.Width - maxColumnsWidth) / table.DefaultCellSize.X;
+            maxColumnsWidth = (table.Width - maxColumnsWidth) + columnsLeft;
+            var rowsLeft = (table.Height - maxRowsHeight) / table.DefaultCellSize.Y;
+            maxRowsHeight = (table.Height - maxRowsHeight) + rowsLeft;
+            */
 
             if (table.DrawFakeCells && maxColumnsWidth < table.Width)
                 maxColumnsWidth = table.Width;

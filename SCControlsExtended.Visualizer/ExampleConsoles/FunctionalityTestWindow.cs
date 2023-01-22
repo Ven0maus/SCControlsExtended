@@ -31,7 +31,7 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             _table.OnCellExit += Table_OnCellExit;
 
             // Only add layout and let the console draw the rest
-            _table.DrawFakeCells = true;
+            _table.DrawFakeCells = false;
 
             Controls.Add(_table);
 
