@@ -123,6 +123,9 @@ namespace SCControlsExtended.Controls
             internal set { if (HorizontalScrollBar == null) return; HorizontalScrollBar.IsVisible = value; }
         }
 
+        /// <summary>
+        /// By default the table will automatically scroll to the selected cell if possible.
+        /// </summary>
         public bool AutoScrollOnCellSelection { get; set; } = true;
 
         /// <summary>
