@@ -160,7 +160,7 @@ namespace SCControlsExtended.Controls
             for (int i = 0; i < diff; i++)
             {
                 SetScrollAmount(scrollBar.Orientation, increment);
-                Cells.AdjustCellsAfterResize();
+                Cells.AdjustCellPositionsAfterResize();
             }
             _previousScrollValue = scrollBar.Value;
             IsDirty = true;
@@ -307,6 +307,34 @@ namespace SCControlsExtended.Controls
                     else
                         scrollBar.Value = (totalIndexSize - total) / defaultIndexSize;
                 }
+            }
+        }
+
+        /// <summary>
+        /// When a cell is resized after the bar has been scrolled, it must be updated with the new values for the rendering.
+        /// </summary>
+        internal void SyncScrollAmountOnResize()
+        {
+            if ((!IsVerticalScrollBarVisible && !IsHorizontalScrollBarVisible) || 
+                (NextScrollAmountHorizontal == 0 && NextScrollAmountVertical == 0)) 
+                return;
+
+            NextScrollAmountVertical = 0;
+            NextScrollAmountHorizontal = 0;
+
+            Cells.AdjustCellPositionsAfterResize();
+
+            var amountVertical = IsVerticalScrollBarVisible ? VerticalScrollBar.Value : 0;
+            var amountHorizontal = IsHorizontalScrollBarVisible ? HorizontalScrollBar.Value : 0;
+            var max = amountVertical > amountHorizontal ? amountVertical : amountHorizontal;
+
+            for (int i = 0; i < max; i++)
+            {
+                if (i < amountVertical)
+                    SetScrollAmount(Orientation.Vertical, true);
+                if (i < amountHorizontal)
+                    SetScrollAmount(Orientation.Horizontal, true);
+                Cells.AdjustCellPositionsAfterResize();
             }
         }
 
@@ -1064,7 +1092,7 @@ namespace SCControlsExtended.Controls
             }
         }
 
-        internal void AdjustCellsAfterResize()
+        internal void AdjustCellPositionsAfterResize()
         {
             foreach (var cell in _cells)
                 cell.Value.Position = GetCellPosition(cell.Value.Row, cell.Value.Column, out _, out _,
@@ -1095,7 +1123,8 @@ namespace SCControlsExtended.Controls
                     if (_size != value)
                     {
                         _size = value;
-                        _table.Cells.AdjustCellsAfterResize();
+                        _table.Cells.AdjustCellPositionsAfterResize();
+                        _table.SyncScrollAmountOnResize();
                         _table.IsDirty = true;
                     }
                 }
@@ -1138,7 +1167,8 @@ namespace SCControlsExtended.Controls
                 SetLayoutInternal(size, foreground, background, settings);
                 if (prevSize != _size)
                 {
-                    _table.Cells.AdjustCellsAfterResize();
+                    _table.Cells.AdjustCellPositionsAfterResize();
+                    _table.SyncScrollAmountOnResize();
                     _table.IsDirty = true;
                 }
             }

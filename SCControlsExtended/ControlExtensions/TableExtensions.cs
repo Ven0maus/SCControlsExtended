@@ -67,7 +67,10 @@ namespace SCControlsExtended.ControlExtensions
             cell.Table.Cells.Column(cell.Column).SetLayoutInternal(columnSize);
             cell.Table.Cells.Row(cell.Row).SetLayoutInternal(rowSize);
             if (rowSize != null || columnSize != null)
-                cell.Table.Cells.AdjustCellsAfterResize();
+            {
+                cell.Table.Cells.AdjustCellPositionsAfterResize();
+                cell.Table.SyncScrollAmountOnResize();
+            }
             cell.Table.IsDirty = true;
         }
 
