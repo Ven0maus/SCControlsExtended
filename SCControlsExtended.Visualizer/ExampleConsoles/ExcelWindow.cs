@@ -77,8 +77,8 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             // Generate fake data
             for (int i=1; i < 100; i++)
             {
-                _table.Cells[i, 1].Text = "Fake scroll data";
-                _table.Cells[0, i].Text = "Fake scroll data";
+                _table.Cells[i, 1].Settings.UseFakeLayout = true;
+                _table.Cells[1, i].Settings.UseFakeLayout = true;
             }
         }
 
