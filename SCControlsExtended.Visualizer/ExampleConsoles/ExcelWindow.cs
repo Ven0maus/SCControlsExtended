@@ -73,9 +73,7 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             _table.Cells[0, 0].Settings.HorizontalAlignment = Table.Cell.Options.HorizontalAlign.Center;
             _table.Cells[0, 0].Settings.VerticalAlignment = Table.Cell.Options.VerticalAlign.Center;
             _table.Cells[0, 0].Settings.Interactable = false;
-
             _table.Cells[5, 0].Settings.UseFakeLayout = true;
-            _table.Cells[5, 0].Resize(1);
         }
 
         private static string GetExcelColumnName(int index)
