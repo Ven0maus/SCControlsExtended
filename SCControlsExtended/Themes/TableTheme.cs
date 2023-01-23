@@ -81,7 +81,7 @@ namespace SCControlsExtended.Themes
                     orientation == Orientation.Vertical ? Layout.LayoutType.Row : Layout.LayoutType.Column);
                 totalIndexSize += cellSize;
                 if (totalIndexSize > (orientation == Orientation.Vertical ? table.Height : table.Width))
-                    scrollBarItems += cellSize / (orientation == Orientation.Vertical ? table.DefaultCellSize.Y : table.DefaultCellSize.X);
+                    scrollBarItems += 1; // cellSize / (orientation == Orientation.Vertical ? table.DefaultCellSize.Y : table.DefaultCellSize.X);
             }
             return scrollBarItems;
         }
@@ -148,17 +148,15 @@ namespace SCControlsExtended.Themes
 
             var columns = maxColumnsWidth;
             var rows = maxRowsHeight;
-            int rowIndex = table.IsVerticalScrollBarVisible ? table.VerticalScrollBar.Value : 0;
+            int rowIndex = table.IsVerticalScrollBarVisible ? table.NextScrollAmountVertical : 0;
             for (int row = 0; row < rows; row++)
             {
-                int colIndex = table.IsHorizontalScrollBarVisible ? table.HorizontalScrollBar.Value : 0;
+                int colIndex = table.IsHorizontalScrollBarVisible ? table.NextScrollAmountHorizontal : 0;
                 int fullRowSize = 0;
                 for (int col = 0; col < columns; col++)
                 {
-                    var verticalScrollBarValue = table.IsVerticalScrollBarVisible ? table.VerticalScrollBar.Value : 0;
-                    var horizontalScrollBarValue = table.IsHorizontalScrollBarVisible ? table.HorizontalScrollBar.Value : 0;
-
-                    // TODO: Attempt to fix the scrollbar amount, using 1 increments instead of cellsize / defaultSize
+                    var verticalScrollBarValue = (table.IsVerticalScrollBarVisible ? table.NextScrollAmountVertical : 0);
+                    var horizontalScrollBarValue = (table.IsHorizontalScrollBarVisible ? table.NextScrollAmountHorizontal : 0);
                     var cellPosition = table.Cells.GetCellPosition(rowIndex, colIndex, out fullRowSize, out int columnSize,
                         verticalScrollBarValue, horizontalScrollBarValue);
 
