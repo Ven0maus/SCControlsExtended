@@ -146,19 +146,25 @@ namespace SCControlsExtended.Controls
         private Point? _leftMouseLastClickPosition;
         internal bool _checkScrollBarVisibility;
 
-        private int _previousScrollValue;
+        private int _previousScrollValueVertical, _previousScrollValueHorizontal;
         private void ScrollBar_ValueChanged(object sender, EventArgs e)
         {
             var scrollBar = (ScrollBar)sender;
-            var increment = _previousScrollValue < scrollBar.Value;
+            var previousScrollValue = scrollBar.Orientation == Orientation.Vertical ? _previousScrollValueVertical : _previousScrollValueHorizontal;
+            var increment = previousScrollValue < scrollBar.Value;
 
-            var diff = Math.Abs(scrollBar.Value - _previousScrollValue);
+            var diff = Math.Abs(scrollBar.Value - previousScrollValue);
             for (int i = 0; i < diff; i++)
             {
                 SetScrollAmount(scrollBar.Orientation, increment);
                 Cells.AdjustCellPositionsAfterResize();
             }
-            _previousScrollValue = scrollBar.Value;
+
+            if (scrollBar.Orientation == Orientation.Vertical)
+                _previousScrollValueVertical = scrollBar.Value;
+            else
+                _previousScrollValueHorizontal = scrollBar.Value;
+
             IsDirty = true;
         }
 

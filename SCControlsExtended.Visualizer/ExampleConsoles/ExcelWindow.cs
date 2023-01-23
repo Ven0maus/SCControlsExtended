@@ -73,6 +73,13 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             _table.Cells[0, 0].Settings.VerticalAlignment = Table.Cell.Options.VerticalAlign.Center;
             _table.Cells[0, 0].Settings.Interactable = false;
             _table.Cells[5, 0].Settings.UseFakeLayout = true;
+
+            // Generate fake data
+            for (int i=1; i < 100; i++)
+            {
+                _table.Cells[i, 1].Text = "Fake scroll data";
+                _table.Cells[0, i].Text = "Fake scroll data";
+            }
         }
 
         private static string GetExcelColumnName(int index)
