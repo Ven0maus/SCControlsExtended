@@ -21,7 +21,7 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
 
             // Set some default theme colors, for selection & hovering appearances
             _table.SetThemeColors(Colors.CreateSadConsoleBlue());
-            _table.SetupScrollBar(SadConsole.Orientation.Vertical, Height - 1, new Point(Width - 1, 0));
+            _table.SetupScrollBar(SadConsole.Orientation.Vertical, Height, new Point(Width - 1, 0));
 
             // Test events
             _table.OnCellDoubleClick += Table_OnCellDoubleClick;
