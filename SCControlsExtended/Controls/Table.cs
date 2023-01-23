@@ -7,10 +7,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using static SCControlsExtended.Controls.Cells;
-using System.Reflection;
-using SadConsole.Ansi;
-using System.Security.Cryptography;
 
 namespace SCControlsExtended.Controls
 {
@@ -288,7 +284,7 @@ namespace SCControlsExtended.Controls
                     foreach (var index in indexes)
                     {
                         var cellSize = Cells.GetSizeOrDefault(index, isRowType ? 
-                            Layout.LayoutType.Row : Layout.LayoutType.Column);
+                            Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column);
                         totalIndexSize += cellSize;
 
                         if (index > selectedIndex)
@@ -343,8 +339,8 @@ namespace SCControlsExtended.Controls
         private void SetScrollAmount(Orientation orientation, bool increment)
         {
             var type = orientation == Orientation.Vertical ?
-                Layout.LayoutType.Row : Layout.LayoutType.Column;
-            var isRowType = type == Layout.LayoutType.Row;
+                Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column;
+            var isRowType = type == Cells.Layout.LayoutType.Row;
             var cellGroups = Cells.GroupBy(a => isRowType ? a.Row : a.Column);
             var orderedCells = increment ?
                 cellGroups.OrderBy(a => a.Key) :

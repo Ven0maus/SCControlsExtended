@@ -6,7 +6,6 @@ using SCControlsExtended.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static SCControlsExtended.Controls.Cells;
 
 namespace SCControlsExtended.Themes
 {
@@ -78,7 +77,7 @@ namespace SCControlsExtended.Themes
             foreach (var index in indexes)
             {
                 var cellSize = table.Cells.GetSizeOrDefault(index,
-                    orientation == Orientation.Vertical ? Layout.LayoutType.Row : Layout.LayoutType.Column);
+                    orientation == Orientation.Vertical ? Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column);
                 totalIndexSize += cellSize;
                 if (totalIndexSize > (orientation == Orientation.Vertical ? table.Height : table.Width))
                     scrollBarItems += 1; // cellSize / (orientation == Orientation.Vertical ? table.DefaultCellSize.Y : table.DefaultCellSize.X);

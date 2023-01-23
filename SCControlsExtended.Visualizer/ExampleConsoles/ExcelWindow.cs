@@ -1,7 +1,6 @@
 ﻿using SadConsole;
 using SadConsole.UI;
 using SadRogue.Primitives;
-using SCControlsExtended.ControlExtensions;
 using SCControlsExtended.Controls;
 using System;
 
