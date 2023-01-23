@@ -513,9 +513,9 @@ namespace SCControlsExtended.Controls
 
         private Point? GetCellIndexByMousePosition(Point mousePosition)
         {
-            for (int col = 0; col < Width; col++)
+            for (int col = IsHorizontalScrollBarVisible ? NextScrollAmountHorizontal : 0; col < Width; col++)
             {
-                for (int row = 0; row < Height; row++)
+                for (int row = IsVerticalScrollBarVisible ? NextScrollAmountVertical : 0; row < Height; row++)
                 {
                     var position = Cells.GetCellPosition(row, col, out int rowSize, out int columnSize, 
                         IsVerticalScrollBarVisible ? NextScrollAmountVertical : 0, IsHorizontalScrollBarVisible ? NextScrollAmountHorizontal : 0);
