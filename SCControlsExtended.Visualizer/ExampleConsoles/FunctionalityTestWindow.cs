@@ -58,8 +58,10 @@ namespace SCControlsExtended.Visualizer.ExampleConsoles
             _table.Cells.Range(1, 1, 10, 5).ForEach(cell => cell.Background = innerCellColor);
 
             // Custom cell size
-            _table.Cells[5, 7].Text = "Support custom cell sizes!";
-            //_table.Cells[5, 7].Resize(6, 20);
+            _table.Cells[5, 7].Text = "Support custom cell sizes and text alignment!";
+            _table.Cells[5, 7].Settings.HorizontalAlignment = Table.Cell.Options.HorizontalAlign.Center;
+            _table.Cells[5, 7].Settings.VerticalAlignment = Table.Cell.Options.VerticalAlign.Center;
+            _table.Cells[5, 7].Resize(7, 20);
             _table.Cells[5, 7].Background = Color.Yellow;
             _table.Cells[5, 7].Foreground = Color.Black;
             _table.Cells[6, 7].Background = Color.Magenta;
