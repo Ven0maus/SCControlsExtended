@@ -39,7 +39,7 @@ namespace SCControlsExtended.Controls
         }
 
         /// <summary>
-        /// Returns the cell the mouse is over, if <see cref="IsMouseEnabled"/> is <see langword="true"/>.
+        /// Returns the cell the mouse is over, if <see cref="UseMouse"/> is <see langword="true"/>.
         /// </summary>
         public Cell CurrentMouseCell { get; private set; }
 
