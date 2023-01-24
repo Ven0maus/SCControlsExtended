@@ -200,5 +200,27 @@ namespace Tests
                 Assert.That(_table.Cells.TotalRows, Is.EqualTo(3));
             });
         }
+
+        [Test]
+        public void Cells_Clear_Correct()
+        {
+            _table.Cells.Row(0).Size = 4;
+            _table.Cells[0, 0].Text = "Hello";
+            _table.Cells[0, 1].Text = "Hello";
+
+            Assert.That(_table.Cells.Count(), Is.EqualTo(2));
+
+            _table.Cells.Clear(false);
+            Assert.Multiple(() =>
+            {
+                Assert.That(_table.Cells.Count(), Is.EqualTo(0));
+                Assert.That(_table.Cells.Row(0).Size, Is.EqualTo(4));
+            });
+            Assert.That(_table.Cells.Row(0).Size, Is.EqualTo(4));
+
+            _table.Cells.Clear(true);
+
+            Assert.That(_table.Cells.Row(0).Size, Is.EqualTo(_table.DefaultCellSize.Y));
+        }
     }
 }
