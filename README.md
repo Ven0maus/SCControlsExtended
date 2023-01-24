@@ -1,8 +1,10 @@
 # SCControlsExtended
-An extension library with more controls for SadConsole
+SCControlsExtended is a library made to extend the current available controls within SadConsole.
 
-# Features
+**[Documentation](https://github.com/Ven0maus/SCControlsExtended/wiki)**
+
+## Controls
 
 - Table
 
-# [Documentation](https://github.com/Ven0maus/SCControlsExtended/wiki)
+
