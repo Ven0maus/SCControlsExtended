@@ -5,9 +5,9 @@ using SadConsole.UI.Themes;
 using SadRogue.Primitives;
 using SCControlsExtended.Controls;
 using SCControlsExtended.Themes;
-using SCControlsExtended.Visualizer.ExampleConsoles;
+using SCControlsExtended.Demo.ExampleConsoles;
 
-namespace SCControlsExtended.Visualizer
+namespace SCControlsExtended.Demo
 {
     class Program
     {

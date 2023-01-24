@@ -5,9 +5,9 @@ VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SCControlsExtended", "SCControlsExtended\SCControlsExtended.csproj", "{8C2F2A4E-C24F-42FB-8A3A-B0C6671B4623}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SCControlsExtended.Visualizer", "SCControlsExtended.Visualizer\SCControlsExtended.Visualizer.csproj", "{DD88F4F2-B6A2-4EF1-AAAC-40569521C896}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SCControlsExtended.Demo", "SCControlsExtended.Demo\SCControlsExtended.Demo.csproj", "{DD88F4F2-B6A2-4EF1-AAAC-40569521C896}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SCControlsExtended.Tests", "SCControlsExtended.Tests\SCControlsExtended.Tests.csproj", "{34BEDDFD-DADE-41E9-9626-668BBDE96740}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SCControlsExtended.Tests", "SCControlsExtended.Tests\SCControlsExtended.Tests.csproj", "{34BEDDFD-DADE-41E9-9626-668BBDE96740}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

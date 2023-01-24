@@ -3,7 +3,7 @@ using SadConsole.UI;
 using SadRogue.Primitives;
 using SCControlsExtended.Controls;
 
-namespace SCControlsExtended.Visualizer.ExampleConsoles
+namespace SCControlsExtended.Demo.ExampleConsoles
 {
     public class DrawingTableWindow : ControlsConsole
     {

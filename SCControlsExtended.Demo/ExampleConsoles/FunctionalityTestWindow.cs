@@ -4,7 +4,7 @@ using SCControlsExtended.ControlExtensions;
 using SCControlsExtended.Controls;
 using System;
 
-namespace SCControlsExtended.Visualizer.ExampleConsoles
+namespace SCControlsExtended.Demo.ExampleConsoles
 {
     internal class FunctionalityTestWindow : ControlsConsole
     {

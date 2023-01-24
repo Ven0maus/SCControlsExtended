@@ -4,7 +4,7 @@ using SadRogue.Primitives;
 using SCControlsExtended.Controls;
 using System;
 
-namespace SCControlsExtended.Visualizer.ExampleConsoles
+namespace SCControlsExtended.Demo.ExampleConsoles
 {
     internal class ExcelWindow : ControlsConsole
     {
