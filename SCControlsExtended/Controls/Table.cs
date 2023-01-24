@@ -691,7 +691,7 @@ namespace SCControlsExtended.Controls
             public Options Settings
             {
                 get { return _settings ??= new Options(this); }
-                set
+                internal set
                 {
                     if (value == null) return;
                     if (_settings != value)
