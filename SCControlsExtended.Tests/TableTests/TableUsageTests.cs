@@ -304,11 +304,23 @@ namespace SCControlsExtended.Tests.TableTests
                 Assert.That(Table.VerticalScrollBar.Value, Is.EqualTo(0));
             });
 
+            // Increment
             for (int i=0; i < extraRowsOffScreen; i++)
             {
                 Table.VerticalScrollBar.Value += 1;
                 Assert.That(Table.StartRenderRow, Is.EqualTo(i + 1));
             }
+
+            Assert.That(Table.StartRenderRow, Is.EqualTo(extraRowsOffScreen));
+
+            // Decrement
+            for (int i = extraRowsOffScreen; i > 0; i--)
+            {
+                Table.VerticalScrollBar.Value -= 1;
+                Assert.That(Table.StartRenderRow, Is.EqualTo(i - 1));
+            }
+
+            Assert.That(Table.StartRenderRow, Is.EqualTo(0));
         }
 
         [Test]
@@ -331,11 +343,23 @@ namespace SCControlsExtended.Tests.TableTests
                 Assert.That(Table.HorizontalScrollBar.Value, Is.EqualTo(0));
             });
 
+            // Increment
             for (int i = 0; i < extraColumnsOffScreen; i++)
             {
                 Table.HorizontalScrollBar.Value += 1;
                 Assert.That(Table.StartRenderColumn, Is.EqualTo(i + 1));
             }
+
+            Assert.That(Table.StartRenderColumn, Is.EqualTo(extraColumnsOffScreen));
+
+            // Decrement
+            for (int i = extraColumnsOffScreen; i > 0; i--)
+            {
+                Table.HorizontalScrollBar.Value -= 1;
+                Assert.That(Table.StartRenderColumn, Is.EqualTo(i - 1));
+            }
+
+            Assert.That(Table.StartRenderColumn, Is.EqualTo(0));
         }
     }
 }
