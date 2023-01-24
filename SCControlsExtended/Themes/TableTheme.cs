@@ -6,7 +6,9 @@ using SCControlsExtended.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
+[assembly: InternalsVisibleTo("SCControlsExtended.Tests")]
 namespace SCControlsExtended.Themes
 {
     public class TableTheme : ThemeBase
@@ -80,7 +82,7 @@ namespace SCControlsExtended.Themes
             foreach (var index in indexes)
             {
                 sum -= index;
-                if (sum <= table.Height) break;
+                if (sum <= (orientation == Orientation.Vertical ? table.Height : table.Width)) break;
                 totalIndex++;
             }
             return totalIndex;

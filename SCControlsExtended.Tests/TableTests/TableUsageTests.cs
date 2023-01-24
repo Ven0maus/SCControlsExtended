@@ -130,6 +130,14 @@ namespace SCControlsExtended.Tests.TableTests
         }
 
         [Test]
+        public void Cells_Layout_Settings_SetCorrectly()
+        {
+            var layout = Table.Cells.Row(0);
+            layout.Settings.Selectable = false;
+            Assert.That(Table.Cells[0, 0].Settings.Selectable, Is.False);
+        }
+
+        [Test]
         public void Cells_Layout_GetMultiple_Correct()
         {
             var rowLayouts = Table.Cells.Row(0, 1, 2);
@@ -226,6 +234,108 @@ namespace SCControlsExtended.Tests.TableTests
             Table.Cells.Clear(true);
 
             Assert.That(Table.Cells.Row(0).Size, Is.EqualTo(Table.DefaultCellSize.Y));
+        }
+
+        [Test]
+        public void Cells_Different_Cell_NotEquals()
+        {
+            var cellA = Table.Cells[0, 0];
+            cellA.Text = "Hello";
+
+            var cellB = Table.Cells[0, 1];
+            cellB.Text = "Hello";
+
+            Assert.That(cellA, Is.Not.EqualTo(cellB));
+
+            cellB = null;
+
+            Assert.That(cellA, Is.Not.EqualTo(cellB));
+        }
+
+        [Test]
+        public void Cells_Cell_CopyAppearanceFrom_Correct()
+        {
+            var cellA = Table.Cells[0, 0];
+            cellA.Background = Color.Brown;
+            cellA.Settings.UseFakeLayout = true;
+
+            var cellB = Table.Cells[0, 1];
+            cellB.CopyAppearanceFrom(cellA);
+            Assert.Multiple(() =>
+            {
+                Assert.That(cellB.Background, Is.EqualTo(Color.Brown));
+                Assert.That(cellB.Settings.UseFakeLayout, Is.EqualTo(true));
+            });
+            cellA.Settings.Selectable = false;
+            cellB.CopyAppearanceFrom(cellA);
+            Assert.Multiple(() =>
+            {
+                Assert.That(cellB.Settings.UseFakeLayout, Is.EqualTo(true));
+                Assert.That(cellB.Settings.Selectable, Is.EqualTo(false));
+            });
+
+            // Settings is not initialized here, copy it over, everything should be default again
+            var cellC = Table.Cells[0, 2];
+            cellB.CopyAppearanceFrom(cellC);
+            Assert.Multiple(() =>
+            {
+                Assert.That(cellB.Settings.UseFakeLayout, Is.EqualTo(false));
+                Assert.That(cellB.Settings.Selectable, Is.EqualTo(true));
+            });
+        }
+
+        [Test]
+        public void Table_ScrollBar_Vertical_Scrolling_Correct()
+        {
+            const int extraRowsOffScreen = 5;
+            Table.SetupScrollBar(SadConsole.Orientation.Vertical, 5, new Point(0, 0));
+
+            var rows = (Table.Height / Table.DefaultCellSize.Y) + (extraRowsOffScreen + 1);
+            for (int row=0; row < rows; row++)
+            {
+                Table.Cells[row, 0].Text = "Row " + row;
+            }
+
+            Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
+            Assert.Multiple(() =>
+            {
+                Assert.That(Table.IsVerticalScrollBarVisible, Is.True);
+                Assert.That(Table.VerticalScrollBar.Maximum, Is.EqualTo(extraRowsOffScreen));
+                Assert.That(Table.VerticalScrollBar.Value, Is.EqualTo(0));
+            });
+
+            for (int i=0; i < extraRowsOffScreen; i++)
+            {
+                Table.VerticalScrollBar.Value += 1;
+                Assert.That(Table.StartRenderRow, Is.EqualTo(i + 1));
+            }
+        }
+
+        [Test]
+        public void Table_ScrollBar_Horizontal_Scrolling_Correct()
+        {
+            const int extraColumnsOffScreen = 5;
+            Table.SetupScrollBar(SadConsole.Orientation.Horizontal, 5, new Point(0, 0));
+
+            var columns = (Table.Width / Table.DefaultCellSize.X) + (extraColumnsOffScreen + 1);
+            for (int column = 0; column < columns; column++)
+            {
+                Table.Cells[0, column].Text = "Column " + column;
+            }
+
+            Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
+            Assert.Multiple(() =>
+            {
+                Assert.That(Table.IsHorizontalScrollBarVisible, Is.True);
+                Assert.That(Table.HorizontalScrollBar.Maximum, Is.EqualTo(extraColumnsOffScreen));
+                Assert.That(Table.HorizontalScrollBar.Value, Is.EqualTo(0));
+            });
+
+            for (int i = 0; i < extraColumnsOffScreen; i++)
+            {
+                Table.HorizontalScrollBar.Value += 1;
+                Assert.That(Table.StartRenderColumn, Is.EqualTo(i + 1));
+            }
         }
     }
 }

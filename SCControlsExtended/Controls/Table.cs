@@ -7,7 +7,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
+[assembly: InternalsVisibleTo("SCControlsExtended.Tests")]
 namespace SCControlsExtended.Controls
 {
     public class Table : CompositeControl
@@ -828,7 +830,7 @@ namespace SCControlsExtended.Controls
                     set { SetFieldValue(_cell, VerticalAlignment, ref _verticalAlignment, value, _usedForLayout); }
                 }
 
-                private bool _useFakeLayout;
+                private bool _useFakeLayout = false;
                 public bool UseFakeLayout
                 {
                     get { return _useFakeLayout; }
