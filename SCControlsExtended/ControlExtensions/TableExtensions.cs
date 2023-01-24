@@ -30,7 +30,7 @@ namespace SCControlsExtended.ControlExtensions
         }
 
         /// <summary>
-        /// Executes an action on each cell
+        /// Executes an action on each cell.
         /// </summary>
         /// <param name="range"></param>
         /// <param name="action"></param>
@@ -43,7 +43,7 @@ namespace SCControlsExtended.ControlExtensions
         }
 
         /// <summary>
-        /// Sets the layout for the cell
+        /// Sets the layout for the cell.
         /// </summary>
         /// <param name="cell"></param>
         /// <param name="foreground"></param>
@@ -97,25 +97,34 @@ namespace SCControlsExtended.ControlExtensions
         }
 
         /// <summary>
-        /// Get the layout for the given columns
+        /// Get the layout for the given columns.
         /// </summary>
         /// <param name="column"></param>
         /// <returns></returns>
-        public static Cells.Layout.Range Column(this Cells cells, params int[] columns)
+        public static Cells.Layout.RangeEnumerable Column(this Cells cells, params int[] columns)
         {
             var layouts = columns.Select(a => cells.Column(a));
-            return new Cells.Layout.Range(layouts);
+            return new Cells.Layout.RangeEnumerable(layouts);
         }
 
         /// <summary>
-        /// Get the layout for the given rows
+        /// Get the layout for the given rows.
         /// </summary>
         /// <param name="row"></param>
         /// <returns></returns>
-        public static Cells.Layout.Range Row(this Cells cells, params int[] rows)
+        public static Cells.Layout.RangeEnumerable Row(this Cells cells, params int[] rows)
         {
             var layouts = rows.Select(a => cells.Row(a));
-            return new Cells.Layout.Range(layouts);
+            return new Cells.Layout.RangeEnumerable(layouts);
+        }
+
+        /// <summary>
+        /// Removes the cell from its table.
+        /// </summary>
+        /// <param name="cell"></param>
+        public static void Remove(this Table.Cell cell)
+        {
+            cell.Table.Cells.Remove(cell.Row, cell.Column);
         }
     }
 }

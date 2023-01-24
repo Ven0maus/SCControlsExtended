@@ -927,6 +927,11 @@ namespace SCControlsExtended.Controls
         /// </summary>
         public int TotalColumns { get { return _cells.Count == 0 ? 0 : _cells.Values.Max(a => a.Column) + 1; } }
 
+        /// <summary>
+        /// The amount of cells currently in the table.
+        /// </summary>
+        public int Count { get { return _cells.Count; } }
+
         internal Cells(Table table)
         {
             _table = table;
@@ -992,6 +997,23 @@ namespace SCControlsExtended.Controls
         }
 
         /// <summary>
+        /// Removes a cell from the table.
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="column"></param>
+        public void Remove(int row, int column)
+        {
+            var prev = _cells.Count;
+            _cells.Remove((row, column));
+            if (prev != _cells.Count)
+            {
+                AdjustCellPositionsAfterResize();
+                _table.SyncScrollAmountOnResize();
+                _table.IsDirty = true;
+            }
+        }
+
+        /// <summary>
         /// Resets all the cells data
         /// </summary>
         /// <param name="clearLayoutOptions"></param>
@@ -1028,15 +1050,12 @@ namespace SCControlsExtended.Controls
         /// <returns></returns>
         internal int GetSizeOrDefault(int index, Layout.LayoutType type)
         {
-            switch (type)
+            return type switch
             {
-                case Layout.LayoutType.Column:
-                    return ColumnLayout.TryGetValue(index, out Layout layout) ? layout.Size : _table.DefaultCellSize.X;
-                case Layout.LayoutType.Row:
-                    return RowLayout.TryGetValue(index, out layout) ? layout.Size : _table.DefaultCellSize.Y;
-                default:
-                    throw new NotSupportedException("Invalid layout type.");
-            }
+                Layout.LayoutType.Column => ColumnLayout.TryGetValue(index, out Layout layout) ? layout.Size : _table.DefaultCellSize.X,
+                Layout.LayoutType.Row => RowLayout.TryGetValue(index, out Layout layout) ? layout.Size : _table.DefaultCellSize.Y,
+                _ => throw new NotSupportedException("Invalid layout type."),
+            };
         }
 
         internal Table.Cell GetIfExists(int row, int col)
@@ -1241,11 +1260,11 @@ namespace SCControlsExtended.Controls
                 EntireColumn
             }
 
-            public class Range : IEnumerable<Layout>
+            public class RangeEnumerable : IEnumerable<Layout>
             {
                 private readonly IEnumerable<Layout> _layouts;
 
-                internal Range(IEnumerable<Layout> layouts)
+                internal RangeEnumerable(IEnumerable<Layout> layouts)
                 {
                     _layouts = layouts;
                 }

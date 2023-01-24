@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SCControlsExtended", "SCCon
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SCControlsExtended.Visualizer", "SCControlsExtended.Visualizer\SCControlsExtended.Visualizer.csproj", "{DD88F4F2-B6A2-4EF1-AAAC-40569521C896}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{34BEDDFD-DADE-41E9-9626-668BBDE96740}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SCControlsExtended.Tests", "SCControlsExtended.Tests\SCControlsExtended.Tests.csproj", "{34BEDDFD-DADE-41E9-9626-668BBDE96740}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
