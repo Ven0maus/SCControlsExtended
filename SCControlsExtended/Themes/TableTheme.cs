@@ -285,7 +285,7 @@ namespace SCControlsExtended.Themes
 
         private static void PrintText(Table table, Table.Cell cell)
         {
-            if (cell.Text == null || (cell.IsSettingsInitialized && !cell.Settings.IsVisible)) return;
+            if (string.IsNullOrWhiteSpace(cell.Text) || (cell.IsSettingsInitialized && !cell.Settings.IsVisible)) return;
 
             var width = table.Cells.GetSizeOrDefault(cell.Column, Cells.Layout.LayoutType.Column);
             var height = table.Cells.GetSizeOrDefault(cell.Row, Cells.Layout.LayoutType.Row);
