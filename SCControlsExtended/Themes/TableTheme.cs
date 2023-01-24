@@ -150,15 +150,18 @@ namespace SCControlsExtended.Themes
 
             var columns = maxColumnsWidth;
             var rows = maxRowsHeight;
-            int rowIndex = table.IsVerticalScrollBarVisible ? table.NextScrollAmountVertical : 0;
+            int rowIndex = table.IsVerticalScrollBarVisible ? table.StartRenderRow : 0;
             for (int row = 0; row < rows; row++)
             {
-                int colIndex = table.IsHorizontalScrollBarVisible ? table.NextScrollAmountHorizontal : 0;
+                int colIndex = table.IsHorizontalScrollBarVisible ? table.StartRenderColumn : 0;
                 int fullRowSize = 0;
                 for (int col = 0; col < columns; col++)
                 {
-                    var verticalScrollBarValue = (table.IsVerticalScrollBarVisible ? table.NextScrollAmountVertical : 0);
-                    var horizontalScrollBarValue = (table.IsHorizontalScrollBarVisible ? table.NextScrollAmountHorizontal : 0);
+                    if (rowIndex == 20 && colIndex == 0)
+                        System.Console.WriteLine("Test");
+
+                    var verticalScrollBarValue = (table.IsVerticalScrollBarVisible ? table.StartRenderRow : 0);
+                    var horizontalScrollBarValue = (table.IsHorizontalScrollBarVisible ? table.StartRenderColumn : 0);
                     var cellPosition = table.Cells.GetCellPosition(rowIndex, colIndex, out fullRowSize, out int columnSize,
                         verticalScrollBarValue, horizontalScrollBarValue);
 

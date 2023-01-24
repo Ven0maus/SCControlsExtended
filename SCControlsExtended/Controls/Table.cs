@@ -321,11 +321,11 @@ namespace SCControlsExtended.Controls
         internal void SyncScrollAmountOnResize()
         {
             if ((!IsVerticalScrollBarVisible && !IsHorizontalScrollBarVisible) || 
-                (NextScrollAmountHorizontal == 0 && NextScrollAmountVertical == 0)) 
+                (StartRenderColumn == 0 && StartRenderRow == 0)) 
                 return;
 
-            NextScrollAmountVertical = 0;
-            NextScrollAmountHorizontal = 0;
+            StartRenderRow = 0;
+            StartRenderColumn = 0;
 
             Cells.AdjustCellPositionsAfterResize();
 
@@ -343,46 +343,93 @@ namespace SCControlsExtended.Controls
             }
         }
 
-        internal int NextScrollAmountVertical { get; private set; }
-        internal int NextScrollAmountHorizontal { get; private set; }
+        /// <summary>
+        /// The row the rendering should start at
+        /// </summary>
+        internal int StartRenderRow { get; private set; }
+        /// <summary>
+        /// The column the rendering should start at
+        /// </summary>
+        internal int StartRenderColumn { get; private set; }
         private void SetScrollAmount(Orientation orientation, bool increment)
         {
             var type = orientation == Orientation.Vertical ?
                 Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column;
             var isRowType = type == Cells.Layout.LayoutType.Row;
             var cellGroups = Cells.GroupBy(a => isRowType ? a.Row : a.Column);
-            var orderedCells = increment ?
-                cellGroups.OrderBy(a => a.Key) :
-                cellGroups.OrderByDescending(a => a.Key);
+            var orderedCells = cellGroups.OrderBy(a => a.Key);
+
             foreach (var group in orderedCells)
             {
                 foreach (var cell in group)
                 {
-                    var isPositionOfScreen = isRowType ?
-                        cell.Position.Y >= Height :
-                        cell.Position.X >= Width;
-                    if (increment ? !isPositionOfScreen : isPositionOfScreen)
+                    var isPositionOfScreen = isRowType ? cell.Position.Y >= Height : cell.Position.Y >= Width;
+                    if (!isPositionOfScreen)
                     {
                         break;
                     }
 
+                    // for decrementing the off screen pos is -1, but we don't have these stored
+                    // so its basically this cell column/row -1
+                    int offScreenIndex = isRowType ? cell.Row : cell.Column;
+                    if (!increment)
+                        offScreenIndex -= 1;
+
+                    // For incrementing:
+                    // We have the next cell that comes after the screen height, so we need to now get the size of this cell
+                    // and then get all the cells before this cell, and add them all up until we reach a total size of >= 40
+                    // then we get the index of the cell when we hit >= 40 (which is the 0, 0 cell position)
+
+                    // For decrementing:
+                    // We first grab the current last cell size visible on the table
+                    // We then do the same logic as above, until we get the first cell visible
+                    // We then take the column/row nr and -1 this to get the next offscreen cell
+                    // We then grab the size and add it together until we hit the size of the (current cell we saved)
+                    // If this >= we have reached our index that we need to start at
+
                     var layoutDict = isRowType ? Cells.RowLayout : Cells.ColumnLayout;
-                    var calculation = layoutDict.TryGetValue(isRowType ? cell.Row : cell.Column, out var layout) ?
-                        (layout.Size / (isRowType ? DefaultCellSize.Y : DefaultCellSize.X)) : 1;
+
+                    var size = 0;
+                    var totalIndex = offScreenIndex;
+
                     if (increment)
                     {
-                        if (orientation == Orientation.Vertical)
-                            NextScrollAmountVertical += calculation;
-                        else
-                            NextScrollAmountHorizontal += calculation;
+                        for (int index = offScreenIndex; index >= 0; index--)
+                        {
+                            if (GetStartIndex(ref totalIndex, ref index, ref size, layoutDict, isRowType))
+                                break;
+                        }
                     }
                     else
                     {
-                        if (orientation == Orientation.Vertical)
-                            NextScrollAmountVertical -= calculation;
-                        else
-                            NextScrollAmountHorizontal -= calculation;
+                        var currentCellSize = layoutDict.TryGetValue(offScreenIndex, out var layout) ?
+                            layout.Size : (isRowType ? DefaultCellSize.Y : DefaultCellSize.X);
+
+                        for (int index = offScreenIndex; index >= 0; index--)
+                        {
+                            if (GetStartIndex(ref totalIndex, ref index, ref size, layoutDict, isRowType))
+                                break;
+                        }
+
+                        var rowToStart = totalIndex - 1;
+                        if (rowToStart < 0) break;
+                        size = 0;
+                        size += layoutDict.TryGetValue(rowToStart, out layout) ?
+                            layout.Size : (isRowType ? DefaultCellSize.Y : DefaultCellSize.X);
+                        while (size < currentCellSize && rowToStart >= 0)
+                        {
+                            rowToStart--;
+                            size += layoutDict.TryGetValue(rowToStart, out layout) ?
+                            layout.Size : (isRowType ? DefaultCellSize.Y : DefaultCellSize.X);
+                        }
+                        totalIndex = rowToStart;
                     }
+
+                    if (isRowType)
+                        StartRenderRow = totalIndex;
+                    else
+                        StartRenderColumn = totalIndex;
+
                     return;
                 }
             }
@@ -390,17 +437,38 @@ namespace SCControlsExtended.Controls
             if (increment)
             {
                 if (orientation == Orientation.Vertical)
-                    NextScrollAmountVertical += 1;
+                    StartRenderRow += 1;
                 else
-                    NextScrollAmountHorizontal += 1;
+                    StartRenderColumn += 1;
             }
             else
             {
                 if (orientation == Orientation.Vertical)
-                    NextScrollAmountVertical -= 1;
+                    StartRenderRow -= 1;
                 else
-                    NextScrollAmountHorizontal -= 1;
+                    StartRenderColumn -= 1;
             }
+        }
+
+        /// <summary>
+        /// Used to determine the start index where the next row should be rendered during scrolling
+        /// </summary>
+        /// <param name="totalIndex"></param>
+        /// <param name="currentIndex"></param>
+        /// <param name="size"></param>
+        /// <param name="layoutDict"></param>
+        /// <param name="isRowType"></param>
+        /// <returns></returns>
+        private bool GetStartIndex(ref int totalIndex, ref int currentIndex, ref int size, 
+            Dictionary<int, Cells.Layout> layoutDict, bool isRowType)
+        {
+            totalIndex = currentIndex;
+            var currentCellSize = layoutDict.TryGetValue(currentIndex, out var layout) ?
+                layout.Size : (isRowType ? DefaultCellSize.Y : DefaultCellSize.X);
+            size += currentCellSize;
+            if (size >= (isRowType ? Height : Width))
+                return true;
+            return false;
         }
 
         /// <summary>
@@ -444,7 +512,7 @@ namespace SCControlsExtended.Controls
                         cell = new Cell(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, this, string.Empty)
                         {
                             Position = Cells.GetCellPosition(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, out _, out _,
-                                IsVerticalScrollBarVisible ? NextScrollAmountVertical : 0, IsHorizontalScrollBarVisible ? NextScrollAmountHorizontal : 0)
+                                IsVerticalScrollBarVisible ? StartRenderRow : 0, IsHorizontalScrollBarVisible ? StartRenderColumn : 0)
                         };
                     }
                     if (CurrentMouseCell != cell)
@@ -546,12 +614,12 @@ namespace SCControlsExtended.Controls
 
         private Point? GetCellIndexByMousePosition(Point mousePosition)
         {
-            for (int col = IsHorizontalScrollBarVisible ? NextScrollAmountHorizontal : 0; col < Width; col++)
+            for (int col = IsHorizontalScrollBarVisible ? StartRenderColumn : 0; col < Width; col++)
             {
-                for (int row = IsVerticalScrollBarVisible ? NextScrollAmountVertical : 0; row < Height; row++)
+                for (int row = IsVerticalScrollBarVisible ? StartRenderRow : 0; row < Height; row++)
                 {
                     var position = Cells.GetCellPosition(row, col, out int rowSize, out int columnSize, 
-                        IsVerticalScrollBarVisible ? NextScrollAmountVertical : 0, IsHorizontalScrollBarVisible ? NextScrollAmountHorizontal : 0);
+                        IsVerticalScrollBarVisible ? StartRenderRow : 0, IsHorizontalScrollBarVisible ? StartRenderColumn : 0);
                     if (IsMouseWithinCell(mousePosition, position.Y, position.X, columnSize, rowSize))
                         return (col, row);
                 }
@@ -984,7 +1052,7 @@ namespace SCControlsExtended.Controls
             _table.SelectedCell = GetIfExists(row, column) ?? new Table.Cell(row, column, _table, string.Empty)
             {
                 Position = GetCellPosition(row, column, out _, out _, 
-                    _table.IsVerticalScrollBarVisible ? _table.NextScrollAmountVertical : 0, _table.IsHorizontalScrollBarVisible ? _table.NextScrollAmountHorizontal : 0)
+                    _table.IsVerticalScrollBarVisible ? _table.StartRenderRow : 0, _table.IsHorizontalScrollBarVisible ? _table.StartRenderColumn : 0)
             };
         }
 
@@ -1082,7 +1150,7 @@ namespace SCControlsExtended.Controls
                 cell = new Table.Cell(row, col, _table, string.Empty)
                 {
                     Position = GetCellPosition(row, col, out _, out _, 
-                        _table.IsVerticalScrollBarVisible ? _table.NextScrollAmountVertical : 0, _table.IsHorizontalScrollBarVisible ? _table.NextScrollAmountHorizontal : 0)
+                        _table.IsVerticalScrollBarVisible ? _table.StartRenderRow : 0, _table.IsHorizontalScrollBarVisible ? _table.StartRenderColumn : 0)
                 };
 
                 _cells[(row, col)] = cell;
@@ -1147,7 +1215,7 @@ namespace SCControlsExtended.Controls
         {
             foreach (var cell in _cells)
                 cell.Value.Position = GetCellPosition(cell.Value.Row, cell.Value.Column, out _, out _,
-                    _table.IsVerticalScrollBarVisible ? _table.NextScrollAmountVertical : 0, _table.IsHorizontalScrollBarVisible ? _table.NextScrollAmountHorizontal : 0);
+                    _table.IsVerticalScrollBarVisible ? _table.StartRenderRow : 0, _table.IsHorizontalScrollBarVisible ? _table.StartRenderColumn : 0);
             _table._checkScrollBarVisibility = true;
             _table.IsDirty = true;
         }
