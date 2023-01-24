@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace SCControlsExtended.Themes
 {
@@ -300,7 +301,7 @@ namespace SCControlsExtended.Themes
                 maxCharsPerLine = width;
 
             // Split the character array into parts based on cell width
-            var splittedTextArray = Split(cell.Text.ToCharArray(), maxCharsPerLine).ToArray();
+            var splittedTextArray = WordWrap(cell.Text, maxCharsPerLine).ToArray();
             for (int y = 0; y < height; y++)
             {
                 // Don't go out of bounds of the cell height
@@ -319,6 +320,77 @@ namespace SCControlsExtended.Themes
                     table.Surface.SetGlyph(startPosX + cell.Position.X + index++, startPosY + cell.Position.Y + y, character);
                 }
             }
+        }
+
+        /// <summary>
+        /// Wraps text into lines by words, long words are also properly wrapped into multiple lines.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="maxCharsPerLine"></param>
+        /// <returns></returns>
+        private static IEnumerable<string> WordWrap(string text, int maxCharsPerLine)
+        {
+            string line = "";
+            int availableLength = maxCharsPerLine;
+            string[] words = text.Trim().Split(' ');
+            foreach (string w in words)
+            {
+                string word = w;
+                if (word == string.Empty)
+                {
+                    continue;
+                }
+
+                int wordLength = word.Length;
+                if (wordLength >= maxCharsPerLine)
+                {
+                    if (availableLength > 0)
+                    {
+                        yield return line += word.Substring(0, availableLength);
+                        line = string.Empty;
+                        word = word[availableLength..];
+                    }
+                    else
+                    {
+                        yield return line;
+                        line = string.Empty;
+                    }
+                    availableLength = maxCharsPerLine;
+                    for (var count = 0; count < word.Length; count++)
+                    {
+                        char ch = word.ElementAt(count);
+
+                        line += ch;
+                        availableLength--;
+
+                        if (availableLength == 0)
+                        {
+                            yield return line;
+                            line = string.Empty;
+                            availableLength = maxCharsPerLine;
+                        }
+                    }
+                    line += " ";
+                    availableLength--;
+                    continue;
+                }
+
+                if ((wordLength + 1) <= availableLength)
+                {
+                    line += word + " ";
+                    availableLength -= (wordLength + 1);
+                }
+                else
+                {
+                    availableLength = maxCharsPerLine;
+                    yield return line;
+                    line = word + " ";
+                    availableLength -= (wordLength + 1);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(line))
+                yield return line.TrimEnd();
         }
 
         private static void GetTotalCellSize(Table.Cell cell, int width, int height, out int totalWidth, out int totalHeight)
