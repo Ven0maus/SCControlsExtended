@@ -2,6 +2,7 @@
 using SadConsole.UI;
 using SadConsole.UI.Controls;
 using SadConsole.UI.Themes;
+using SadRogue.Primitives;
 using SCControlsExtended.Controls;
 using System;
 using System.Collections.Generic;
@@ -169,17 +170,19 @@ namespace SCControlsExtended.Themes
                     }
 
                     var cell = table.Cells.GetIfExists(rowIndex, colIndex);
-                    if (!table.DrawFakeCells && cell == null)
-                    {
-                        colIndex++;
-                        continue;
-                    }
-
                     var fakeCellCreated = cell == null;
                     cell ??= new Table.Cell(rowIndex, colIndex, table, string.Empty, addToTableIfModified: false)
                     {
                         Position = cellPosition
                     };
+
+                    if (!table.DrawFakeCells && fakeCellCreated)
+                    {
+                        HideVisualCell(table, cell);
+
+                        colIndex++;
+                        continue;
+                    }
 
                     // This method raises an event that the user can use to modify the cell layout
                     if (fakeCellCreated || (cell.IsSettingsInitialized && cell.Settings.UseFakeLayout))
@@ -255,6 +258,24 @@ namespace SCControlsExtended.Themes
                         table.Surface[colIndex, rowIndex].IsVisible = cell.Settings.IsVisible;
                     table.Surface.SetForeground(colIndex, rowIndex, customStateAppearance != null ? customStateAppearance.Foreground : cell.Foreground);
                     table.Surface.SetBackground(colIndex, rowIndex, customStateAppearance != null ? customStateAppearance.Background : cell.Background);
+                }
+            }
+        }
+
+        private static void HideVisualCell(Table table, Table.Cell cell)
+        {
+            var width = table.Cells.GetSizeOrDefault(cell.Column, Cells.Layout.LayoutType.Column);
+            var height = table.Cells.GetSizeOrDefault(cell.Row, Cells.Layout.LayoutType.Row);
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    int colIndex = cell.Position.X + x;
+                    int rowIndex = cell.Position.Y + y;
+                    if (!table.Surface.IsValidCell(colIndex, rowIndex)) continue;
+                    table.Surface[colIndex, rowIndex].IsVisible = true;
+                    table.Surface.SetForeground(colIndex, rowIndex, table.DefaultForeground);
+                    table.Surface.SetBackground(colIndex, rowIndex, table.DefaultBackground);
                 }
             }
         }
