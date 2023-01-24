@@ -5,7 +5,4 @@ An extension library with more controls for SadConsole
 
 - Table
 
-# Screenshots
-
-![SCControlsExtended](/SCControlsExtended.Visualizer/Screenshots/FunctionalityExample.png)
-![SCControlsExtended](/SCControlsExtended.Visualizer/Screenshots/ExcelExample.png)
+# [Documentation](https://github.com/Ven0maus/SCControlsExtended/wiki)
