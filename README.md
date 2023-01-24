@@ -1,7 +1,7 @@
 # SCControlsExtended
 An extension library with more controls for SadConsole
 
-# Controls
+# Features
 
 - Table
 
