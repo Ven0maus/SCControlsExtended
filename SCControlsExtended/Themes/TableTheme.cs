@@ -7,6 +7,7 @@ using SCControlsExtended.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace SCControlsExtended.Themes
 {
@@ -70,20 +71,21 @@ namespace SCControlsExtended.Themes
         private static int GetScrollBarItems(Table table, Orientation orientation)
         {
             var order = orientation == Orientation.Vertical ?
-                table.Cells.OrderBy(a => a.Row).GroupBy(a => a.Row) :
-                table.Cells.OrderBy(a => a.Column).GroupBy(a => a.Column);
-            var indexes = order.Select(a => a.Key);
-            int scrollBarItems = 0;
-            int totalIndexSize = 0;
+                table.Cells.OrderByDescending(a => a.Row).GroupBy(a => a.Row) :
+                table.Cells.OrderByDescending(a => a.Column).GroupBy(a => a.Column);
+            var indexes = order
+                .Select(a => table.Cells.GetSizeOrDefault(a.Key, orientation == Orientation.Vertical ? 
+                    Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column))
+                .ToArray();
+            var sum = indexes.Sum();
+            int totalIndex = 0;
             foreach (var index in indexes)
             {
-                var cellSize = table.Cells.GetSizeOrDefault(index,
-                    orientation == Orientation.Vertical ? Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column);
-                totalIndexSize += cellSize;
-                if (totalIndexSize > (orientation == Orientation.Vertical ? table.Height : table.Width))
-                    scrollBarItems += 1; // cellSize / (orientation == Orientation.Vertical ? table.DefaultCellSize.Y : table.DefaultCellSize.X);
+                sum -= index;
+                if (sum <= table.Height) break;
+                totalIndex++;
             }
-            return scrollBarItems;
+            return totalIndex;
         }
 
         private static void SetScrollBarPropertiesOnTable(Table table, ScrollBar scrollBar, int maxRowsHeight, int maxColumnsWidth)
