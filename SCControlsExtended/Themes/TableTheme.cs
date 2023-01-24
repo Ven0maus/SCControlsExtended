@@ -2,13 +2,10 @@
 using SadConsole.UI;
 using SadConsole.UI.Controls;
 using SadConsole.UI.Themes;
-using SadRogue.Primitives;
 using SCControlsExtended.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 
 namespace SCControlsExtended.Themes
 {

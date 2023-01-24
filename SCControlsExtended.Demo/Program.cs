@@ -4,8 +4,8 @@ using SadConsole.UI.Controls;
 using SadConsole.UI.Themes;
 using SadRogue.Primitives;
 using SCControlsExtended.Controls;
-using SCControlsExtended.Themes;
 using SCControlsExtended.Demo.ExampleConsoles;
+using SCControlsExtended.Themes;
 
 namespace SCControlsExtended.Demo
 {
