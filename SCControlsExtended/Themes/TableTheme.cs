@@ -157,9 +157,6 @@ namespace SCControlsExtended.Themes
                 int fullRowSize = 0;
                 for (int col = 0; col < columns; col++)
                 {
-                    if (rowIndex == 20 && colIndex == 0)
-                        System.Console.WriteLine("Test");
-
                     var verticalScrollBarValue = (table.IsVerticalScrollBarVisible ? table.StartRenderRow : 0);
                     var horizontalScrollBarValue = (table.IsHorizontalScrollBarVisible ? table.StartRenderColumn : 0);
                     var cellPosition = table.Cells.GetCellPosition(rowIndex, colIndex, out fullRowSize, out int columnSize,
