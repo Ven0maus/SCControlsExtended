@@ -57,20 +57,24 @@ namespace SCControlsExtended.ControlExtensions
         }
 
         /// <summary>
-        /// Resizes the entire column and row to the specified sizes
+        /// Resizes the entire column and row to the specified sizes.
+        /// If no sizes are specified for both row and column, the cell will be reset to the default size.
         /// </summary>
         /// <param name="cell"></param>
         /// <param name="rowSize"></param>
         /// <param name="columnSize"></param>
-        public static void Resize(this Table.Cell cell, int? rowSize, int? columnSize = null)
+        public static void Resize(this Table.Cell cell, int? rowSize = null, int? columnSize = null)
         {
+            if (rowSize == null && columnSize == null)
+            {
+                rowSize = cell.Table.DefaultCellSize.Y;
+                columnSize = cell.Table.DefaultCellSize.X;
+            }
+
             cell.Table.Cells.Column(cell.Column).SetLayoutInternal(columnSize);
             cell.Table.Cells.Row(cell.Row).SetLayoutInternal(rowSize);
-            if (rowSize != null || columnSize != null)
-            {
-                cell.Table.Cells.AdjustCellPositionsAfterResize();
-                cell.Table.SyncScrollAmountOnResize();
-            }
+            cell.Table.Cells.AdjustCellPositionsAfterResize();
+            cell.Table.SyncScrollAmountOnResize();
             cell.Table.IsDirty = true;
         }
 

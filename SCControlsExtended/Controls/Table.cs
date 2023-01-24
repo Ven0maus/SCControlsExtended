@@ -658,7 +658,7 @@ namespace SCControlsExtended.Controls
                         _foreground = option.Foreground.Value;
                     if (option.Background != null)
                         _background = option.Background.Value;
-                    if (option.SettingsInitialized)
+                    if (option.HasCustomSettings)
                         (_settings ??= new Options(this)).CopyFrom(option.Settings);
                 }
             }
@@ -672,6 +672,19 @@ namespace SCControlsExtended.Controls
             internal bool IsSettingsInitialized
             {
                 get { return _settings != null; }
+            }
+
+            public static bool operator ==(Cell a, Cell b)
+            {
+                var refEqualNullA = a is null;
+                var refEqualNullB = b is null;
+                if (refEqualNullA && refEqualNullB) return true;
+                if (refEqualNullA || refEqualNullB) return false;
+                return a.Equals(b);
+            }
+            public static bool operator !=(Cell a, Cell b)
+            {
+                return !(a == b);
             }
 
             public bool Equals(Cell cell)
@@ -826,6 +839,19 @@ namespace SCControlsExtended.Controls
                     Bottom
                 }
 
+                public static bool operator ==(Options a, Options b)
+                {
+                    var refEqualNullA = a is null;
+                    var refEqualNullB = b is null;
+                    if (refEqualNullA && refEqualNullB) return true;
+                    if (refEqualNullA || refEqualNullB) return false;
+                    return a.Equals(b);
+                }
+                public static bool operator !=(Options a, Options b)
+                {
+                    return !(a == b);
+                }
+
                 public bool Equals(Options other)
                 {
                     if (other == null) return false;
@@ -836,7 +862,8 @@ namespace SCControlsExtended.Controls
                         other.Selectable == Selectable &&
                         other.SelectionMode == SelectionMode &&
                         other.HoverMode == HoverMode &&
-                        other.Interactable == Interactable;
+                        other.Interactable == Interactable &&
+                        other.UseFakeLayout == UseFakeLayout;
                 }
 
                 public override bool Equals(object obj)
@@ -891,14 +918,14 @@ namespace SCControlsExtended.Controls
         }
 
         /// <summary>
-        /// The maximum rows the table currently holds.
+        /// The rows the table currently holds.
         /// </summary>
-        public int MaxRows { get { return _cells.Count == 0 ? 0 : _cells.Values.Max(a => a.Row); } }
+        public int TotalRows { get { return _cells.Count == 0 ? 0 : _cells.Values.Max(a => a.Row) + 1; } }
 
         /// <summary>
-        /// The maximum columns the table currently holds.
+        /// The columns the table currently holds.
         /// </summary>
-        public int MaxColumns { get { return _cells.Count == 0 ? 0 : _cells.Values.Max(a => a.Column); } }
+        public int TotalColumns { get { return _cells.Count == 0 ? 0 : _cells.Values.Max(a => a.Column) + 1; } }
 
         internal Cells(Table table)
         {
@@ -1149,7 +1176,10 @@ namespace SCControlsExtended.Controls
                 }
             }
 
-            internal bool SettingsInitialized { get { return _settings != null; } }
+            /// <summary>
+            /// True if the Settings property has been accessed before.
+            /// </summary>
+            internal bool HasCustomSettings { get { return _settings != null; } }
 
             private readonly Table _table;
 
