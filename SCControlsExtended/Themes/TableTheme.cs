@@ -443,14 +443,6 @@ namespace SCControlsExtended.Themes
             return position;
         }
 
-        private static IEnumerable<IEnumerable<T>> Split<T>(T[] array, int size)
-        {
-            for (var i = 0; i < (float)array.Length / size; i++)
-            {
-                yield return array.Skip(i * size).Take(size);
-            }
-        }
-
         /// <inheritdoc />
         public override ThemeBase Clone() => new TableTheme((ScrollBarTheme)ScrollBarTheme.Clone())
         {
