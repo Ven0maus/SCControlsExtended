@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using SadConsole;
 using SadRogue.Primitives;
 using SCControlsExtended.ControlExtensions;
 using SCControlsExtended.Controls;
@@ -309,21 +310,29 @@ namespace SCControlsExtended.Tests.TableTests
             int maximum = Table.VerticalScrollBar.Maximum;
             for (int i=0; i < maximum; i++)
             {
+                totalHeight += GetLastVisibleCellSize(Table, Orientation.Vertical, true);
+                totalHeight = totalHeight < 0 ? 0 : totalHeight;
                 Table.VerticalScrollBar.Value += 1;
                 Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
-                totalHeight += Table.Cells[i, 0].Height;
-                Assert.That(Table.StartRenderYPos, Is.EqualTo(totalHeight));
-                Assert.That(Table.VerticalScrollBar.Maximum, Is.EqualTo(maximum));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(Table.StartRenderYPos, Is.EqualTo(totalHeight));
+                    Assert.That(Table.VerticalScrollBar.Maximum, Is.EqualTo(maximum));
+                });
             }
 
             // Decrement
             for (int i = maximum; i > 0; i--)
             {
+                totalHeight += GetLastVisibleCellSize(Table, Orientation.Vertical, false);
+                totalHeight = totalHeight < 0 ? 0 : totalHeight;
                 Table.VerticalScrollBar.Value -= 1;
                 Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
-                totalHeight -= Table.Cells[i, 0].Height;
-                Assert.That(Table.StartRenderYPos, Is.EqualTo(totalHeight));
-                Assert.That(Table.VerticalScrollBar.Maximum, Is.EqualTo(maximum));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(Table.StartRenderYPos, Is.EqualTo(totalHeight));
+                    Assert.That(Table.VerticalScrollBar.Maximum, Is.EqualTo(maximum));
+                });
             }
 
             Assert.That(Table.StartRenderYPos, Is.EqualTo(0));
@@ -354,21 +363,29 @@ namespace SCControlsExtended.Tests.TableTests
             int maximum = Table.HorizontalScrollBar.Maximum;
             for (int i = 0; i < maximum; i++)
             {
+                totalWidth += GetLastVisibleCellSize(Table, Orientation.Horizontal, true);
+                totalWidth = totalWidth < 0 ? 0 : totalWidth;
                 Table.HorizontalScrollBar.Value += 1;
                 Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
-                totalWidth += Table.Cells[0, i].Width;
-                Assert.That(Table.StartRenderXPos, Is.EqualTo(totalWidth));
-                Assert.That(Table.HorizontalScrollBar.Maximum, Is.EqualTo(maximum));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(Table.StartRenderXPos, Is.EqualTo(totalWidth));
+                    Assert.That(Table.HorizontalScrollBar.Maximum, Is.EqualTo(maximum));
+                });
             }
 
             // Decrement
             for (int i = maximum; i > 0; i--)
             {
+                totalWidth += GetLastVisibleCellSize(Table, Orientation.Horizontal, false);
+                totalWidth = totalWidth < 0 ? 0 : totalWidth;
                 Table.HorizontalScrollBar.Value -= 1;
                 Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
-                totalWidth -= Table.Cells[0, i].Width;
-                Assert.That(Table.StartRenderXPos, Is.EqualTo(totalWidth));
-                Assert.That(Table.HorizontalScrollBar.Maximum, Is.EqualTo(maximum));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(Table.StartRenderXPos, Is.EqualTo(totalWidth));
+                    Assert.That(Table.HorizontalScrollBar.Maximum, Is.EqualTo(maximum));
+                });
             }
 
             Assert.That(Table.StartRenderXPos, Is.EqualTo(0));
@@ -378,8 +395,7 @@ namespace SCControlsExtended.Tests.TableTests
         public void Table_ScrollBar_Vertical_Scrolling_DifferentSizes_Correct()
         {
             const int extraRowsOffScreen = 5;
-            Table = new Table(100, 20, 10, 2);
-            Table.SetupScrollBar(SadConsole.Orientation.Vertical, 5, new Point(0, 0));
+            Table.SetupScrollBar(Orientation.Vertical, 5, new Point(0, 0));
 
             var rows = (Table.Height / Table.DefaultCellSize.Y) + extraRowsOffScreen;
             for (int row = 0; row < rows; row++)
@@ -394,29 +410,50 @@ namespace SCControlsExtended.Tests.TableTests
 
             Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
 
+            var maximum = GetMaximumScrollBarItems(Table, Orientation.Vertical);
             Assert.Multiple(() =>
             {
                 Assert.That(Table.IsVerticalScrollBarVisible, Is.True);
-                Assert.That(Table.VerticalScrollBar.Maximum, Is.EqualTo(extraRowsOffScreen));
+                Assert.That(Table.VerticalScrollBar.Maximum, Is.EqualTo(maximum));
                 Assert.That(Table.VerticalScrollBar.Value, Is.EqualTo(0));
             });
 
             // Increment
-            for (int i = 0; i < extraRowsOffScreen; i++)
+            int totalHeight = 0;
+            for (int i = 0; i < maximum; i++)
             {
+                totalHeight += GetLastVisibleCellSize(Table, Orientation.Vertical, true);
+                totalHeight = totalHeight < 0 ? 0 : totalHeight;
                 Table.VerticalScrollBar.Value += 1;
-                Assert.That(Table.StartRenderYPos, Is.EqualTo(i + 1));
+                Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
+                Assert.Multiple(() =>
+                {
+                    Assert.That(Table.StartRenderYPos, Is.EqualTo(totalHeight));
+                    Assert.That(Table.VerticalScrollBar.Maximum, Is.EqualTo(maximum));
+                });
             }
 
-            // TODO
-            Assert.Fail();
+            // Decrement
+            for (int i = maximum; i > 0; i--)
+            {
+                totalHeight += GetLastVisibleCellSize(Table, Orientation.Vertical, false);
+                totalHeight = totalHeight < 0 ? 0 : totalHeight;
+                Table.VerticalScrollBar.Value -= 1;
+                Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
+                Assert.Multiple(() =>
+                {
+                    Assert.That(Table.StartRenderYPos, Is.EqualTo(totalHeight));
+                    Assert.That(Table.VerticalScrollBar.Maximum, Is.EqualTo(maximum));
+                });
+            }
+
+            Assert.That(Table.StartRenderYPos, Is.EqualTo(0));
         }
 
         [Test]
         public void Table_ScrollBar_Horizontal_Scrolling_DifferentSizes_Correct()
         {
             const int extraColumnsOffScreen = 5;
-            Table = new Table(100, 20, 10, 2);
             Table.SetupScrollBar(SadConsole.Orientation.Horizontal, 5, new Point(0, 0));
 
             var columns = (Table.Width / Table.DefaultCellSize.X) + extraColumnsOffScreen;
@@ -432,8 +469,43 @@ namespace SCControlsExtended.Tests.TableTests
 
             Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
 
-            // TODO
-            Assert.Fail();
+            var maximum = GetMaximumScrollBarItems(Table, Orientation.Horizontal);
+            Assert.Multiple(() =>
+            {
+                Assert.That(Table.IsHorizontalScrollBarVisible, Is.True);
+                Assert.That(Table.HorizontalScrollBar.Maximum, Is.EqualTo(maximum));
+                Assert.That(Table.HorizontalScrollBar.Value, Is.EqualTo(0));
+            });
+
+            // Increment
+            int totalWidth = 0;
+            for (int i = 0; i < maximum; i++)
+            {
+                totalWidth += GetLastVisibleCellSize(Table, Orientation.Horizontal, true);
+                totalWidth = totalWidth < 0 ? 0 : totalWidth;
+                Table.HorizontalScrollBar.Value += 1;
+                Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
+                Assert.Multiple(() =>
+                {
+                    Assert.That(Table.StartRenderXPos, Is.EqualTo(totalWidth));
+                    Assert.That(Table.HorizontalScrollBar.Maximum, Is.EqualTo(maximum));
+                });
+            }
+
+            for (int i = maximum; i > 0; i--)
+            {
+                totalWidth += GetLastVisibleCellSize(Table, Orientation.Horizontal, false);
+                totalWidth = totalWidth < 0 ? 0 : totalWidth;
+                Table.HorizontalScrollBar.Value -= 1;
+                Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
+                Assert.Multiple(() =>
+                {
+                    Assert.That(Table.StartRenderXPos, Is.EqualTo(totalWidth));
+                    Assert.That(Table.HorizontalScrollBar.Maximum, Is.EqualTo(maximum));
+                });
+            }
+
+            Assert.That(Table.StartRenderXPos, Is.EqualTo(0));
         }
     }
 }
