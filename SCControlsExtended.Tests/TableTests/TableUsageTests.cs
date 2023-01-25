@@ -290,7 +290,7 @@ namespace SCControlsExtended.Tests.TableTests
             const int extraRowsOffScreen = 5;
             Table.SetupScrollBar(SadConsole.Orientation.Vertical, 5, new Point(0, 0));
 
-            var rows = (Table.Height / Table.DefaultCellSize.Y) + (extraRowsOffScreen + 1);
+            var rows = (Table.Height / Table.DefaultCellSize.Y) + extraRowsOffScreen;
             for (int row=0; row < rows; row++)
             {
                 Table.Cells[row, 0].Text = "Row " + row;
@@ -305,19 +305,25 @@ namespace SCControlsExtended.Tests.TableTests
             });
 
             // Increment
-            for (int i=0; i < extraRowsOffScreen; i++)
+            int totalHeight = 0;
+            int maximum = Table.VerticalScrollBar.Maximum;
+            for (int i=0; i < maximum; i++)
             {
                 Table.VerticalScrollBar.Value += 1;
-                Assert.That(Table.StartRenderYPos, Is.EqualTo(i + 1));
+                Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
+                totalHeight += Table.Cells[i, 0].Height;
+                Assert.That(Table.StartRenderYPos, Is.EqualTo(totalHeight));
+                Assert.That(Table.VerticalScrollBar.Maximum, Is.EqualTo(maximum));
             }
 
-            Assert.That(Table.StartRenderYPos, Is.EqualTo(extraRowsOffScreen));
-
             // Decrement
-            for (int i = extraRowsOffScreen; i > 0; i--)
+            for (int i = maximum; i > 0; i--)
             {
                 Table.VerticalScrollBar.Value -= 1;
-                Assert.That(Table.StartRenderYPos, Is.EqualTo(i - 1));
+                Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
+                totalHeight -= Table.Cells[i, 0].Height;
+                Assert.That(Table.StartRenderYPos, Is.EqualTo(totalHeight));
+                Assert.That(Table.VerticalScrollBar.Maximum, Is.EqualTo(maximum));
             }
 
             Assert.That(Table.StartRenderYPos, Is.EqualTo(0));
@@ -329,7 +335,7 @@ namespace SCControlsExtended.Tests.TableTests
             const int extraColumnsOffScreen = 5;
             Table.SetupScrollBar(SadConsole.Orientation.Horizontal, 5, new Point(0, 0));
 
-            var columns = (Table.Width / Table.DefaultCellSize.X) + (extraColumnsOffScreen + 1);
+            var columns = (Table.Width / Table.DefaultCellSize.X) + extraColumnsOffScreen;
             for (int column = 0; column < columns; column++)
             {
                 Table.Cells[0, column].Text = "Column " + column;
@@ -344,19 +350,25 @@ namespace SCControlsExtended.Tests.TableTests
             });
 
             // Increment
-            for (int i = 0; i < extraColumnsOffScreen; i++)
+            int totalWidth = 0;
+            int maximum = Table.HorizontalScrollBar.Maximum;
+            for (int i = 0; i < maximum; i++)
             {
                 Table.HorizontalScrollBar.Value += 1;
-                Assert.That(Table.StartRenderXPos, Is.EqualTo(i + 1));
+                Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
+                totalWidth += Table.Cells[0, i].Width;
+                Assert.That(Table.StartRenderXPos, Is.EqualTo(totalWidth));
+                Assert.That(Table.HorizontalScrollBar.Maximum, Is.EqualTo(maximum));
             }
 
-            Assert.That(Table.StartRenderXPos, Is.EqualTo(extraColumnsOffScreen));
-
             // Decrement
-            for (int i = extraColumnsOffScreen; i > 0; i--)
+            for (int i = maximum; i > 0; i--)
             {
                 Table.HorizontalScrollBar.Value -= 1;
-                Assert.That(Table.StartRenderXPos, Is.EqualTo(i - 1));
+                Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
+                totalWidth -= Table.Cells[0, i].Width;
+                Assert.That(Table.StartRenderXPos, Is.EqualTo(totalWidth));
+                Assert.That(Table.HorizontalScrollBar.Maximum, Is.EqualTo(maximum));
             }
 
             Assert.That(Table.StartRenderXPos, Is.EqualTo(0));
@@ -369,7 +381,7 @@ namespace SCControlsExtended.Tests.TableTests
             Table = new Table(100, 20, 10, 2);
             Table.SetupScrollBar(SadConsole.Orientation.Vertical, 5, new Point(0, 0));
 
-            var rows = (Table.Height / Table.DefaultCellSize.Y) + (extraRowsOffScreen + 1);
+            var rows = (Table.Height / Table.DefaultCellSize.Y) + extraRowsOffScreen;
             for (int row = 0; row < rows; row++)
             {
                 Table.Cells[row, 0].Text = "Row " + row;
@@ -407,7 +419,7 @@ namespace SCControlsExtended.Tests.TableTests
             Table = new Table(100, 20, 10, 2);
             Table.SetupScrollBar(SadConsole.Orientation.Horizontal, 5, new Point(0, 0));
 
-            var columns = (Table.Width / Table.DefaultCellSize.X) + (extraColumnsOffScreen + 1);
+            var columns = (Table.Width / Table.DefaultCellSize.X) + extraColumnsOffScreen;
             for (int column = 0; column < columns; column++)
             {
                 Table.Cells[0, column].Text = "Column " + column;

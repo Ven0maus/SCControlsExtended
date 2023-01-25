@@ -83,7 +83,7 @@ namespace SCControlsExtended.Themes
                 var size = table.Cells.GetSizeOrDefault(index.Key, layoutType);
                 totalSize += size;
 
-                if (totalSize >= maxSize)
+                if (totalSize > maxSize)
                 {
                     items++;
                 }
