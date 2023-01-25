@@ -3,6 +3,7 @@ using SadRogue.Primitives;
 using SCControlsExtended.ControlExtensions;
 using SCControlsExtended.Controls;
 using System;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace SCControlsExtended.Demo.ExampleConsoles
 {
@@ -13,10 +14,10 @@ namespace SCControlsExtended.Demo.ExampleConsoles
         public FunctionalityTestWindow(int width, int height) : base(width, height)
         {
             // Construct table control
-            _table = new Table(width, height, 10, 2)
+            _table = new Table(100, 20, 10, 2)
             {
                 // Set default background color
-                DefaultBackground = Color.Wheat
+                DefaultBackground = Color.Lerp(Color.Gray, Color.Black, 0.85f)
             };
 
             // Set some default theme colors, for selection & hovering appearances
@@ -36,7 +37,22 @@ namespace SCControlsExtended.Demo.ExampleConsoles
 
             Controls.Add(_table);
 
+            //Test();
             AdjustTableValues();
+        }
+
+        private void Test()
+        {
+            var rows = (_table.Height / _table.DefaultCellSize.Y) + (5 + 1);
+            for (int row = 0; row < rows; row++)
+            {
+                _table.Cells[row, 0].Text = "Row " + row;
+            }
+
+            // Resize columns
+            _table.Cells[1, 0].Resize(rowSize: 4);
+            _table.Cells[2, 0].Resize(rowSize: 8);
+            _table.Cells[3, 0].Resize(rowSize: 1);
         }
 
         private void AdjustTableValues()

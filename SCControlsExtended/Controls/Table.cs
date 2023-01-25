@@ -7,6 +7,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("SCControlsExtended.Tests")]
@@ -377,55 +378,16 @@ namespace SCControlsExtended.Controls
                     if (!increment)
                         offScreenIndex -= 1;
 
-                    // For incrementing:
-                    // We have the next cell that comes after the screen height, so we need to now get the size of this cell
-                    // and then get all the cells before this cell, and add them all up until we reach a total size of >= 40
-                    // then we get the index of the cell when we hit >= 40 (which is the 0, 0 cell position)
-
-                    // For decrementing:
-                    // We first grab the current last cell size visible on the table
-                    // We then do the same logic as above, until we get the first cell visible
-                    // We then take the column/row nr and -1 this to get the next offscreen cell
-                    // We then grab the size and add it together until we hit the size of the (current cell we saved)
-                    // If this >= we have reached our index that we need to start at
-
+                    // The problem is in the sizing, you cannot scroll properly on different sizes
+                    // And make the start render always be a specific row, sometimes it can be in the middle of a cell of a longer size
+                    // And this is simply not handled currently, so this bug remains
                     var layoutDict = isRowType ? Cells.RowLayout : Cells.ColumnLayout;
-
-                    var size = 0;
-                    var totalIndex = offScreenIndex;
-
-                    if (increment)
-                    {
-                        for (int index = offScreenIndex; index >= 0; index--)
-                        {
-                            if (GetStartIndex(ref totalIndex, ref index, ref size, layoutDict, isRowType))
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        var currentCellSize = layoutDict.TryGetValue(offScreenIndex, out var layout) ?
-                            layout.Size : (isRowType ? DefaultCellSize.Y : DefaultCellSize.X);
-
-                        for (int index = offScreenIndex; index >= 0; index--)
-                        {
-                            if (GetStartIndex(ref totalIndex, ref index, ref size, layoutDict, isRowType))
-                                break;
-                        }
-
-                        var rowToStart = totalIndex - 1;
-                        if (rowToStart < 0) break;
-                        size = 0;
-                        size += layoutDict.TryGetValue(rowToStart, out layout) ?
-                            layout.Size : (isRowType ? DefaultCellSize.Y : DefaultCellSize.X);
-                        while (size < currentCellSize && rowToStart >= 0)
-                        {
-                            rowToStart--;
-                            size += layoutDict.TryGetValue(rowToStart, out layout) ?
-                            layout.Size : (isRowType ? DefaultCellSize.Y : DefaultCellSize.X);
-                        }
-                        totalIndex = rowToStart;
-                    }
+                    var defaultSize = isRowType ? DefaultCellSize.Y : DefaultCellSize.X;
+                    var cellSize = layoutDict.TryGetValue(offScreenIndex, out var layout) ?
+                        layout.Size : defaultSize;
+                    var indexStartSize = isRowType ? StartRenderRow : StartRenderColumn;
+                    var totalIndex = increment ? (indexStartSize + (cellSize / defaultSize)) :
+                        (indexStartSize - (cellSize / defaultSize));
 
                     if (isRowType)
                         StartRenderRow = totalIndex;
@@ -450,27 +412,6 @@ namespace SCControlsExtended.Controls
                 else
                     StartRenderColumn -= 1;
             }
-        }
-
-        /// <summary>
-        /// Used to determine the start index where the next row should be rendered during scrolling
-        /// </summary>
-        /// <param name="totalIndex"></param>
-        /// <param name="currentIndex"></param>
-        /// <param name="size"></param>
-        /// <param name="layoutDict"></param>
-        /// <param name="isRowType"></param>
-        /// <returns></returns>
-        private bool GetStartIndex(ref int totalIndex, ref int currentIndex, ref int size, 
-            Dictionary<int, Cells.Layout> layoutDict, bool isRowType)
-        {
-            totalIndex = currentIndex;
-            var currentCellSize = layoutDict.TryGetValue(currentIndex, out var layout) ?
-                layout.Size : (isRowType ? DefaultCellSize.Y : DefaultCellSize.X);
-            size += currentCellSize;
-            if (size >= (isRowType ? Height : Width))
-                return true;
-            return false;
         }
 
         /// <summary>
