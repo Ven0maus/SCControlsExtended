@@ -395,6 +395,9 @@ namespace SCControlsExtended.Tests.TableTests
                 Table.VerticalScrollBar.Value += 1;
                 Assert.That(Table.StartRenderRow, Is.EqualTo(i + 1));
             }
+
+            // TODO
+            Assert.Fail();
         }
 
         [Test]
@@ -417,7 +420,8 @@ namespace SCControlsExtended.Tests.TableTests
 
             Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
 
-
+            // TODO
+            Assert.Fail();
         }
     }
 }
