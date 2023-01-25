@@ -482,7 +482,10 @@ namespace SCControlsExtended.Controls
                 else
                 {
                     if (CurrentMouseCell != null && (!CurrentMouseCell.IsSettingsInitialized || CurrentMouseCell.Settings.Interactable))
+                    {
                         OnCellExit?.Invoke(this, new CellEventArgs(CurrentMouseCell));
+                        CurrentMouseCell = null;
+                    }
                 }
             }
 
@@ -575,8 +578,8 @@ namespace SCControlsExtended.Controls
             {
                 for (int row = 0; row < Height; row++)
                 {
-                    var colValue = col + (IsHorizontalScrollBarVisible ? StartRenderXPos : col);
-                    var rowValue = row + (IsVerticalScrollBarVisible ? StartRenderYPos : row);
+                    var rowValue = row + (IsVerticalScrollBarVisible ? VerticalScrollBar.Value : 0);
+                    var colValue = col + (IsHorizontalScrollBarVisible ? HorizontalScrollBar.Value : 0);
                     var position = Cells.GetCellPosition(rowValue, colValue, out int rowSize, out int columnSize, 
                         IsVerticalScrollBarVisible ? StartRenderYPos : 0, IsHorizontalScrollBarVisible ? StartRenderXPos : 0);
                     if (IsMouseWithinCell(mousePosition, position.Y, position.X, columnSize, rowSize))

@@ -13,7 +13,7 @@ namespace SCControlsExtended.Demo.ExampleConsoles
         public FunctionalityTestWindow(int width, int height) : base(width, height)
         {
             // Construct table control
-            _table = new Table(100, 20, 10, 2)
+            _table = new Table(100, 40, 10, 2)
             {
                 // Set default background color
                 DefaultBackground = Color.Lerp(Color.Gray, Color.Black, 0.85f)
