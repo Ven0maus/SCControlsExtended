@@ -653,16 +653,6 @@ namespace SCControlsExtended.Controls
             public Options Settings
             {
                 get { return _settings ??= new Options(this); }
-                internal set
-                {
-                    if (value == null) return;
-                    if (_settings != value)
-                    {
-                        (_settings ??= new Options(this)).CopyFrom(value);
-                        AddToTableIfNotExists();
-                        Table.IsDirty = true;
-                    }
-                }
             }
 
             private readonly bool _addToTableIfModified;
