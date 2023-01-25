@@ -1096,16 +1096,6 @@ namespace SCControlsExtended.Controls
             return null;
         }
 
-        internal Table.Cell GetIfExistsByCellPosition(int row, int col)
-        {
-            foreach (var cell in _cells)
-            {
-                if (cell.Value.Position.X == col && cell.Value.Position.Y == row)
-                    return cell.Value;
-            }
-            return null;
-        }
-
         private Table.Cell GetOrCreateCell(int row, int col)
         {
             if (!_cells.TryGetValue((row, col), out Table.Cell cell))

@@ -131,6 +131,16 @@ namespace SCControlsExtended.Tests.TableTests
         }
 
         [Test]
+        public void Cells_Width_Height_Correct()
+        {
+            Table.Cells.Row(0).Size = 11;
+            Assert.That(Table.Cells[0, 0].Height, Is.EqualTo(11));
+
+            Table.Cells.Column(0).Size = 6;
+            Assert.That(Table.Cells[0, 0].Width, Is.EqualTo(6));
+        }
+
+        [Test]
         public void Cells_Layout_Settings_SetCorrectly()
         {
             var layout = Table.Cells.Row(0);
@@ -506,6 +516,84 @@ namespace SCControlsExtended.Tests.TableTests
             }
 
             Assert.That(Table.StartRenderXPos, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Table_ScrollBar_Horizontal_ChangeScrollMaximum_OnResize_Correct()
+        {
+            const int extraColumnsOffScreen = 5;
+            Table.SetupScrollBar(Orientation.Horizontal, 5, new Point(0, 0));
+
+            var columns = (Table.Width / Table.DefaultCellSize.X) + extraColumnsOffScreen;
+            for (int column = 0; column < columns; column++)
+            {
+                Table.Cells[0, column].Text = "Column " + column;
+            }
+
+            // Resize columns
+            Table.Cells[0, 1].Resize(columnSize: 4);
+            Table.Cells[0, 2].Resize(columnSize: 8);
+            Table.Cells[0, 3].Resize(columnSize: 1);
+
+            Table.HorizontalScrollBar.Value = 1;
+            Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
+
+            var maximum = GetMaximumScrollBarItems(Table, Orientation.Horizontal);
+            Assert.Multiple(() =>
+            {
+                Assert.That(Table.IsHorizontalScrollBarVisible, Is.True);
+                Assert.That(Table.HorizontalScrollBar.Maximum, Is.EqualTo(maximum));
+                Assert.That(Table.HorizontalScrollBar.Value, Is.EqualTo(1));
+            });
+
+            // Resize existing cell
+            Table.Cells[0, 1].Resize(columnSize: 9);
+            Table.Cells[0, 2].Resize(columnSize: 16);
+            Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
+            Assert.That(Table.HorizontalScrollBar.Maximum, Is.Not.EqualTo(maximum));
+
+            // Update max
+            maximum = GetMaximumScrollBarItems(Table, Orientation.Horizontal);
+            Assert.That(Table.HorizontalScrollBar.Maximum, Is.EqualTo(maximum));
+        }
+
+        [Test]
+        public void Table_ScrollBar_Vertical_ChangeScrollMaximum_OnResize_Correct()
+        {
+            const int extraRowsOffScreen = 5;
+            Table.SetupScrollBar(Orientation.Vertical, 5, new Point(0, 0));
+
+            var rows = (Table.Height / Table.DefaultCellSize.Y) + extraRowsOffScreen;
+            for (int row = 0; row < rows; row++)
+            {
+                Table.Cells[row, 0].Text = "Row " + row;
+            }
+
+            // Resize columns
+            Table.Cells[1, 0].Resize(rowSize: 4);
+            Table.Cells[2, 0].Resize(rowSize: 8);
+            Table.Cells[3, 0].Resize(rowSize: 1);
+
+            Table.VerticalScrollBar.Value = 1;
+            Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
+
+            var maximum = GetMaximumScrollBarItems(Table, Orientation.Vertical);
+            Assert.Multiple(() =>
+            {
+                Assert.That(Table.IsVerticalScrollBarVisible, Is.True);
+                Assert.That(Table.VerticalScrollBar.Maximum, Is.EqualTo(maximum));
+                Assert.That(Table.VerticalScrollBar.Value, Is.EqualTo(1));
+            });
+
+            // Resize existing cell
+            Table.Cells[1, 0].Resize(rowSize: 9);
+            Table.Cells[2, 0].Resize(rowSize: 16);
+            Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
+            Assert.That(Table.VerticalScrollBar.Maximum, Is.Not.EqualTo(maximum));
+
+            // Update max
+            maximum = GetMaximumScrollBarItems(Table, Orientation.Vertical);
+            Assert.That(Table.VerticalScrollBar.Maximum, Is.EqualTo(maximum));
         }
     }
 }
