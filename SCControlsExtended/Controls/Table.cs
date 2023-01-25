@@ -256,18 +256,16 @@ namespace SCControlsExtended.Controls
         {
             return !Cells.Any() ? 0 : Cells
                 .GroupBy(a => a.Row)
-                // Row 0 should also get atleast a size
-                .Select(a => (a.Key == 0 ? 1 : a.Key) * Cells.GetSizeOrDefault(a.Key, Cells.Layout.LayoutType.Row))
-                .Max();
+                .Select(a => Cells.GetSizeOrDefault(a.Key, Cells.Layout.LayoutType.Row))
+                .Sum();
         }
 
         internal int GetMaxColumnsBasedOnColumnSizes()
         {
             return !Cells.Any() ? 0 : Cells
                 .GroupBy(a => a.Column)
-                // Column 0 should also get atleast a size
-                .Select(a => (a.Key == 0 ? 1 : a.Key) * Cells.GetSizeOrDefault(a.Key, Cells.Layout.LayoutType.Column))
-                .Max();
+                .Select(a => Cells.GetSizeOrDefault(a.Key, Cells.Layout.LayoutType.Column))
+                .Sum();
         }
 
         /// <summary>
