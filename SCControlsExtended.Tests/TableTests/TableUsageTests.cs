@@ -595,5 +595,57 @@ namespace SCControlsExtended.Tests.TableTests
             maximum = GetMaximumScrollBarItems(Table, Orientation.Vertical);
             Assert.That(Table.VerticalScrollBar.Maximum, Is.EqualTo(maximum));
         }
+
+        [Test]
+        public void Table_ScrollBar_ScrollToSelectedItem_Vertical_Works()
+        {
+            const int extraRowsOffScreen = 5;
+            Table.SetupScrollBar(Orientation.Vertical, 5, new Point(0, 0));
+
+            var rows = (Table.Height / Table.DefaultCellSize.Y) + extraRowsOffScreen;
+            for (int row = 0; row < rows; row++)
+            {
+                Table.Cells[row, 0].Text = "Row " + row;
+            }
+
+            // Resize columns
+            Table.Cells[1, 0].Resize(rowSize: 4);
+            Table.Cells[2, 0].Resize(rowSize: 8);
+            Table.Cells[3, 0].Resize(rowSize: 1);
+
+            Table.VerticalScrollBar.Value = 0;
+            Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
+
+            Table.Cells.Select(rows - 1, 0);
+            Table.ScrollToSelectedItem();
+
+            Assert.That(Table.VerticalScrollBar.Value, Is.Not.EqualTo(0));
+        }
+
+        [Test]
+        public void Table_ScrollBar_ScrollToSelectedItem_Horizontal_Works()
+        {
+            const int extraColumnsOffScreen = 5;
+            Table.SetupScrollBar(Orientation.Horizontal, 5, new Point(0, 0));
+
+            var columns = (Table.Width / Table.DefaultCellSize.X) + extraColumnsOffScreen;
+            for (int col = 0; col < columns; col++)
+            {
+                Table.Cells[0, col].Text = "Col " + col;
+            }
+
+            // Resize columns
+            Table.Cells[0, 1].Resize(columnSize: 4);
+            Table.Cells[0, 2].Resize(columnSize: 8);
+            Table.Cells[0, 3].Resize(columnSize: 1);
+
+            Table.HorizontalScrollBar.Value = 0;
+            Table.Theme.UpdateAndDraw(Table, new System.TimeSpan());
+
+            Table.Cells.Select(0, columns - 1);
+            Table.ScrollToSelectedItem();
+
+            Assert.That(Table.HorizontalScrollBar.Value, Is.Not.EqualTo(0));
+        }
     }
 }
