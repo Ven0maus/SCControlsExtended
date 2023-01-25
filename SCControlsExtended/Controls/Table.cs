@@ -1161,24 +1161,9 @@ namespace SCControlsExtended.Controls
                 return;
             }
 
-            if (_cells.TryGetValue((row, col), out Table.Cell oldCell))
-            {
-                if (!oldCell.Foreground.Equals(cell.Foreground) ||
-                    !oldCell.Background.Equals(cell.Background) ||
-                    !oldCell.Text.Equals(cell.Text) ||
-                    !oldCell.Settings.Equals(cell.Settings))
-                {
-                    _cells[(row, col)] = cell;
-                    _table._checkScrollBarVisibility = true;
-                    _table.IsDirty = true;
-                }
-            }
-            else
-            {
-                _cells[(row, col)] = cell;
-                _table._checkScrollBarVisibility = true;
-                _table.IsDirty = true;
-            }
+            _cells[(row, col)] = cell;
+            _table._checkScrollBarVisibility = true;
+            _table.IsDirty = true;
         }
 
         internal void AdjustCellPositionsAfterResize()
