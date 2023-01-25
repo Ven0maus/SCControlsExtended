@@ -10,7 +10,7 @@ namespace SCControlsExtended.Tests.TableTests
     /// Tests the code structure of the table, that is accessible to the users
     /// </summary>
     [TestFixture(100, 20, 10, 2)]
-    [TestFixture(50, 20, 5, 3)]
+    [TestFixture(77, 35, 5, 3)]
     internal class TableUsageTests : TableTestsBase
     {
         public TableUsageTests(int width, int height, int cellWidth, int cellHeight) 
@@ -308,19 +308,19 @@ namespace SCControlsExtended.Tests.TableTests
             for (int i=0; i < extraRowsOffScreen; i++)
             {
                 Table.VerticalScrollBar.Value += 1;
-                Assert.That(Table.StartRenderRow, Is.EqualTo(i + 1));
+                Assert.That(Table.StartRenderYPos, Is.EqualTo(i + 1));
             }
 
-            Assert.That(Table.StartRenderRow, Is.EqualTo(extraRowsOffScreen));
+            Assert.That(Table.StartRenderYPos, Is.EqualTo(extraRowsOffScreen));
 
             // Decrement
             for (int i = extraRowsOffScreen; i > 0; i--)
             {
                 Table.VerticalScrollBar.Value -= 1;
-                Assert.That(Table.StartRenderRow, Is.EqualTo(i - 1));
+                Assert.That(Table.StartRenderYPos, Is.EqualTo(i - 1));
             }
 
-            Assert.That(Table.StartRenderRow, Is.EqualTo(0));
+            Assert.That(Table.StartRenderYPos, Is.EqualTo(0));
         }
 
         [Test]
@@ -347,19 +347,19 @@ namespace SCControlsExtended.Tests.TableTests
             for (int i = 0; i < extraColumnsOffScreen; i++)
             {
                 Table.HorizontalScrollBar.Value += 1;
-                Assert.That(Table.StartRenderColumn, Is.EqualTo(i + 1));
+                Assert.That(Table.StartRenderXPos, Is.EqualTo(i + 1));
             }
 
-            Assert.That(Table.StartRenderColumn, Is.EqualTo(extraColumnsOffScreen));
+            Assert.That(Table.StartRenderXPos, Is.EqualTo(extraColumnsOffScreen));
 
             // Decrement
             for (int i = extraColumnsOffScreen; i > 0; i--)
             {
                 Table.HorizontalScrollBar.Value -= 1;
-                Assert.That(Table.StartRenderColumn, Is.EqualTo(i - 1));
+                Assert.That(Table.StartRenderXPos, Is.EqualTo(i - 1));
             }
 
-            Assert.That(Table.StartRenderColumn, Is.EqualTo(0));
+            Assert.That(Table.StartRenderXPos, Is.EqualTo(0));
         }
 
         [Test]
@@ -393,7 +393,7 @@ namespace SCControlsExtended.Tests.TableTests
             for (int i = 0; i < extraRowsOffScreen; i++)
             {
                 Table.VerticalScrollBar.Value += 1;
-                Assert.That(Table.StartRenderRow, Is.EqualTo(i + 1));
+                Assert.That(Table.StartRenderYPos, Is.EqualTo(i + 1));
             }
 
             // TODO

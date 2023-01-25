@@ -3,7 +3,6 @@ using SadRogue.Primitives;
 using SCControlsExtended.ControlExtensions;
 using SCControlsExtended.Controls;
 using System;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace SCControlsExtended.Demo.ExampleConsoles
 {
@@ -37,22 +36,7 @@ namespace SCControlsExtended.Demo.ExampleConsoles
 
             Controls.Add(_table);
 
-            //Test();
             AdjustTableValues();
-        }
-
-        private void Test()
-        {
-            var rows = (_table.Height / _table.DefaultCellSize.Y) + (5 + 1);
-            for (int row = 0; row < rows; row++)
-            {
-                _table.Cells[row, 0].Text = "Row " + row;
-            }
-
-            // Resize columns
-            _table.Cells[1, 0].Resize(rowSize: 4);
-            _table.Cells[2, 0].Resize(rowSize: 8);
-            _table.Cells[3, 0].Resize(rowSize: 1);
         }
 
         private void AdjustTableValues()
@@ -86,6 +70,7 @@ namespace SCControlsExtended.Demo.ExampleConsoles
             _table.Cells[6, 8].Settings.Interactable = false;
             _table.Cells[7, 8].Settings.IsVisible = false;
             _table.Cells[1, 5].Select();
+            _table.Cells[9, 0].Resize(1);
             _table.Cells[10, 0].Resize(8);
             for (int i=1; i <= 9; i++)
                 _table.Cells[10 + i, 0].Text = (10 + i).ToString();

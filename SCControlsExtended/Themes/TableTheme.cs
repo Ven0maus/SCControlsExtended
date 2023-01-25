@@ -70,22 +70,25 @@ namespace SCControlsExtended.Themes
 
         private static int GetScrollBarItems(Table table, Orientation orientation)
         {
-            var order = orientation == Orientation.Vertical ?
-                table.Cells.OrderByDescending(a => a.Row).GroupBy(a => a.Row) :
-                table.Cells.OrderByDescending(a => a.Column).GroupBy(a => a.Column);
-            var indexes = order
-                .Select(a => table.Cells.GetSizeOrDefault(a.Key, orientation == Orientation.Vertical ? 
-                    Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column))
-                .ToArray();
-            var sum = indexes.Sum();
-            int totalIndex = 0;
-            foreach (var index in indexes)
+            var indexes = orientation == Orientation.Vertical ?
+                table.Cells.GroupBy(a => a.Row) : table.Cells.GroupBy(a => a.Column);
+            var orderedIndex = indexes.OrderBy(a => a.Key);
+
+            var layoutType = orientation == Orientation.Vertical ? Cells.Layout.LayoutType.Row : Cells.Layout.LayoutType.Column;
+            var maxSize = orientation == Orientation.Vertical ? table.Height : table.Width;
+            var totalSize = 0;
+            var items = 0;
+            foreach (var index in orderedIndex)
             {
-                sum -= index;
-                if (sum <= (orientation == Orientation.Vertical ? table.Height : table.Width)) break;
-                totalIndex++;
+                var size = table.Cells.GetSizeOrDefault(index.Key, layoutType);
+                totalSize += size;
+
+                if (totalSize >= maxSize)
+                {
+                    items++;
+                }
             }
-            return totalIndex;
+            return items;
         }
 
         private static void SetScrollBarPropertiesOnTable(Table table, ScrollBar scrollBar, int maxRowsHeight, int maxColumnsWidth)
@@ -150,15 +153,17 @@ namespace SCControlsExtended.Themes
 
             var columns = maxColumnsWidth;
             var rows = maxRowsHeight;
-            int rowIndex = table.IsVerticalScrollBarVisible ? table.StartRenderRow : 0;
+            var rowIndexPos = table.Cells.GetIndexAtCellPosition(table.StartRenderYPos, Cells.Layout.LayoutType.Row, out int _);
+            int rowIndex = table.IsVerticalScrollBarVisible ? rowIndexPos : 0;
             for (int row = 0; row < rows; row++)
             {
-                int colIndex = table.IsHorizontalScrollBarVisible ? table.StartRenderColumn : 0;
+                var colIndexPos = table.Cells.GetIndexAtCellPosition(table.StartRenderXPos, Cells.Layout.LayoutType.Column, out int _);
+                int colIndex = table.IsHorizontalScrollBarVisible ? colIndexPos : 0;
                 int fullRowSize = 0;
                 for (int col = 0; col < columns; col++)
                 {
-                    var verticalScrollBarValue = (table.IsVerticalScrollBarVisible ? table.StartRenderRow : 0);
-                    var horizontalScrollBarValue = (table.IsHorizontalScrollBarVisible ? table.StartRenderColumn : 0);
+                    var verticalScrollBarValue = (table.IsVerticalScrollBarVisible ? table.StartRenderYPos : 0);
+                    var horizontalScrollBarValue = (table.IsHorizontalScrollBarVisible ? table.StartRenderXPos : 0);
                     var cellPosition = table.Cells.GetCellPosition(rowIndex, colIndex, out fullRowSize, out int columnSize,
                         verticalScrollBarValue, horizontalScrollBarValue);
 
