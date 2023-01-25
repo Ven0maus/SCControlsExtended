@@ -3,9 +3,7 @@ using SadConsole;
 using SadConsole.UI.Themes;
 using SCControlsExtended.Controls;
 using SCControlsExtended.Themes;
-using System.Drawing;
 using System.Linq;
-using System.Runtime.CompilerServices;
 
 namespace SCControlsExtended.Tests.TableTests
 {
