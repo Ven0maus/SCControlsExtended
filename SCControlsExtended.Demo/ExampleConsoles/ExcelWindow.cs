@@ -16,8 +16,8 @@ namespace SCControlsExtended.Demo.ExampleConsoles
             _table.SetThemeColors(Colors.CreateSadConsoleBlue());
             _table.DefaultForeground = Color.Black;
             _table.DefaultBackground = Color.Lerp(Color.WhiteSmoke, Color.Black, 0.075f);
-            _table.SetupScrollBar(Orientation.Vertical, Height -1, new Point(Width - 1, 0));
-            _table.SetupScrollBar(Orientation.Horizontal, Width - 1, new Point(0, Height - 2));
+            _table.SetupScrollBar(Orientation.Vertical, Height, new Point(Width - 1, 0));
+            _table.SetupScrollBar(Orientation.Horizontal, Width - 1, new Point(0, Height - 1));
 
             // Only add layout and let the console draw the rest
             _table.OnDrawFakeCell += DrawFakeCell;
@@ -26,14 +26,6 @@ namespace SCControlsExtended.Demo.ExampleConsoles
             Controls.Add(_table);
 
             AdjustTable();
-        }
-
-        public void Init()
-        {
-            Game.Instance.ResizeWindow(Width, Height - 1, Game.Instance.DefaultFont.GetFontSize(Game.Instance.DefaultFontSize));
-            Resize(Width, Height - 1, false);
-            UsePixelPositioning = true;
-            Position = new Point(0, 8);
         }
 
         private void DrawFakeCell(object sender, Table.CellEventArgs args)

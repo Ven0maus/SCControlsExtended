@@ -450,7 +450,7 @@ public class Table : CompositeControl
                 if (partialOverlap)
                 {
                     int overlapAmount = indexSizeCell + cellSize - (isRowType ? Height : Width);
-                    cellSize -= overlapAmount;
+                    cellSize = overlapAmount;
                 }
 
                 return increment ? cellSize : -cellSize;
