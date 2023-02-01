@@ -1296,11 +1296,11 @@ public sealed class Cells : IEnumerable<Table.Cell>
         {
             if (_cells.Remove((row, col)))
             {
+                MaxRow = _cells.Count == 0 ? 0 : _cells.Values.Max(a => a.Row);
+                MaxColumn = _cells.Count == 0 ? 0 : _cells.Values.Max(a => a.Column);
                 _table._checkScrollBarVisibility = true;
                 _table.IsDirty = true;
             }
-            MaxRow = _cells.Count == 0 ? 0 : _cells.Values.Max(a => a.Row);
-            MaxColumn = _cells.Count == 0 ? 0 : _cells.Values.Max(a => a.Column);
             return;
         }
 
