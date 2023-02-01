@@ -48,7 +48,7 @@ namespace SCControlsExtended.Demo.ExampleConsoles
                 if (cell.Row == 0 && cell.Column == 0) 
                     return;
 
-                cell.Text = cell.Row == 0 ? GetExcelColumnName(cell.Column) : cell.Row.ToString();
+                cell.Value = cell.Row == 0 ? GetExcelColumnName(cell.Column) : cell.Row.ToString();
                 cell.Settings.HorizontalAlignment = Table.Cell.Options.HorizontalAlign.Center;
                 cell.Settings.VerticalAlignment = Table.Cell.Options.VerticalAlign.Center;
                 cell.Settings.Interactable = false;
@@ -58,7 +58,7 @@ namespace SCControlsExtended.Demo.ExampleConsoles
             // Setting the inner cells
             cell.Foreground = Color.Lerp(Color.WhiteSmoke, Color.Black, 0.3f);
             cell.Background = Color.Lerp(Color.WhiteSmoke, Color.Black, 0.075f);
-            cell.Text = GetExcelColumnName(cell.Column) + cell.Row;
+            cell.Value = GetExcelColumnName(cell.Column) + cell.Row;
             cell.Settings.Interactable = true;
         }
 
@@ -68,7 +68,7 @@ namespace SCControlsExtended.Demo.ExampleConsoles
             _table.Cells.Column(0).SetLayout(background: Color.Lerp(Color.WhiteSmoke, Color.Black, 0.25f));
 
             // Set column
-            _table.Cells[0, 0].Text = ">";
+            _table.Cells[0, 0].Value = ">";
             _table.Cells[0, 0].Settings.HorizontalAlignment = Table.Cell.Options.HorizontalAlign.Center;
             _table.Cells[0, 0].Settings.VerticalAlignment = Table.Cell.Options.VerticalAlign.Center;
             _table.Cells[0, 0].Settings.Interactable = false;

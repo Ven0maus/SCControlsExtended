@@ -1,6 +1,5 @@
 ﻿using SadConsole.UI;
 using SadRogue.Primitives;
-using SCControlsExtended.ControlExtensions;
 using SCControlsExtended.Controls;
 using System;
 
@@ -48,17 +47,17 @@ namespace SCControlsExtended.Demo.ExampleConsoles
             int col = 1, row = 1;
 
             // Set column
-            _table.Cells[0, 0].Text = "C/R 0";
+            _table.Cells[0, 0].Value = "C/R 0";
 
             // Set column, row texts
-            _table.Cells.Range(0, 1, 0, 5).ForEach(cell => cell.Text = "Column " + col++);
-            _table.Cells.Range(1, 0, 10, 0).ForEach(cell => cell.Text = "Row " + row++);
+            _table.Cells.Range(0, 1, 0, 5).ForEach(cell => cell.Value = "Column " + col++);
+            _table.Cells.Range(1, 0, 10, 0).ForEach(cell => cell.Value = "Row " + row++);
 
             // Set inner cells color
             _table.Cells.Range(1, 1, 10, 5).ForEach(cell => cell.Background = innerCellColor);
 
             // Custom cell size
-            _table.Cells[5, 7].Text = "Support custom cell sizes and text alignment!";
+            _table.Cells[5, 7].Value = "Support custom cell sizes and text alignment!";
             _table.Cells[5, 7].Settings.HorizontalAlignment = Table.Cell.Options.HorizontalAlign.Center;
             _table.Cells[5, 7].Settings.VerticalAlignment = Table.Cell.Options.VerticalAlign.Center;
             _table.Cells[5, 7].Resize(7, 20);
@@ -73,12 +72,12 @@ namespace SCControlsExtended.Demo.ExampleConsoles
             _table.Cells[9, 0].Resize(1);
             _table.Cells[10, 0].Resize(8);
             for (int i=1; i <= 9; i++)
-                _table.Cells[10 + i, 0].Text = (10 + i).ToString();
+                _table.Cells[10 + i, 0].Value = (10 + i).ToString();
             _table.Cells[19, 0].Background = Color.Blue;
             _table.Cells[20, 0].Background = Color.Red;
-            _table.Cells[20, 0].Text = "hello";
+            _table.Cells[20, 0].Value = "hello";
             _table.Cells[20, 0].Resize(10);
-            _table.Cells[21, 0].Text = "test";
+            _table.Cells[21, 0].Value = "test";
         }
 
         private static void Table_OnCellExit(object sender, Table.CellEventArgs e)

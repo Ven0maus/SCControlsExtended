@@ -5,7 +5,6 @@ using SadConsole.UI.Themes;
 using SadRogue.Primitives;
 using SCControlsExtended.Controls;
 using SCControlsExtended.Demo.ExampleConsoles;
-using SCControlsExtended.Themes;
 
 namespace SCControlsExtended.Demo
 {
@@ -14,7 +13,7 @@ namespace SCControlsExtended.Demo
         public const int Width = 100;
         public const int Height = 40;
 
-        static void Main(string[] args)
+        static void Main()
         {
             Settings.WindowTitle = "SadConsole Controls Extended";
 
