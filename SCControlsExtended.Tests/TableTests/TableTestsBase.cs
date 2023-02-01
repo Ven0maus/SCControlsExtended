@@ -2,7 +2,6 @@
 using SadConsole;
 using SadConsole.UI.Themes;
 using SCControlsExtended.Controls;
-using SCControlsExtended.Themes;
 using System.Linq;
 
 namespace SCControlsExtended.Tests.TableTests
