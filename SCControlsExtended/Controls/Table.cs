@@ -1077,14 +1077,14 @@ public sealed class Cells : IEnumerable<Table.Cell>
     }
 
     /// <summary>
-    /// The rows the table currently holds.
+    /// The maximum row in the table.
     /// </summary>
-    public int TotalRows => _cells.Count == 0 ? 0 : _cells.Values.Max(a => a.Row) + 1;
+    public int MaxRow { get; private set; }
 
     /// <summary>
-    /// The columns the table currently holds.
+    /// The maximum column in the table.
     /// </summary>
-    public int TotalColumns => _cells.Count == 0 ? 0 : _cells.Values.Max(a => a.Column) + 1;
+    public int MaxColumn { get; private set; }
 
     /// <summary>
     /// The amount of cells currently in the table.
@@ -1236,6 +1236,10 @@ public sealed class Cells : IEnumerable<Table.Cell>
             };
 
             _cells[(row, col)] = cell;
+            if (MaxRow < row)
+                MaxRow = row;
+            if (MaxColumn < col)
+                MaxColumn = col;
             _table._checkScrollBarVisibility = true;
         }
         return cell;
@@ -1251,25 +1255,24 @@ public sealed class Cells : IEnumerable<Table.Cell>
             controlIndex = indexPos - startPos;
         }
 
-        indexSize = type == Layout.LayoutType.Column ?
-            (_columnLayout.TryGetValue(startIndex, out Layout? layout) ? layout.Size : _table.DefaultCellSize.X) :
-            (_rowLayout.TryGetValue(startIndex, out layout) ? layout.Size : _table.DefaultCellSize.Y);
+        var layoutDict = type == Layout.LayoutType.Column ? _columnLayout : _rowLayout;
+        var defaultSize = type == Layout.LayoutType.Column ? _table.DefaultCellSize.X : _table.DefaultCellSize.Y;
+
+        indexSize = layoutDict.TryGetValue(startIndex, out Layout? layout) ? layout.Size : defaultSize;
 
         while (startIndex < index)
         {
             controlIndex += indexSize;
             startIndex++;
 
-            indexSize = type == Layout.LayoutType.Column ?
-                (_columnLayout.TryGetValue(startIndex, out layout) ? layout.Size : _table.DefaultCellSize.X) :
-                (_rowLayout.TryGetValue(startIndex, out layout) ? layout.Size : _table.DefaultCellSize.Y);
+            indexSize = layoutDict.TryGetValue(startIndex, out layout) ? layout.Size : defaultSize;
         }
         return controlIndex;
     }
 
     internal int GetIndexAtCellPosition(int pos, Layout.LayoutType type, out int indexPos)
     {
-        int total = type == Layout.LayoutType.Row ? _table.Cells.TotalRows : _table.Cells.TotalColumns;
+        int total = type == Layout.LayoutType.Row ? (_table.Cells.MaxRow + 1) : (_table.Cells.MaxColumn + 1);
         Dictionary<int, Layout> layoutDict = type == Layout.LayoutType.Row ? _rowLayout : _columnLayout;
         int defaultSize = type == Layout.LayoutType.Row ? _table.DefaultCellSize.Y : _table.DefaultCellSize.X;
         int totalSize = 0;
@@ -1296,10 +1299,16 @@ public sealed class Cells : IEnumerable<Table.Cell>
                 _table._checkScrollBarVisibility = true;
                 _table.IsDirty = true;
             }
+            MaxRow = _cells.Count == 0 ? 0 : _cells.Values.Max(a => a.Row);
+            MaxColumn = _cells.Count == 0 ? 0 : _cells.Values.Max(a => a.Column);
             return;
         }
 
         _cells[(row, col)] = cell;
+        if (MaxRow < row)
+            MaxRow = row;
+        if (MaxColumn < col)
+            MaxColumn = col;
         _table._checkScrollBarVisibility = true;
         _table.IsDirty = true;
     }

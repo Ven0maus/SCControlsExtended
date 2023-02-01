@@ -206,8 +206,8 @@ internal class TableUsageTests : TableTestsBase
         Table.Cells[0, 1].Value = "Column 2";
         Assert.Multiple(() =>
         {
-            Assert.That(Table.Cells.TotalColumns, Is.EqualTo(2));
-            Assert.That(Table.Cells.TotalRows, Is.EqualTo(3));
+            Assert.That(Table.Cells.MaxColumn, Is.EqualTo(1));
+            Assert.That(Table.Cells.MaxRow, Is.EqualTo(2));
         });
     }
 
