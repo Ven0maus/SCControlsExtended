@@ -73,7 +73,7 @@ namespace SCControlsExtended.Tests.TableTests
                     if (partialOverlap)
                     {
                         var overlapAmount = indexSizeCell + size - (isRowType ? table.Height : table.Width);
-                        size -= overlapAmount;
+                        size = overlapAmount;
                     }
                     return increment ? size : -size;
                 }
