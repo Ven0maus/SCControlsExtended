@@ -37,11 +37,11 @@ namespace SCControlsExtended.Demo
         {
             SetCustomThemes();
 
-            var selectionMenu = new ControlsConsole(Width, Height);
+            var selectionMenu = new ControlsConsole(Width + 1, Height + 1);
             var options = new ControlsConsole[] 
             { 
                 new FunctionalityTestWindow(Width, Height), 
-                new ExcelWindow(Width, Height), 
+                new ExcelWindow(Width - 1, Height - 1), 
                 new DrawingTableWindow(Width, Height) 
             };
 

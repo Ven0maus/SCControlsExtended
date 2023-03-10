@@ -10,9 +10,9 @@ namespace SCControlsExtended.Demo.ExampleConsoles
     {
         private readonly Table _table;
 
-        public ExcelWindow(int width, int height) : base(width, height)
+        public ExcelWindow(int width, int height) : base(width + 1, height + 1)
         {
-            _table = new Table(Width, Height, 10, 3);
+            _table = new Table(Width - 1, Height - 1, 10, 3);
             _table.SetThemeColors(Colors.CreateSadConsoleBlue());
             _table.DefaultForeground = Color.Black;
             _table.DefaultBackground = Color.Lerp(Color.WhiteSmoke, Color.Black, 0.075f);
