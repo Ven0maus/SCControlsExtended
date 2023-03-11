@@ -56,6 +56,9 @@ namespace SCControlsExtended.Demo.ExampleConsoles
             // Set inner cells color
             _table.Cells.Range(1, 1, 10, 5).ForEach(cell => cell.Background = innerCellColor);
 
+            // Hide row 13
+            _table.Cells.Row(13).IsVisible = false;
+
             // Custom cell size
             _table.Cells[5, 7].Value = "Support custom cell sizes and text alignment!";
             _table.Cells[5, 7].Settings.HorizontalAlignment = Table.Cell.Options.HorizontalAlign.Center;
@@ -67,7 +70,7 @@ namespace SCControlsExtended.Demo.ExampleConsoles
             _table.Cells[5, 8].Background = Color.Orange;
             _table.Cells[6, 8].Background = Color.Blue;
             _table.Cells[6, 8].Settings.Interactable = false;
-            _table.Cells[7, 8].Settings.IsVisible = false;
+            _table.Cells[7, 8].IsVisible = false;
             _table.Cells[1, 5].Select();
             _table.Cells[9, 0].Resize(1);
             _table.Cells[10, 0].Resize(8);

@@ -20,6 +20,10 @@ namespace SCControlsExtended.Demo.ExampleConsoles
             _table.SetupScrollBar(Orientation.Vertical, Height, new Point(Width - 1, 0));
             _table.SetupScrollBar(Orientation.Horizontal, Width - 1, new Point(0, Height - 1));
 
+            // Don't render row 2 at all, show feature where other rows takes its place
+            // Good for filtering features
+            _table.Cells.Row(2).IsVisible = false;
+
             // Only add layout and let the console draw the rest
             _table.OnDrawFakeCell += DrawFakeCell;
             _table.DrawFakeCells = true;
