@@ -81,6 +81,7 @@ public class TableTheme : ThemeBase
         int rowIndexPos = table.Cells.GetIndexAtCellPosition(table.StartRenderYPos, Cells.Layout.LayoutType.Row, out _);
         int rowIndex = table.IsVerticalScrollBarVisible ? rowIndexPos : 0;
         bool offScreenY = false;
+        List<((int x, int y), (int row, int col))>? fakeCells = table.DrawFakeCells ? new() : null;
         for (int row = 0; row <= rows; row++)
         {
             // Check if entire row is !IsVisible, then skip this row index entirely
@@ -109,8 +110,11 @@ public class TableTheme : ThemeBase
 
                 col += columnSize - 1;
 
+                if (fakeCells != null)
+                    fakeCells.Add((cellPosition, (rowIndex, colIndex)));
+
                 // Check if entire column is !IsVisible, then skip this column index entirely
-                var entireRowOrColumnNotVisible = entireRowNotVisible || 
+                var entireRowOrColumnNotVisible = entireRowNotVisible ||
                     IsEntireRowOrColumnNotVisible(colIndex, table, Cells.Layout.LayoutType.Column);
                 if (!headerRow && entireRowOrColumnNotVisible)
                 {
@@ -131,13 +135,24 @@ public class TableTheme : ThemeBase
                         break;
                 }
 
-                Table.Cell? cell = table.Cells.GetIfExists(rowIndex, colIndex);
+                int oldRow = -1, oldCol = -1;
+                GetOldRowAndColumnValues(table, fakeCells, cellPosition, ref oldRow, ref oldCol);
+
+                Table.Cell? cell = table.Cells.GetIfExists(rowIndex, colIndex, true);
                 if (cell == null && table.DrawFakeCells)
                 {
                     cell = new Table.Cell(rowIndex, colIndex, table, string.Empty, addToTableIfModified: false)
                     {
-                        Position = cellPosition
+                        Position = cellPosition,
+                        _row = oldRow != -1 ? oldRow : rowIndex,
+                        _column = oldCol != -1 ? oldCol : colIndex
                     };
+                }
+                else if (cell != null)
+                {
+                    cell.Position = cellPosition;
+                    cell._row = oldRow != -1 ? oldRow : rowIndex;
+                    cell._column = oldCol != -1 ? oldCol : colIndex;
                 }
 
                 if (cell == null)
@@ -169,6 +184,34 @@ public class TableTheme : ThemeBase
         }
 
         control.IsDirty = false;
+    }
+
+    private static void GetOldRowAndColumnValues(Table table, List<((int x, int y), (int row, int col))>? fakeCells, Point cellPosition, ref int oldRow, ref int oldCol)
+    {
+        if (fakeCells == null)
+        {
+            foreach (var cellV in table.Cells)
+            {
+                if (cellV.Position == cellPosition)
+                {
+                    oldRow = cellV.Row;
+                    oldCol = cellV.Column;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            foreach (var cellV in fakeCells)
+            {
+                if (cellV.Item1 == cellPosition)
+                {
+                    oldRow = cellV.Item2.row;
+                    oldCol = cellV.Item2.col;
+                    break;
+                }
+            }
+        }
     }
 
     private static bool IsEntireRowOrColumnNotVisible(int index, Table table, Cells.Layout.LayoutType type)
@@ -213,7 +256,7 @@ public class TableTheme : ThemeBase
             int size = table.Cells.GetSizeOrDefault(index.Key, layoutType);
             if (IsEntireRowOrColumnNotVisible(index.Key, table, layoutType))
                 continue;
-            
+
             totalSize += size;
 
             if (totalSize > maxSize)
@@ -274,13 +317,14 @@ public class TableTheme : ThemeBase
             switch (selectionMode)
             {
                 case Cells.Layout.Mode.Single:
-                    if (!cell.Equals(table.SelectedCell)) break;
+                    if (cell._row != table.SelectedCell._row ||
+                        cell._column != table.SelectedCell._column) break;
                     return ControlThemeState.Selected;
                 case Cells.Layout.Mode.EntireRow:
-                    if (cell.Row != table.SelectedCell.Row) break;
+                    if (cell._row != table.SelectedCell._row) break;
                     return ControlThemeState.Selected;
                 case Cells.Layout.Mode.EntireColumn:
-                    if (cell.Column != table.SelectedCell.Column) break;
+                    if (cell._column != table.SelectedCell._column) break;
                     return ControlThemeState.Selected;
                 case Cells.Layout.Mode.None:
                     break;
@@ -291,13 +335,14 @@ public class TableTheme : ThemeBase
         switch (hoverMode)
         {
             case Cells.Layout.Mode.Single:
-                if (table.CurrentMouseCell == null || !cell.Equals(table.CurrentMouseCell)) break;
+                if (table.CurrentMouseCell == null || cell._row != table.CurrentMouseCell._row ||
+                        cell._column != table.CurrentMouseCell._column) break;
                 return ControlThemeState.MouseOver;
             case Cells.Layout.Mode.EntireRow:
-                if (table.CurrentMouseCell == null || table.CurrentMouseCell.Row != cell.Row) break;
+                if (table.CurrentMouseCell == null || table.CurrentMouseCell._row != cell._row) break;
                 return ControlThemeState.MouseOver;
             case Cells.Layout.Mode.EntireColumn:
-                if (table.CurrentMouseCell == null || table.CurrentMouseCell.Column != cell.Column) break;
+                if (table.CurrentMouseCell == null || table.CurrentMouseCell._column != cell._column) break;
                 return ControlThemeState.MouseOver;
             case Cells.Layout.Mode.None:
                 break;

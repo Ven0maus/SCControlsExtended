@@ -1,11 +1,10 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using SadConsole;
 using SadConsole.UI.Controls;
 using SadRogue.Primitives;
-using static SCControlsExtended.Controls.Cells.Layout;
 
 namespace SCControlsExtended.Controls;
 
@@ -497,9 +496,10 @@ public class Table : CompositeControl
         {
             if (mousePosCellIndex != null)
             {
-                Cell? cell = Cells.GetIfExists(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X);
+                Cell? cell = Cells.GetIfExists(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, true);
                 if (cell == null && DrawFakeCells)
                 {
+                    // A fake cell doesn't know if it should be selected if the row is hidden
                     cell = new Cell(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, this, string.Empty)
                     {
                         Position = Cells.GetCellPosition(mousePosCellIndex.Value.Y, mousePosCellIndex.Value.X, out _, out _,
@@ -610,16 +610,21 @@ public class Table : CompositeControl
 
     private Point? GetCellIndexByMousePosition(Point mousePosition)
     {
-        for (int col = 0; col < Width; col++)
+        for (int col = 0; col <= Cells.MaxColumn; col++)
         {
-            for (int row = 0; row < Height; row++)
+            for (int row = 0; row <= Cells.MaxRow; row++)
             {
                 int rowValue = row + (IsVerticalScrollBarVisible && VerticalScrollBar != null ? VerticalScrollBar.Value : 0);
                 int colValue = col + (IsHorizontalScrollBarVisible && HorizontalScrollBar != null ? HorizontalScrollBar.Value : 0);
+
                 Point position = Cells.GetCellPosition(rowValue, colValue, out int rowSize, out int columnSize,
                     IsVerticalScrollBarVisible ? StartRenderYPos : 0, IsHorizontalScrollBarVisible ? StartRenderXPos : 0);
                 if (IsMouseWithinCell(mousePosition, position.Y, position.X, columnSize, rowSize))
-                    return (colValue, rowValue);
+                {
+                    var cell = Cells.GetIfExists(rowValue, colValue, false);
+                    if (cell == null || (cell._row == rowValue && cell._column == colValue && cell.IsVisible))
+                        return cell != null ? (cell.Column, cell.Row) : (colValue, rowValue);
+                }
             }
         }
         return null;
@@ -671,7 +676,17 @@ public class Table : CompositeControl
     /// </summary>
     public sealed class Cell : IEquatable<Cell>
     {
-        internal Point Position { get; set; }
+        /// <summary>
+        /// Contains the real position value when other cells are not being rendered
+        /// This is used to obtain the real cell from mouse interactions.
+        /// </summary>
+        internal Point Position;
+        /// <summary>
+        /// Contains the real row value and column value when other cells are not being rendered
+        /// This is used to obtain the real cell from mouse interactions.
+        /// </summary>
+        internal int _row, _column;
+
         /// <summary>
         /// The row this cell is part of
         /// </summary>
@@ -751,6 +766,8 @@ public class Table : CompositeControl
         {
             _table = table;
             _value = value;
+            _row = row;
+            _column = col;
             _foreground = table.DefaultForeground;
             _background = table.DefaultBackground;
             _addToTableIfModified = addToTableIfModified;
@@ -776,7 +793,7 @@ public class Table : CompositeControl
 
         internal void AddToTableIfNotExists()
         {
-            if (_addToTableIfModified && _table.Cells.GetIfExists(Row, Column) == null)
+            if (_addToTableIfModified && _table.Cells.GetIfExists(Row, Column, true) == null)
                 _table.Cells[Row, Column] = this;
         }
 
@@ -1063,7 +1080,7 @@ public sealed class Cells : IEnumerable<Table.Cell>
     /// <summary>
     /// Contains all rows and columns that aren't rendered
     /// </summary>
-    internal readonly Dictionary<LayoutType, HashSet<int>> _hiddenIndexes = new();
+    internal readonly Dictionary<Layout.LayoutType, HashSet<int>> _hiddenIndexes = new();
 
     /// <summary>
     /// Gets or creates a new cell on the specified row and column
@@ -1120,12 +1137,12 @@ public sealed class Cells : IEnumerable<Table.Cell>
     /// <param name="visible"></param>
     public void Row(int row, bool visible)
     {
-        if (!_hiddenIndexes.TryGetValue(LayoutType.Row, out var indexes))
+        if (!_hiddenIndexes.TryGetValue(Layout.LayoutType.Row, out var indexes))
         {
             if (visible) return;
 
             indexes = new HashSet<int>();
-            _hiddenIndexes.Add(LayoutType.Row, indexes);
+            _hiddenIndexes.Add(Layout.LayoutType.Row, indexes);
         }
 
         for (int col = 0; col <= _table.Cells.MaxColumn; col++)
@@ -1135,14 +1152,20 @@ public sealed class Cells : IEnumerable<Table.Cell>
         {
             indexes.Remove(row);
             if (indexes.Count == 0)
-                _hiddenIndexes.Remove(LayoutType.Row);
+                _hiddenIndexes.Remove(Layout.LayoutType.Row);
         }
         else
         {
             indexes.Add(row);
         }
 
+        if (_table.HorizontalScrollBar != null)
+            _table.HorizontalScrollBar.Value = 0;
+        if (_table.VerticalScrollBar != null)
+            _table.VerticalScrollBar.Value = 0;
+
         _table.IsDirty = true;
+        _table._checkScrollBarVisibility = true;
     }
 
     /// <summary>
@@ -1152,12 +1175,12 @@ public sealed class Cells : IEnumerable<Table.Cell>
     /// <param name="visible"></param>
     public void Column(int column, bool visible)
     {
-        if (!_hiddenIndexes.TryGetValue(LayoutType.Column, out var indexes))
+        if (!_hiddenIndexes.TryGetValue(Layout.LayoutType.Column, out var indexes))
         {
             if (visible) return;
 
             indexes = new HashSet<int>();
-            _hiddenIndexes.Add(LayoutType.Column, indexes);
+            _hiddenIndexes.Add(Layout.LayoutType.Column, indexes);
         }
 
         for (int row = 0; row <= _table.Cells.MaxRow; row++)
@@ -1167,14 +1190,20 @@ public sealed class Cells : IEnumerable<Table.Cell>
         {
             indexes.Remove(column);
             if (indexes.Count == 0)
-                _hiddenIndexes.Remove(LayoutType.Column);
+                _hiddenIndexes.Remove(Layout.LayoutType.Column);
         }
         else
         {
             indexes.Add(column);
         }
 
+        if (_table.HorizontalScrollBar != null)
+            _table.HorizontalScrollBar.Value = 0;
+        if (_table.VerticalScrollBar != null)
+            _table.VerticalScrollBar.Value = 0;
+
         _table.IsDirty = true;
+        _table._checkScrollBarVisibility = true;
     }
 
     /// <summary>
@@ -1220,7 +1249,7 @@ public sealed class Cells : IEnumerable<Table.Cell>
     public void Select(int row, int column)
     {
         // Set existing cell, or a fake one if it does not yet exists, but modifying this fake cell with add it to the table
-        _table.SelectedCell = GetIfExists(row, column) ?? new Table.Cell(row, column, _table, string.Empty)
+        _table.SelectedCell = GetIfExists(row, column, false) ?? new Table.Cell(row, column, _table, string.Empty)
         {
             Position = GetCellPosition(row, column, out _, out _,
                 _table.IsVerticalScrollBarVisible ? _table.StartRenderYPos : 0, _table.IsHorizontalScrollBarVisible ? _table.StartRenderXPos : 0)
@@ -1302,9 +1331,24 @@ public sealed class Cells : IEnumerable<Table.Cell>
         };
     }
 
-    internal Table.Cell? GetIfExists(int row, int col)
+    internal Table.Cell? GetIfExists(int row, int col, bool useRealRowAndCols)
     {
-        return _cells.TryGetValue((row, col), out Table.Cell? cell) ? cell : null;
+        Table.Cell? chosenCell = null;
+        foreach (var cell in _cells)
+        {
+            if (useRealRowAndCols)
+            {
+                if (cell.Value.Row == row && cell.Value.Column == col)
+                    chosenCell = cell.Value;
+                continue;
+            }
+
+            if (cell.Value._row == row && cell.Value._column == col)
+            {
+                chosenCell = cell.Value;
+            }
+        }
+        return chosenCell;
     }
 
     private Table.Cell GetOrCreateCell(int row, int col)
@@ -1355,7 +1399,7 @@ public sealed class Cells : IEnumerable<Table.Cell>
             indexSize = layoutDict.TryGetValue(startIndex, out layout) ? layout.Size : defaultSize;
             // If entire row or column is hidden then skip it
             _hiddenIndexes.TryGetValue(type, out indexes);
-            if (indexes != null && indexes.Contains(startIndex))
+            if (indexes != null && indexes.Contains(startIndex) && startIndex < index)
                 indexSize = 0;
         }
         return controlIndex;
