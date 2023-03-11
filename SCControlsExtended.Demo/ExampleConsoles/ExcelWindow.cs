@@ -22,7 +22,7 @@ namespace SCControlsExtended.Demo.ExampleConsoles
 
             // Don't render row 2 at all, show feature where other rows takes its place
             // Good for filtering features
-            _table.Cells.Row(2).IsVisible = false;
+            _table.Cells.Row(2, false);
 
             // Only add layout and let the console draw the rest
             _table.OnDrawFakeCell += DrawFakeCell;

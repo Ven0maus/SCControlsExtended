@@ -57,7 +57,7 @@ namespace SCControlsExtended.Demo.ExampleConsoles
             _table.Cells.Range(1, 1, 10, 5).ForEach(cell => cell.Background = innerCellColor);
 
             // Hide row 13
-            _table.Cells.Row(13).IsVisible = false;
+            _table.Cells.Row(13, false);
 
             // Custom cell size
             _table.Cells[5, 7].Value = "Support custom cell sizes and text alignment!";

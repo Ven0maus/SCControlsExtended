@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using SadConsole;
 using SadConsole.UI.Controls;
 using SadRogue.Primitives;
@@ -1061,6 +1060,10 @@ public sealed class Cells : IEnumerable<Table.Cell>
     private readonly Dictionary<Point, Table.Cell> _cells = new();
     internal readonly Dictionary<int, Layout> _columnLayout = new();
     internal readonly Dictionary<int, Layout> _rowLayout = new();
+    /// <summary>
+    /// Contains all rows and columns that aren't rendered
+    /// </summary>
+    internal readonly Dictionary<LayoutType, HashSet<int>> _hiddenIndexes = new();
 
     /// <summary>
     /// Gets or creates a new cell on the specified row and column
@@ -1110,6 +1113,70 @@ public sealed class Cells : IEnumerable<Table.Cell>
     }
 
     #region Public Methods
+    /// <summary>
+    /// Sets the visibility of the entire row
+    /// </summary>
+    /// <param name="row"></param>
+    /// <param name="visible"></param>
+    public void Row(int row, bool visible)
+    {
+        if (!_hiddenIndexes.TryGetValue(LayoutType.Row, out var indexes))
+        {
+            if (visible) return;
+
+            indexes = new HashSet<int>();
+            _hiddenIndexes.Add(LayoutType.Row, indexes);
+        }
+
+        for (int col = 0; col <= _table.Cells.MaxColumn; col++)
+            _table.Cells[row, col].IsVisible = visible;
+
+        if (visible)
+        {
+            indexes.Remove(row);
+            if (indexes.Count == 0)
+                _hiddenIndexes.Remove(LayoutType.Row);
+        }
+        else
+        {
+            indexes.Add(row);
+        }
+
+        _table.IsDirty = true;
+    }
+
+    /// <summary>
+    /// Sets the visibility of the entire column
+    /// </summary>
+    /// <param name="column"></param>
+    /// <param name="visible"></param>
+    public void Column(int column, bool visible)
+    {
+        if (!_hiddenIndexes.TryGetValue(LayoutType.Column, out var indexes))
+        {
+            if (visible) return;
+
+            indexes = new HashSet<int>();
+            _hiddenIndexes.Add(LayoutType.Column, indexes);
+        }
+
+        for (int row = 0; row <= _table.Cells.MaxRow; row++)
+            _table.Cells[row, column].IsVisible = visible;
+
+        if (visible)
+        {
+            indexes.Remove(column);
+            if (indexes.Count == 0)
+                _hiddenIndexes.Remove(LayoutType.Column);
+        }
+        else
+        {
+            indexes.Add(column);
+        }
+
+        _table.IsDirty = true;
+    }
+
     /// <summary>
     /// Get the layout for the given column
     /// </summary>
@@ -1276,7 +1343,8 @@ public sealed class Cells : IEnumerable<Table.Cell>
         indexSize = layoutDict.TryGetValue(startIndex, out Layout? layout) ? layout.Size : defaultSize;
 
         // If entire row or column is hidden then skip it
-        if (layout != null && !layout.IsVisible)
+        _hiddenIndexes.TryGetValue(type, out var indexes);
+        if (indexes != null && indexes.Contains(startIndex))
             indexSize = 0;
 
         while (startIndex < index)
@@ -1286,7 +1354,8 @@ public sealed class Cells : IEnumerable<Table.Cell>
 
             indexSize = layoutDict.TryGetValue(startIndex, out layout) ? layout.Size : defaultSize;
             // If entire row or column is hidden then skip it
-            if (layout != null && !layout.IsVisible)
+            _hiddenIndexes.TryGetValue(type, out indexes);
+            if (indexes != null && indexes.Contains(startIndex))
                 indexSize = 0;
         }
         return controlIndex;
@@ -1301,7 +1370,8 @@ public sealed class Cells : IEnumerable<Table.Cell>
         for (int i = 0; i < total; i++)
         {
             int indexSize = layoutDict.TryGetValue(i, out Layout? layout) ? layout.Size : defaultSize;
-            if (layout != null && !layout.IsVisible)
+            _hiddenIndexes.TryGetValue(type, out var indexes);
+            if (indexes != null && indexes.Contains(i))
                 indexSize = 0;
             totalSize += indexSize;
             if (pos < totalSize)
@@ -1389,11 +1459,6 @@ public sealed class Cells : IEnumerable<Table.Cell>
         /// The background color used by the row or column
         /// </summary>
         public Color? Background { get; set; }
-
-        /// <summary>
-        /// Setting this to false will skip the entire layout for rendering (differs from SadConsole default behaviour of IsVisible)
-        /// </summary>
-        public bool IsVisible { get; set; } = true;
 
         private Table.Cell.Options? _settings;
         /// <summary>

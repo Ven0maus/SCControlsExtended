@@ -173,10 +173,8 @@ public class TableTheme : ThemeBase
 
     private static bool IsEntireRowOrColumnNotVisible(int index, Table table, Cells.Layout.LayoutType type)
     {
-        var layoutDict = type == Cells.Layout.LayoutType.Row ? table.Cells._rowLayout : table.Cells._columnLayout;
-        if (layoutDict.TryGetValue(index, out var layout))
-            return layout != null && !layout.IsVisible;
-        return false;
+        table.Cells._hiddenIndexes.TryGetValue(type, out var indexes);
+        return indexes != null && indexes.Contains(index);
     }
 
     /// <summary>
