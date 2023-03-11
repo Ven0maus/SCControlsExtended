@@ -104,7 +104,7 @@ public class TableTheme : ThemeBase
                     verticalScrollBarValue = 0;
                 }
 
-                SadRogue.Primitives.Point cellPosition = table.Cells.GetCellPosition(rowIndex, colIndex, out fullRowSize, out int columnSize,
+                Point cellPosition = table.Cells.GetCellPosition(rowIndex, colIndex, out fullRowSize, out int columnSize,
                     verticalScrollBarValue, horizontalScrollBarValue);
 
                 col += columnSize - 1;
