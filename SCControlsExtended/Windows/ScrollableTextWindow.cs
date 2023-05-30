@@ -27,7 +27,7 @@ namespace SCControlsExtended.Windows
 
         public ScrollableTextWindow(int width, int height, Action? closeButtonClick = null) : base(width, height)
         {
-            DefaultBackground = Color.DarkBlue;
+            DefaultBackground = Color.Black;
             DefaultForeground = Color.White;
 
             Title = string.Empty;
