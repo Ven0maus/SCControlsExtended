@@ -7,4 +7,6 @@ SCControlsExtended is a library made to extend the current available controls wi
 
 - Table
 
+## Windows / Consoles
 
+- ScrollableTextWindow
