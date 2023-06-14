@@ -17,8 +17,8 @@ namespace SCControlsExtended.Windows
         public ObservableCollection<ColoredString> Content { get; }
 
         /// <summary>
-        /// Automatically re-draw and adjust sliders when a string as added to the content collection.
-        /// Default: False
+        /// Automatically re-draw and adjust sliders when a string is added to the content collection.
+        /// Default: True
         /// </summary>
         public bool DrawOnContentChange { get; set; } = true;
 
