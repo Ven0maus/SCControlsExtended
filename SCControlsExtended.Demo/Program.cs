@@ -51,7 +51,7 @@ namespace SCControlsExtended.Demo
                 },
                 new Group
                 {
-                    Name = "Scrollable Text Window",
+                    Name = "Windows",
                     Options = new ScreenSurface[]
                     {
                         new ScrollableTextWindow(Width / 2, Height / 2, "Scrollable Text Window").Prepare((a) =>
@@ -63,6 +63,11 @@ namespace SCControlsExtended.Demo
                                 a.Content.Add(new ColoredString("Hello world!", new Color(r.Next(0, 255), r.Next(0, 255), r.Next(0, 255)), a.DefaultBackground));
                             a.AdjustContent();
                             a.Show();
+                        }),
+                        new FontWindow(Game.Instance.DefaultFont).Prepare(a => 
+                        {
+                            a.DrawFontSurface();
+                            a.OnClick += (sender, glyphIndex) => {System.Console.WriteLine($"Glyph '{(char)glyphIndex}' | Glyph index: {glyphIndex}"); };
                         }),
                     }
                 },
