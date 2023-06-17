@@ -12,4 +12,5 @@ Checkout and run the demo project for a view of all the different controls and w
 
 ## Windows / Consoles
 
-- ScrollableTextWindow
+- ScrollableTextWindow (A window with scrollable text, good for a message console)
+- FontWindow (Shows all the glyphs in the font, and clicking on a glyph gives you the index)
